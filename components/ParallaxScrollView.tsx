@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactElement } from 'react';
+import { memo, PropsWithChildren, ReactElement } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import Animated, {
   interpolate,
@@ -16,7 +16,7 @@ type Props = PropsWithChildren<{
   headerBackgroundColor: { dark: string; light: string };
 }>;
 
-export default function ParallaxScrollView({
+function ParallaxScrollView({
   children,
   headerImage,
   headerBackgroundColor,
@@ -58,6 +58,7 @@ export default function ParallaxScrollView({
     </ThemedView>
   );
 }
+export default memo(ParallaxScrollView);
 
 const styles = StyleSheet.create({
   container: {

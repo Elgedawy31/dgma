@@ -1,37 +1,54 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Routes } from '@routes';
+import { memo, useEffect } from 'react';
+import StatusBar from '@blocks/StatusBar';
+import useStorage from '@hooks/useStorage';
+import { router, Stack } from 'expo-router';
+import Providers from '@ProviderContext';
+import useSecureStorage from '@hooks/useSecureStorage';
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+function RootLayout() {
+    const { readStorage: readToken, removeStorage: removeToken } = useSecureStorage();
+    const { readStorage: readOnboarding, removeStorage } = useStorage();
+    useEffect(() => {
+        const checkCondition = async () => {
+            // removeStorage('role');
+            // removeStorage('name');
+            // removeToken('token');
+            const token = await readToken('token');
+            setTimeout(async () => {
+                if (token) {
+                    router.replace(Routes.tabs);
+                } else {
+                    await readOnboarding('onboarding') === 'done' ?
+                        router.replace(Routes.auth)
+                        : router.replace(Routes.onboarding);
+                }
+            }, 3500);
+        };
+        checkCondition();
+    }, []);
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
-  );
+    return (
+        <Providers>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <BottomSheetModalProvider>
+                    <StatusBar />
+                    <Stack>
+                        <Stack.Screen name="chat" options={{ headerShown: false }} />
+                        <Stack.Screen name="index" options={{ headerShown: false }} />
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                        <Stack.Screen name="profile" options={{ headerShown: false }} />
+                        <Stack.Screen name="project" options={{ headerShown: false }} />
+                        <Stack.Screen name="(meeting)" options={{ headerShown: false }} />
+                        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+                        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                    </Stack>
+                </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+        </Providers>
+    )
 }
+export default memo(RootLayout)
