@@ -1,8 +1,10 @@
-import { SERVER_URL } from '@env';
+// import { SERVER_URL } from '@env';
 import { Socket, io } from 'socket.io-client';
 import useSecureStorage from './useSecureStorage';
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 
+
+let SERVER_URL = 'http://192.168.1.71:5001';
 // Types
 interface MessageModel {
     content: string;
