@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "@hooks/useThemeColor";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 
 interface CustomDatePickerProps {
   isVisible: boolean;
@@ -20,9 +14,16 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   onClose,
   onDateSelect,
 }) => {
-  const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
-  const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState<number>(
+    new Date().getDate()
+  );
+  const [currentMonth, setCurrentMonth] = useState<number>(
+    new Date().getMonth()
+  );
+  const [currentYear, setCurrentYear] = useState<number>(
+    new Date().getFullYear()
+  );
+  const colors = useThemeColor();
 
   const getDaysInMonth = (month: number, year: number): number => {
     return new Date(year, month + 1, 0).getDate();
@@ -35,34 +36,55 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const generateCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentMonth, currentYear);
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
-    const days: (number | null)[] = Array(firstDay).fill(null);
-    
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
+    const totalDays = Math.ceil((daysInMonth + firstDay) / 7) * 7;
+    const days: (number | null)[] = Array(totalDays).fill(null);
+
+    // Fill in the actual days
+    for (let i = 0; i < daysInMonth; i++) {
+      days[i + firstDay] = i + 1;
     }
-    
-    return days;
+
+    // Group days into rows
+    const rows = [];
+    for (let i = 0; i < days.length; i += 7) {
+      rows.push(days.slice(i, i + 7));
+    }
+
+    return rows;
   };
 
   const handleDateSelect = (day: number) => {
-    const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateString = `${currentYear}-${String(currentMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
     setSelectedDate(day);
     onDateSelect(dateString);
     onClose();
   };
 
   const renderWeekDays = () => {
-    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
     return weekDays.map((day, index) => (
-      <Text key={index} style={styles.weekDay}>
-        {day}
-      </Text>
+      <View key={index} style={styles.weekDayContainer}>
+        <Text style={styles.weekDay}>{day}</Text>
+      </View>
     ));
   };
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const handlePrevMonth = () => {
@@ -92,48 +114,72 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.closeButton}>Cancel</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+           onPress={onClose}
+            style={{
+              gap: 8,
+              alignItems: "center",
+              flexDirection: "row",
+              paddingTop: 8,
+              paddingBottom: 24,
+              marginHorizontal: 24,
+              borderBottomWidth: 1,
+              borderBottomColor: "#CAC4D0",
+            }}
+          >
+         
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
+           
             <Text style={styles.headerTitle}>Select date</Text>
-            <View style={styles.placeholder} />
-          </View>
-          
+          </TouchableOpacity>
+
           <View style={styles.monthSelector}>
-            <TouchableOpacity onPress={handlePrevMonth}>
-              <Text style={styles.monthArrow}>{'<'}</Text>
-            </TouchableOpacity>
-            <Text style={styles.monthYear}>
-              {`${months[currentMonth]} ${currentYear}`}
-            </Text>
-            <TouchableOpacity onPress={handleNextMonth}>
-              <Text style={styles.monthArrow}>{'>'}</Text>
-            </TouchableOpacity>
+            <View>
+              <Text style={styles.monthYear}>
+                {`${months[currentMonth]} ${currentYear}`}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
+              <TouchableOpacity onPress={handlePrevMonth}>
+                <Ionicons name="chevron-back" size={20} color={colors.text} />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleNextMonth}>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.text}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.calendar}>
             <View style={styles.weekDays}>{renderWeekDays()}</View>
             <View style={styles.daysGrid}>
-              {generateCalendarDays().map((day, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.dayCell,
-                    day === selectedDate && styles.selectedDay,
-                  ]}
-                  onPress={() => day && handleDateSelect(day)}
-                  disabled={!day}
-                >
-                  <Text
-                    style={[
-                      styles.dayText,
-                      day === selectedDate && styles.selectedDayText,
-                    ]}
-                  >
-                    {day || ''}
-                  </Text>
-                </TouchableOpacity>
+              {generateCalendarDays().map((row, rowIndex) => (
+                <View key={rowIndex} style={styles.row}>
+                  {row.map((day, colIndex) => (
+                    <TouchableOpacity
+                      key={colIndex}
+                      style={[
+                        styles.dayCell,
+                        day === selectedDate && styles.selectedDay,
+                      ]}
+                      onPress={() => day && handleDateSelect(day)}
+                      disabled={!day}
+                    >
+                      <Text
+                        style={[
+                          styles.dayText,
+                          day === selectedDate && styles.selectedDayText,
+                        ]}
+                      >
+                        {day || ""}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               ))}
             </View>
           </View>
@@ -146,86 +192,78 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
     paddingBottom: 40,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
   headerTitle: {
     fontSize: 17,
-    fontWeight: '600',
-  },
-  closeButton: {
-    color: '#007AFF',
-    fontSize: 17,
-  },
-  placeholder: {
-    width: 60,
+    fontWeight: "500",
+    color: "#515151",
   },
   monthSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 40,
     marginBottom: 20,
+    marginTop: 10,
   },
   monthYear: {
     fontSize: 17,
-    fontWeight: '600',
-  },
-  monthArrow: {
-    fontSize: 20,
-    color: '#007AFF',
-    padding: 10,
+    fontWeight: "600",
+    color: "#515151",
   },
   calendar: {
     paddingHorizontal: 10,
   },
   weekDays: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginBottom: 10,
   },
-  weekDay: {
+  weekDayContainer: {
     width: 40,
-    textAlign: 'center',
+    alignItems: 'center',
+  },
+  weekDay: {
     fontSize: 15,
-    color: '#666',
+    color: "#666",
+    textAlign: 'center',
   },
   daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    width: '100%',
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: '100%',
   },
   dayCell: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 2,
+    justifyContent: "center",
+    alignItems: "center",
   },
   dayText: {
     fontSize: 16,
-    color: '#000',
+    color: "#515151",
   },
   selectedDay: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF10",
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#002D75",
   },
   selectedDayText: {
-    color: 'white',
+    color: "#002D75",
+    fontWeight: "600",
   },
 });
 
