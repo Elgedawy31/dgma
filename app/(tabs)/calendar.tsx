@@ -1,7 +1,5 @@
-import { View, Text, FlatList } from "react-native";
+import { View, FlatList } from "react-native";
 import React, { useState } from "react";
-import CustomCalendar from "@components/calendar/CustomCalendar";
-import TaskCard from "@cards/TaskCard";
 import CalendarCard from "@components/calendar/CalendarCard";
 import CalendarHeader from "@components/calendar/CalendarHeader";
 import { useThemeColor } from "@hooks/useThemeColor";
@@ -9,17 +7,45 @@ import ToggleView from "@components/calendar/ToggleButton";
 import HorizontalCalendar from "@components/calendar/DayComponent";
 import CalendarHead from "@components/calendar/CalenderHead";
 import TaskFormModal from "@components/calendar/AddPersonalTask";
+import MonthCalendar from "@components/calendar/MonthCalendar";
+import DatePickerModal from "@components/calendar/DatePickerModal";
 
 const explore = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [view, setView] = useState<"list" | "month">("list");
+  const [isDatePickerVisible, setDatePickerVisible] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
-  const handleSubmit = (data:any): void => {
-    console.log('Form data:', data);
+  const tasksMonth = [
+    {
+      id: "1",
+      title: "Landing page",
+      startDate: new Date(2024, 7, 8),
+      endDate: new Date(2024, 7, 10),
+      status: "pink",
+    },
+    {
+      id: "2",
+      title: "Landing page",
+      startDate: new Date(2024, 7, 15),
+      endDate: new Date(2024, 7, 17),
+      status: "purple",
+    },
+    {
+      id: "3",
+      title: "Landing page",
+      startDate: new Date(2024, 7, 15),
+      endDate: new Date(2024, 7, 18),
+      status: "lightPurple",
+    },
+  ];
+
+  const handleSubmit = (data: any): void => {
+    console.log("Form data:", data);
     // Handle the form submission
   };
   const handleViewChange = (view: "list" | "month") => {
-    console.log("Current view:", view);
-    // Handle view change logic here
+    setView(view);
   };
   const color = useThemeColor();
 
@@ -89,7 +115,22 @@ const explore = () => {
       subTitle: "Market res earch - User research ",
       time: "12 Aug-14 Aug",
     },
-  ]; 
+  ];
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const handleDateSelect2 = (date: any) => {
+    setSelectedDate(date.dateString);
+  };
+
+  console.log(selectedDate) 
 
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
@@ -97,35 +138,52 @@ const explore = () => {
         events={events}
         onDateSelect={handleDateSelect}
         initialDate={new Date()} 
-      />  
+      />   
       */}
-      <CalendarHeader />
+      <CalendarHeader
+        fromCalenderTab
+        title="Calender"
+        view={view}
+        setModalVisible={setModalVisible}
+        setDatePickerVisible={setDatePickerVisible}
+      />
       <ToggleView onViewChange={handleViewChange} />
-      <View>
-        <HorizontalCalendar onDateSelect={handleDateSelect} />
-      </View>
-      <CalendarHead setModalVisible={setModalVisible} />
-      <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 0 }}>
-        <FlatList
-          keyExtractor={(item, index) => item.title + index}
-          showsVerticalScrollIndicator={false}
-          data={tasks}
-          renderItem={({ item }) => (
-            <CalendarCard
-              title={item.title}
-              state={item.id}
-              subTitle={item.subTitle}
-              time={item.time}
-            /> 
-          )}
-        />
-      </View>
+      {view === "list" ? (
+        <>
+          <View>
+            <HorizontalCalendar onDateSelect={handleDateSelect} />
+          </View>
+          <CalendarHead setModalVisible={setModalVisible} />
+          <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 0 }}>
+            <FlatList
+              keyExtractor={(item, index) => item.title + index}
+              showsVerticalScrollIndicator={false}
+              data={tasks}
+              renderItem={({ item }) => (
+                <CalendarCard
+                  title={item.title}
+                  state={item.id}
+                  subTitle={item.subTitle}
+                  time={item.time}
+                />
+              )}
+            />
+          </View>
+        </>
+      ) : (
+        <MonthCalendar tasks={tasksMonth} />
+      )}
 
-
-      <TaskFormModal 
+      <TaskFormModal
         isVisible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleSubmit}
+      />
+
+      <DatePickerModal
+        isVisible={isDatePickerVisible}
+        onClose={() => setDatePickerVisible(false)}
+        onDateSelect={handleDateSelect2}
       />
     </View>
   );
