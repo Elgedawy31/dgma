@@ -12,29 +12,6 @@ import DatePickerModal from "@components/calendar/DatePickerModal";
 import dayjs from "dayjs";
 import useAxios from "@hooks/useAxios";
 import NoTasks from "@components/calendar/NoTasks";
-const tasksMonth = [
-  {
-    id: "1",
-    title: "Landing page",
-    startDate: new Date(2024, 7, 8),
-    endDate: new Date(2024, 7, 10),
-    status: "pink",
-  },
-  {
-    id: "2",
-    title: "Landing page",
-    startDate: new Date(2024, 7, 15),
-    endDate: new Date(2024, 7, 17),
-    status: "purple",
-  },
-  {
-    id: "3",
-    title: "Landing page",
-    startDate: new Date(2024, 7, 15),
-    endDate: new Date(2024, 7, 18),
-    status: "lightPurple",
-  },
-];
 const explore = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [view, setView] = useState<"list" | "month">("list");
@@ -128,7 +105,7 @@ const explore = () => {
           </View>
         </>
       ) : (
-        <MonthCalendar tasks={tasksMonth} />
+        <MonthCalendar tasks={tasks} />
       )}
 
       <TaskFormModal

@@ -1,4 +1,3 @@
-// CustomCalendar.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +8,7 @@ interface Task {
   title: string;
   startDate: Date;
   endDate: Date;
-  status: 'pink' | 'purple' | 'lightPurple';
+  status: 'review' | 'overdue' | 'progress' | 'completed' | 'pending' | 'cancelled';
 }
 
 interface CalendarProps {
@@ -70,8 +69,11 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
       return isWithinRange(dayDate, task.startDate, task.endDate);
     }).map(task => ({
       ...task,
+      status:task?.status,
       isStart: isSameDay(task.startDate, dayDate),
-      isEnd: isSameDay(task.endDate, dayDate)
+      isEnd: isSameDay(task.endDate, dayDate),
+      daysFromStart: dayjs(dayDate).diff(dayjs(task.startDate), 'day'),
+      totalDays: dayjs(task.endDate).diff(dayjs(task.startDate), 'day') + 1
     }));
   };
 
@@ -91,6 +93,8 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
         !task.isEnd && { marginRight: -1 },
       ];
 
+      const shouldShowTitle = task.totalDays >= 2;
+
       return (
         <TouchableOpacity
           key={`${task.id}-${day}`}
@@ -98,7 +102,7 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
           onPress={() => onTaskPress?.(task)}
           activeOpacity={0.7}
         >
-          {task.isStart && (
+          {shouldShowTitle && task.daysFromStart === 0 && (
             <Text style={styles.taskText} numberOfLines={1} ellipsizeMode="tail">
               {task.title}
             </Text>
@@ -159,9 +163,11 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
             <View key={index} style={styles.dayCell}>
               {day !== null && (
                 <View style={styles.dayContent}>
-                  {renderDayNumber(day)}
                   <View style={styles.taskContainer}>
                     {renderTaskBars(day)}
+                  </View>
+                  <View style={styles.dayNumberContainer}>
+                    {renderDayNumber(day)}
                   </View>
                 </View>
               )}
@@ -225,24 +231,32 @@ const styles = StyleSheet.create({
   },
   dayContent: {
     flex: 1,
+    position: 'relative',
     padding: 4,
     borderRadius: 4,
   },
   dayText: {
     fontSize: 14,
     color: '#333',
-    marginBottom: 4,
+    textAlign: 'center',
   },
   todayText: {
     color: '#007AFF',
     fontWeight: '600',
   },
-  taskContainer: {
+  dayNumberContainer: {
     position: 'absolute',
-    top: 30,
+    bottom: 4,
     left: 0,
     right: 0,
-    bottom: 0,
+    alignItems: 'center',
+  },
+  taskContainer: {
+    position: 'absolute',
+    top: 4,
+    left: 0,
+    right: 0,
+    bottom: 24,
   },
   taskBar: {
     position: 'absolute',
@@ -259,14 +273,23 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: 4,
   },
-  pink: {
-    backgroundColor: '#ffb6c1',
+  review: {
+    backgroundColor: '#2684FF',
   },
-  purple: {
-    backgroundColor: '#e6e6fa',
+  overdue: {
+    backgroundColor: '#E54C4C',
   },
-  lightPurple: {
-    backgroundColor: '#d8bfd8',
+  progress: {
+    backgroundColor: '#FFC400',
+  },
+  completed: {
+    backgroundColor: '#57D9A3',
+  },
+  pending: {
+    backgroundColor: '#D9D9D9',
+  },
+  cancelled: {
+    backgroundColor: '#03243C',
   },
 });
 
