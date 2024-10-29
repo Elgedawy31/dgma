@@ -7,21 +7,22 @@ import IconWrapper from "@components/IconWrapper";
 import dayjs from "dayjs";
 
 interface HeaderProps {
-  onBackPress?: () => void;
   onSearchPress?: () => void;
   setModalVisible: (val: boolean) => void;
+  date: string;
 }
 
 const CalendarHead: React.FC<HeaderProps> = ({
-  onBackPress,
+  date,
   onSearchPress,
   setModalVisible,
 }) => {
   const colors = useThemeColor();
+
   return (
     <View style={styles.container}>
       <Text
-        title={dayjs().format("MMMM YYYY")}
+        title={dayjs(date).format("MMMM YYYY")}
         bold
         color={"black"}
         size={20}

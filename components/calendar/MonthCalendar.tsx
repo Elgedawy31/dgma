@@ -176,7 +176,6 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
     padding: 16,
   },
   header: {
@@ -221,7 +220,7 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: `${100 / 7}%`,
-    height: `${100 / 6}%`,
+    height: `${100 / 5}%`,
     padding: 2,
   },
   dayContent: {

@@ -17,15 +17,6 @@ type LoginModel = {
     email: string;
     password: string;
 }
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://api.example.com';
-
-const api = axios.create({
-    baseURL: API_URL,
-    timeout: 10000, // 10 seconds
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
 
 function Login() {
     const { setUserData, user } = useContext(userContext);

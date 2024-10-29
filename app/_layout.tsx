@@ -17,7 +17,7 @@ function RootLayout() {
             // removeStorage('name');
             // removeToken('token');
             // const token = await readToken('token');
-            let token = 'token'
+            let token = await readToken('token');
             setTimeout(async () => {
                 if (token) {
                     router.replace(Routes.tabs);

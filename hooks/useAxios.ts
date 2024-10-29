@@ -15,6 +15,7 @@ type AxiosParams = {
 let SERVER_URL = 'http://192.168.1.71:5001';
 export default function useAxios() {
     const { readStorage } = useSecureStorage();
+
     const get = useCallback(async ({ endPoint, hasToken = true }: AxiosParams) => {
         return await axios.get(
             `${SERVER_URL}/api/${endPoint}`,
@@ -28,11 +29,11 @@ export default function useAxios() {
         const headers = {
             'Accept': 'application/json',
             Authorization: hasToken ? `Bearer ${token}` : '',
-            'Content-Type': 'multipart/form-data',
+            // 'Content-Type': 'multipart/form-data',
         };
         return await axios
             .post(`${SERVER_URL}/api/${endPoint}`, body, { headers })
-            .then(res => res.data)
+            .then(res => res.data) 
             .catch(err => console.log(`Error: ${err} `));
 
     }, []);

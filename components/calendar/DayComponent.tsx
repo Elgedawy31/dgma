@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
   StyleSheet,
-  Dimensions 
+  Dimensions,
 } from 'react-native';
 
 interface DayProps {
@@ -16,26 +16,36 @@ interface DayProps {
   onSelect: () => void;
 }
 
-const DayComponent: React.FC<DayProps> = ({ date, day, isSelected, isToday, onSelect }) => (
-  <TouchableOpacity 
+const DayComponent: React.FC<DayProps> = ({
+  date,
+  day,
+  isSelected,
+  isToday,
+  onSelect,
+}) => (
+  <TouchableOpacity
     style={[
       styles.dayContainer,
       isSelected && styles.selectedDay,
-    ]} 
+    ]}
     onPress={onSelect}
   >
-    <Text style={[
-      styles.dateText,
-      isToday && styles.todayText,
-      isSelected && styles.selectedText
-    ]}>
+    <Text
+      style={[
+        styles.dateText,
+        isToday && styles.todayText,
+        isSelected && styles.selectedText,
+      ]}
+    >
       {date}
     </Text>
-    <Text style={[
-      styles.dayText,
-      isToday && styles.todayText,
-      isSelected && styles.selectedText
-    ]}>
+    <Text
+      style={[
+        styles.dayText,
+        isToday && styles.todayText,
+        isSelected && styles.selectedText,
+      ]}
+    >
       {day}
     </Text>
   </TouchableOpacity>
@@ -43,19 +53,22 @@ const DayComponent: React.FC<DayProps> = ({ date, day, isSelected, isToday, onSe
 
 interface HorizontalCalendarProps {
   onDateSelect?: (date: Date) => void;
+  currentDate: string; // Format: "YYYY-MM-DD"
 }
 
-const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({ onDateSelect }) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({
+  onDateSelect,
+  currentDate,
+}) => {
+  const parsedDate = new Date(currentDate);
+  const [selectedDate, setSelectedDate] = useState<Date>(parsedDate);
   const scrollViewRef = useRef<ScrollView>(null);
   const today = new Date();
 
-  // Generate dates for the current month
   const getDates = () => {
     const dates = [];
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    const year = parsedDate.getFullYear();
+    const month = parsedDate.getMonth();
     const lastDay = new Date(year, month + 1, 0).getDate();
 
     for (let i = 1; i <= lastDay; i++) {
@@ -68,28 +81,40 @@ const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({ onDateSelect })
 
   const dates = getDates();
 
-  // Format day name (Mon, Tue, etc)
   const formatDay = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'short' });
   };
 
   useEffect(() => {
-    // Scroll to today's date
-    const todayIndex = dates.findIndex(
-      date => date.getDate() === today.getDate()
+    const selectedDay = parsedDate.getDate();
+    const selectedIndex = dates.findIndex(
+      (date) => date.getDate() === selectedDay
     );
-    if (todayIndex !== -1 && scrollViewRef.current) {
-      const xOffset = todayIndex * 80; // Adjust based on item width
-      scrollViewRef.current.scrollTo({ x: xOffset - 40, animated: true });
+    
+    if (selectedIndex !== -1 && scrollViewRef.current) {
+      const xOffset = selectedIndex * 48;
+      scrollViewRef.current.scrollTo({
+        x: Math.max(0, xOffset - 40),
+        animated: true,
+      });
     }
-  }, []);
+    setSelectedDate(parsedDate);
+  }, [currentDate]);
 
   const isToday = (date: Date) => {
-    return date.toDateString() === today.toDateString();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
   };
 
   const isSelected = (date: Date) => {
-    return date.toDateString() === selectedDate.toDateString();
+    return (
+      date.getDate() === selectedDate.getDate() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getFullYear() === selectedDate.getFullYear()
+    );
   };
 
   return (
@@ -98,7 +123,7 @@ const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({ onDateSelect })
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
-      snapToInterval={80} // Match item width for snapping
+      snapToInterval={48}
       decelerationRate="fast"
     >
       {dates.map((date, index) => (
@@ -125,7 +150,7 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     width: 40,
-    height:60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 4,
@@ -147,7 +172,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   todayText: {
-    color: '#002B7F',
+    color: '#000',
+
   },
   selectedText: {
     color: '#002B7F',
