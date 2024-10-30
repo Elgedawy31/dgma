@@ -1,57 +1,172 @@
-import React, { memo, useRef, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import BottomSheet from '@blocks/BottomSheet';
-import Text from '@blocks/Text';
-import Button from '@ui/Button';
-import MeetingDetails from '@components/MeetingDetails';
-import Icon from '@blocks/Icon';
-import { router } from 'expo-router';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import React, { useEffect } from "react";
+import { useThemeColor } from "@hooks/useThemeColor";
+import { TaskColors } from "@colors";
+import IconWrapper from "@components/IconWrapper";
+import { AntDesign } from "@expo/vector-icons";
+import NewUser from "@components/users/AddNewUserModal";
+import useAxios from "@hooks/useAxios";
 
-function Meetings() {
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+type User = {
+  id: string;
+  user: { first: string; last: string };
+  email: string;
+  avatar: string;
+  role: "admin" | "user";
+};
 
-  const handlePresentModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.present();
-  }, []);
+const Users = () => {
+  const color = useThemeColor();
+  const [isModalVisible, setModalVisible] = React.useState(false);
+  const [userAdded, setUserAdded] = React.useState<boolean | any>(false);
+  const [users, setUsers] = React.useState<User[]>([]);
+  const { get } = useAxios();
+  const handleTerminate = (userId: string) => {
+    // Handle user termination logic here
+    console.log(`Terminate user with ID: ${userId}`);
+  };
+
+  const renderUserItem = ({ item }: any) => (
+    <View style={styles.userCard}>
+      {item?.avatar ? (
+        <Image source={{ uri: item.avatar }} style={styles.avatar} />
+      ) : (
+        <View style={[styles.avatar, { backgroundColor: color.primary }]}>
+          <Text style={styles.avatarTxt}>{item?.name?.first?.slice(0, 1)}</Text>
+        </View>
+      )}
+      <View style={styles.userInfo}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Text style={styles.username}>
+            {item.name.first} {item.name.first}{" "}
+          </Text>
+          {/* <Text style={[styles.username , {color:item.role ==='admin' ? TaskColors.completed : TaskColors.review}]}> {item.role}</Text> */}
+        </View>
+        <Text style={styles.email}>{item.email}</Text>
+      </View>
+      <TouchableOpacity onPress={() => handleTerminate(item.id)}>
+        <Text style={styles.terminateButtonText}>Terminate</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  useEffect(() => {
+    const handleSubmit = async () => {
+      await get({ endPoint: "users/" })
+        .then((res) => {
+          if (res) {
+            setUsers(res);
+          }
+        })
+        .catch((err) => {
+          console.error(`Error: ${err}`);
+        });
+    };
+    handleSubmit();
+  }, [userAdded]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.emptyState}>
-          <Text type='title' title='There are no ongoing meetings' />
-        </View>
+    <View style={[styles.container, { backgroundColor: color.background }]}>
+      <View style={styles.headerView}>
+        <Text style={styles.header}>Users List</Text>
+        <TouchableOpacity>
+          <IconWrapper
+            size={48}
+            onPress={() => setModalVisible(true)}
+            Icon={<AntDesign name="plus" size={24} color={color.primary} />}
+          />
+        </TouchableOpacity>
       </View>
-      <BottomSheet ref={bottomSheetModalRef} index={2}>
-        <View style={{ flex: 1, width: '100%', }}>
-          <Icon icon='close' iconColor='black' onPress={() => bottomSheetModalRef.current?.dismiss()} />
-          <MeetingDetails onJoinPress={() => { bottomSheetModalRef.current?.dismiss(); router.push({ pathname: '/(meeting)/[id]', params: { id: '1' } })}} />
-        </View>
-      </BottomSheet>
-      <Button
-        type='float'
-        icon='add'
-        position={{ vertical: 5, horizontal: 2 }}
-        onPress={handlePresentModalPress}
+      <FlatList
+        data={users}
+        renderItem={renderUserItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+      />
+
+      <NewUser
+        isVisible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+        setTaskAdded={setUserAdded}
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
   },
-  content: {
-    flex: 1,
+  headerView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: "500",
+
+    color: "#0F1010",
+  },
+  listContainer: {
     padding: 16,
   },
-  emptyState: {
+  userCard: {
+    flexDirection: "row",
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    alignItems: "center",
+    shadowColor: "#aaa",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  userInfo: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginLeft: 16,
+  },
+  username: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  email: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
+  terminateButtonText: {
+    color: TaskColors.overdue,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  avatarTxt: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });
 
-export default memo(Meetings);
+export default Users;
