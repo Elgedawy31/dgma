@@ -13,6 +13,7 @@ import IconWrapper from "@components/IconWrapper";
 import { AntDesign } from "@expo/vector-icons";
 import NewUser from "@components/users/AddNewUserModal";
 import useAxios from "@hooks/useAxios";
+import TerminateModal from "@components/users/TerminateModal";
 
 type User = {
   id: string;
@@ -26,11 +27,13 @@ const Users = () => {
   const color = useThemeColor();
   const [isModalVisible, setModalVisible] = React.useState(false);
   const [userAdded, setUserAdded] = React.useState<boolean | any>(false);
+  const [openDeleteModal, setOpenDeleteModal] = React.useState(false);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [users, setUsers] = React.useState<User[]>([]);
-  const { get } = useAxios();
+  const { get , deleteFunc } = useAxios();
   const handleTerminate = (userId: string) => {
-    // Handle user termination logic here
-    console.log(`Terminate user with ID: ${userId}`);
+    setSelectedId(userId);
+    setOpenDeleteModal(true);
   };
 
   const renderUserItem = ({ item }: any) => (
@@ -45,7 +48,7 @@ const Users = () => {
       <View style={styles.userInfo}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Text style={styles.username}>
-            {item.name.first} {item.name.first}{" "}
+            {item.name.first} {item.name.last}{" "}
           </Text>
           {/* <Text style={[styles.username , {color:item.role ==='admin' ? TaskColors.completed : TaskColors.review}]}> {item.role}</Text> */}
         </View>
@@ -72,6 +75,21 @@ const Users = () => {
     handleSubmit();
   }, [userAdded]);
 
+  const handleDelete = async() => {
+
+      await deleteFunc({ endPoint: `users/${selectedId}` })
+        .then((res) => {
+          if (res) {
+           setUserAdded((prev:boolean) => !prev);
+           setOpenDeleteModal(false);
+           setSelectedId(null)
+          }
+        })
+        .catch((err) => {
+          console.error(`Error: ${err}`);
+        });
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: color.background }]}>
       <View style={styles.headerView}>
@@ -95,6 +113,14 @@ const Users = () => {
         isVisible={isModalVisible}
         onClose={() => setModalVisible(false)}
         setTaskAdded={setUserAdded}
+      />
+
+      <TerminateModal
+        visible={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
       />
     </View>
   );
