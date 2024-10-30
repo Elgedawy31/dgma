@@ -30,7 +30,7 @@ function CalendarCard({ time, title, state, subTitle , assignedTo  , link}: Cale
   return (
     <TouchableOpacity onPress={() => router.push(link)} style={[styles.container, { borderColor: TaskColors[state] }]}>
       <Text type="body" color="black" title={title} />
-      <Text type="small" title={subTitle} />
+      <Text type="small" title={subTitle?.length > 60 ? `${subTitle.slice(0 , 60)}...` : subTitle} />
       <Text type="small" title={time} />
       <Ionicons
         size={18}

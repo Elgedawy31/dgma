@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
 
 interface Resource {
   id: string;
@@ -17,13 +17,17 @@ interface ResourcesProps {
 const ResourcesList: React.FC<ResourcesProps> = ({
   resources,
   onDownload,
-  onSeeAll,
 }) => {
+
+  // Toggle between showing all resources and only 3
+  const displayedResources = resources 
+
+
   const renderItem = ({ item }: { item: Resource }) => (
     <View style={styles.resourceItem}>
       <View style={styles.resourceInfo}>
         <View style={styles.pdfIconContainer}>
-        <FontAwesome name="file-pdf-o" size={32} color="#002D75" />
+          <FontAwesome name="file-pdf-o" size={32} color="#002D75" />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.resourceName}>{item.name}</Text>
@@ -34,29 +38,27 @@ const ResourcesList: React.FC<ResourcesProps> = ({
         style={styles.downloadButton}
         onPress={() => onDownload?.(item)}
       >
-       <Feather name="download" size={20} color="#002D75" />
+        <Feather name="download" size={20} color="#002D75" />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={{marginHorizontal:16}} >
+    <View style={{ marginHorizontal: 16  , flex:1}}>
       <View style={styles.header}>
         <Text style={styles.title}>Resources</Text>
-        <TouchableOpacity onPress={onSeeAll}>
-          <Text style={styles.seeAllText}>See all</Text>
-        </TouchableOpacity>
-      </View>
       
-<View style={styles.container}>
-<FlatList
-        data={resources}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        showsVerticalScrollIndicator={false}
-      />
-</View>
+      </View>
+
+      <View style={styles.container}>
+        <FlatList
+          data={displayedResources}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </View>
   );
 };
@@ -75,8 +77,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#0F1010',
-fontSize: 20,
-fontFamily: '500',
+    fontSize: 20,
+    fontWeight: '500',
   },
   seeAllText: {
     fontSize: 12,
@@ -104,7 +106,7 @@ fontFamily: '500',
     fontSize: 16,
     color: '#2B2C2C',
     marginBottom: 2,
-    fontWeight:'500'
+    fontWeight: '500',
   },
   resourceSize: {
     fontSize: 12,
@@ -115,7 +117,7 @@ fontFamily: '500',
   },
   separator: {
     height: 1,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: '#E1E1E1',
     marginVertical: 4,
   },
 });

@@ -15,7 +15,7 @@ const tabs = [
   { name: 'index', label: 'Home', icon: 'home', hasHeader: true },
   { name: 'messaging', label: 'Messaging', icon: 'notifications', hasHeader: false },
   { name: 'tasks', label: 'Tasks', icon: 'layers', hasHeader: true },
-  { name: 'meetings', label: 'Meetings', icon: 'videocam', hasHeader: true },
+  { name: 'users', label: 'Users', icon: 'people', hasHeader: true },
   { name: 'calendar', label: 'Calendar', icon: 'calendar', hasHeader: false },
 ];
 function TabLayout() {
