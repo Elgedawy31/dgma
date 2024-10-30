@@ -66,7 +66,7 @@ const explore = () => {
       setFilteredTasks(tasks); 
     }
   } , [selectedDate , tasks]) 
-
+ 
 
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
@@ -94,18 +94,25 @@ const explore = () => {
               data={filteredTasks}
               renderItem={({ item }) => (
                 <CalendarCard
+                link={`/task/${item.id}`}
                   title={item.title} 
                   state={item.status} 
                   subTitle={item.description}
                   assignedTo={item?.assignedTo}
-                  time={`${dayjs(item.startDate).format('DD MMM')} - ${dayjs(item.endDate).format('DD MMM')}`} 
+                  time={`${dayjs(item.startDate).format('DD MMM')} - ${dayjs(item.deadline).format('DD MMM')}`} 
                 />
               )}
             /> : <NoTasks />}
           </View>
         </>
       ) : (
-        <MonthCalendar tasks={tasks} />
+        <MonthCalendar tasks={tasks.map((ele: any) => ({ 
+          id: ele.id,
+          title:ele?.title,
+          startDate: ele?.startDate, 
+          endDate: ele?.deadline, 
+          status: ele.status as const 
+        }))} />
       )}
 
       <TaskFormModal

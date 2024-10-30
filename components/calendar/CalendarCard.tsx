@@ -2,9 +2,10 @@
 import { memo } from "react";
 import Text from "@blocks/Text";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { TaskColors } from "@/constants/Colors";
 import ProfileStack from "@components/PoepleComponent";
+import { router } from "expo-router";
 //#endregion
 
 type AssignedTo = {
@@ -16,6 +17,7 @@ type AssignedTo = {
 
 type CalendarCardProps = {
   time: string;
+  link:string ,
   title: string;
   state: string;
   subTitle: string;
@@ -23,10 +25,10 @@ type CalendarCardProps = {
 };
 
 
-function CalendarCard({ time, title, state, subTitle , assignedTo }: CalendarCardProps) {
+function CalendarCard({ time, title, state, subTitle , assignedTo  , link}: CalendarCardProps) {
   //#region UI
   return (
-    <View style={[styles.container, { borderColor: TaskColors[state] }]}>
+    <TouchableOpacity onPress={() => router.push(link)} style={[styles.container, { borderColor: TaskColors[state] }]}>
       <Text type="body" color="black" title={title} />
       <Text type="small" title={subTitle} />
       <Text type="small" title={time} />
@@ -43,7 +45,7 @@ function CalendarCard({ time, title, state, subTitle , assignedTo }: CalendarCar
       <View style={styles.people}>
         <ProfileStack profiles={assignedTo} maxDisplay={3} />
       </View>
-    </View>
+    </TouchableOpacity>
   );
   //#endregion
 }

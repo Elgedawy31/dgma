@@ -69,7 +69,7 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
       return isWithinRange(dayDate, task.startDate, task.endDate);
     }).map(task => ({
       ...task,
-      status:task?.status,
+      status: task?.status,
       isStart: isSameDay(task.startDate, dayDate),
       isEnd: isSameDay(task.endDate, dayDate),
       daysFromStart: dayjs(dayDate).diff(dayjs(task.startDate), 'day'),
@@ -86,11 +86,13 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
       const barStyle = [
         styles.taskBar,
         styles[task.status],
-        { top: index * 24 },
-        task.isStart && { marginLeft: 0, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 },
-        task.isEnd && { marginRight: 0, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
-        !task.isStart && { marginLeft: -1 },
-        !task.isEnd && { marginRight: -1 },
+        { 
+          top: index * 28,
+          marginLeft: task.isStart ? 4 : -8,
+          marginRight: task.isEnd ? 4 : -8,
+          borderRadius: 6,
+          zIndex: task.isStart ? 2 : 1
+        }
       ];
 
       const shouldShowTitle = task.totalDays >= 2;
@@ -127,9 +129,11 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
     const isToday = today.format('YYYY-MM-DD') === currentDate.date(day).format('YYYY-MM-DD');
 
     return (
-      <Text style={[styles.dayText, isToday && styles.todayText]}>
-        {day}
-      </Text>
+      <View style={styles.dayNumberContainer}>
+        <Text style={[styles.dayText, isToday && styles.todayText]}>
+          {day}
+        </Text>
+      </View>
     );
   };
 
@@ -152,9 +156,11 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
       <View style={styles.calendarContainer}>
         <View style={styles.weekDays}>
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-            <Text key={index} style={styles.weekDayText}>
-              {day}
-            </Text>
+            <View key={index} style={styles.weekDayContainer}>
+              <Text style={styles.weekDayText}>
+                {day}
+              </Text>
+            </View>
           ))}
         </View>
 
@@ -163,11 +169,9 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
             <View key={index} style={styles.dayCell}>
               {day !== null && (
                 <View style={styles.dayContent}>
+                  {renderDayNumber(day)}
                   <View style={styles.taskContainer}>
                     {renderTaskBars(day)}
-                  </View>
-                  <View style={styles.dayNumberContainer}>
-                    {renderDayNumber(day)}
                   </View>
                 </View>
               )}
@@ -183,6 +187,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -201,39 +206,46 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     flex: 1,
-    marginTop: 16,
+    marginTop: 8,
   },
   weekDays: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  weekDayText: {
+  weekDayContainer: {
     width: `${100 / 7}%`,
-    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 8,
+  },
+  weekDayText: {
     color: '#666',
     fontSize: 14,
     fontWeight: '500',
+    textAlign: 'center',
   },
   daysGrid: {
     flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignContent: 'stretch',
-    height: '100%',
   },
   dayCell: {
     width: `${100 / 7}%`,
-    height: `${100 / 5}%`,
+    aspectRatio: 1,
     padding: 2,
   },
   dayContent: {
     flex: 1,
-    position: 'relative',
     padding: 4,
-    borderRadius: 4,
+  },
+  dayNumberContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    height: 24,
   },
   dayText: {
     fontSize: 14,
@@ -244,52 +256,52 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
-  dayNumberContainer: {
-    position: 'absolute',
-    bottom: 4,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
   taskContainer: {
     position: 'absolute',
-    top: 4,
-    left: 0,
-    right: 0,
-    bottom: 24,
+    top: 30,
+    left: 4,
+    right: 4,
+    bottom: 0,
   },
   taskBar: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 24,
+    height: 28,
     justifyContent: 'center',
-    zIndex: 1,
+    shadowColor: '#fff',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
   taskText: {
     fontSize: 12,
-    color: '#333',
+    color: '#fff',
     fontWeight: '500',
-    paddingLeft: 4,
-    paddingRight: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
   },
   review: {
-    backgroundColor: '#2684FF',
+    backgroundColor: 'rgba(38, 132, 255, 0.9)',
   },
   overdue: {
-    backgroundColor: '#E54C4C',
+    backgroundColor: 'rgba(229, 76, 76, 0.9)',
   },
   progress: {
-    backgroundColor: '#FFC400',
+    backgroundColor: 'rgba(255, 196, 0, 0.9)',
   },
   completed: {
-    backgroundColor: '#57D9A3',
+    backgroundColor: 'rgba(87, 217, 163, 0.9)',
   },
   pending: {
-    backgroundColor: '#D9D9D9',
+    backgroundColor: 'rgba(217, 217, 217, 0.9)',
   },
   cancelled: {
-    backgroundColor: '#03243C',
+    backgroundColor: 'rgba(3, 36, 60, 0.9)',
   },
 });
 

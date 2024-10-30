@@ -9,8 +9,8 @@ import { router } from "expo-router";
 interface HeaderProps {
   fromCalenderTab: boolean;
   title: string;
-  setModalVisible: (val: boolean) => void;
-  setDatePickerVisible: (val: boolean) => void;
+  setModalVisible?: (val: boolean) => void;
+  setDatePickerVisible?: (val: boolean) => void;
   view?: "list" | "month";
 }
 
@@ -25,9 +25,9 @@ const CalendarHeader: React.FC<HeaderProps> = ({
 
   const handlePress = () => {
     if (view === "list") {
-      setDatePickerVisible(true);
+      setDatePickerVisible && setDatePickerVisible(true);
     } else {
-     setModalVisible(true);
+      setModalVisible && setModalVisible(true);
     }
   };
 
