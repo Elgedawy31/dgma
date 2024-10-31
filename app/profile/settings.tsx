@@ -28,8 +28,10 @@ function Settings() {
         }
       />
 
-      <View style={{ marginTop: 24 ,gap:8 }}>
+      <View style={{ marginTop: 24  }}>
         <CustomListItem
+        isActive={isActive}
+        setIsActive={setIsActive}
           text="Users List"
           icon={
             <Ionicons
@@ -40,6 +42,20 @@ function Settings() {
           }
           onPress={() => router.push("/profile/users")}
           type="navigate"
+        />
+        <CustomListItem
+            isActive={isActive}
+            setIsActive={setIsActive}
+          text="Dark Mode"
+          icon={
+            <Ionicons
+              name="moon-outline"
+              size={24}
+              color={color.primary}
+            />
+          }
+          onPress={() =>  setIsActive(!isActive)} 
+          type="switch"
         />
       </View>
     </View>

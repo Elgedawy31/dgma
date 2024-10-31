@@ -1,14 +1,17 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import CustomSwitch from "./CustomSwitch";
 
 interface CustomListItemProps {
   icon: JSX.Element;
   text: string;
   onPress: () => void;
   type: "switch" | "navigate";
+  isActive?: boolean;
+  setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
 }
-const CustomListItem = ({ icon, text, onPress, type }: CustomListItemProps) => {
+const CustomListItem = ({ icon, text, onPress, type  , isActive =false , setIsActive}: CustomListItemProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.leftContent}>
@@ -16,7 +19,11 @@ const CustomListItem = ({ icon, text, onPress, type }: CustomListItemProps) => {
         <Text style={styles.text}>{text}</Text>
       </View>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        {type === "switch" ? 
+        <CustomSwitch isActive={isActive} setIsActive={setIsActive} />
+        : 
         <Ionicons name="chevron-forward" size={24} color="#666" />
+      }
       </TouchableOpacity>
     </View>
   );

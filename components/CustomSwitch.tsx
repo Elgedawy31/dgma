@@ -13,11 +13,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 const CustomSwitch = ({
-  onChange,
   isActive,
   setIsActive,
 }: {
-  onChange: (val: boolean) => void;
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
@@ -43,7 +41,6 @@ const CustomSwitch = ({
   useEffect(() => {
     // Update the animation when isActive changes
     switchTranslateX.value = isActive ? 17 : 0; // Adjust this value based on the size of the switch
-    onChange(isActive);
   }, [isActive]);
 
   const styles = StyleSheet.create({
@@ -59,7 +56,7 @@ const CustomSwitch = ({
       backgroundColor: colorScheme.primary,
     },
     inactive: {
-      backgroundColor: '#F7F7F7',
+      backgroundColor: '#6E6D6D',
     },
     switchCircle: {
       width: 20,
