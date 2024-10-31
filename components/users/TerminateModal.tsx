@@ -21,7 +21,6 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
   onClose,
   onConfirm,
   title = 'Confirm Delete',
-  message = 'Are you sure you want to delete this item?',
 }) => {
   return (
     <Modal
@@ -34,10 +33,6 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{title}</Text>
-          </View>
-
-          <View style={styles.modalBody}>
-            <Text style={styles.modalMessage}>{message}</Text>
           </View>
 
           <View style={styles.modalFooter}>
@@ -73,16 +68,19 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: width * 0.85,
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 16,
+    padding: 24,
+    
   },
   modalHeader: {
-    marginBottom: 15,
+    marginBottom: 32,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '500',
     color: '#333',
+    textAlign:'center'
+
   },
   modalBody: {
     marginBottom: 20,
@@ -94,19 +92,19 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    gap:24
   },
   button: {
     paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginLeft: 10,
+    paddingHorizontal: 24,
+    borderRadius: 12,
   },
   cancelButton: {
     backgroundColor: '#E0E0E0',
   },
   deleteButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#F22A2A',
   },
   cancelButtonText: {
     color: '#333',

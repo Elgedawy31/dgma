@@ -34,7 +34,7 @@ function AppBar({ center = false, leading, title, action, dark, height = 1 }: Ap
                 <View>
                     {typeof leading === 'object' && leading}
                     {leading === 'back' && <Icon icon='back' iconColor={dark ? 'white' : 'black'} size={24} onPress={() => router.back()} />}
-                    {leading === 'avatar' && <ImageAvatar type="avatar" url={profilePicture} href='/profile' />}
+                    {leading === 'avatar' && <ImageAvatar type="avatar" url={profilePicture} onPress={() => router.push('/profile')} />}
                 </View>
                 {/* /** Trailing Icon | Notification | Title */}
                 <View>

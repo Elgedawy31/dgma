@@ -10,11 +10,13 @@ import React, { useEffect } from "react";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { TaskColors } from "@colors";
 import IconWrapper from "@components/IconWrapper";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import NewUser from "@components/users/AddNewUserModal";
 import useAxios from "@hooks/useAxios";
 import TerminateModal from "@components/users/TerminateModal";
-
+import AppBar from "@blocks/AppBar";
+import { router } from "expo-router";
+import BlocksTxt from "@/components/blocks/Text";
 type User = {
   id: string;
   user: { first: string; last: string };
@@ -30,7 +32,7 @@ const Users = () => {
   const [openDeleteModal, setOpenDeleteModal] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [users, setUsers] = React.useState<User[]>([]);
-  const { get , deleteFunc } = useAxios();
+  const { get, deleteFunc } = useAxios();
   const handleTerminate = (userId: string) => {
     setSelectedId(userId);
     setOpenDeleteModal(true);
@@ -75,33 +77,43 @@ const Users = () => {
     handleSubmit();
   }, [userAdded]);
 
-  const handleDelete = async() => {
-
-      await deleteFunc({ endPoint: `users/${selectedId}` })
-        .then((res) => {
-          if (res) {
-           setUserAdded((prev:boolean) => !prev);
-           setOpenDeleteModal(false);
-           setSelectedId(null)
-          }
-        })
-        .catch((err) => {
-          console.error(`Error: ${err}`);
-        });
+  const handleDelete = async () => {
+    await deleteFunc({ endPoint: `users/${selectedId}` })
+      .then((res) => {
+        if (res) {
+          setUserAdded((prev: boolean) => !prev);
+          setOpenDeleteModal(false);
+          setSelectedId(null);
+        }
+      })
+      .catch((err) => {
+        console.error(`Error: ${err}`);
+      });
   };
 
   return (
     <View style={[styles.container, { backgroundColor: color.background }]}>
-      <View style={styles.headerView}>
-        <Text style={styles.header}>Users List</Text>
-        <TouchableOpacity>
+      <AppBar
+        center
+        title={<BlocksTxt type="subtitle" title="Users List" />}
+        action={
           <IconWrapper
-            size={48}
+            size={36}
             onPress={() => setModalVisible(true)}
             Icon={<AntDesign name="plus" size={24} color={color.primary} />}
           />
-        </TouchableOpacity>
-      </View>
+        }
+        leading={
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color="black"
+            onPress={() => {
+              router.back();
+            }}
+          />
+        }
+      />
       <FlatList
         data={users}
         renderItem={renderUserItem}
@@ -119,8 +131,7 @@ const Users = () => {
         visible={openDeleteModal}
         onClose={() => setOpenDeleteModal(false)}
         onConfirm={handleDelete}
-        title="Delete User"
-        message="Are you sure you want to delete this user? This action cannot be undone."
+        title="You want to terminate this user?"
       />
     </View>
   );

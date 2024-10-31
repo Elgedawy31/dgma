@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { memo } from 'react'
 import { router } from 'expo-router'
 
@@ -10,7 +10,7 @@ type ImageAvatarProps = {
 }
 function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
     return (
-        <Pressable onPress={onPress}>
+        <TouchableOpacity onPress={onPress}>
             <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
                 source={{
                     uri: url ||
@@ -18,7 +18,7 @@ function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
                         'https://cdn.dribbble.com/users/5534/screenshots/14230133/profile_4x.jpg'
                 }}
             />
-        </Pressable>
+        </TouchableOpacity>
         // />
     )
 
