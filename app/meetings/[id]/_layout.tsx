@@ -6,6 +6,8 @@ function Profilelayout() {
     return (
             <Stack initialRouteName='index'>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="ReviewMeetings" options={{ headerShown: false }} />
+                <Stack.Screen name='LandingMeeting' options={{ headerShown: false }} />
             </Stack>
     )
 }

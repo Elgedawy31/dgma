@@ -6,54 +6,55 @@ import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { router } from "expo-router";
 import { memo } from "react";
-import { View, ScrollView } from "react-native";
+import { View } from "react-native";
 
 const guests = [
   {
-    id: '1',
-    name: 'Ahmed',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "1",
+    name: "Ahmed",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
   {
-    id: '2',
-    name: 'Aya Ibrahim',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "2",
+    name: "Aya Ibrahim",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
   {
-    id: '3',
-    name: 'Maha Ahmed',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "3",
+    name: "Maha Ahmed",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
   {
-    id: '4',
-    name: 'Maha Ahmed',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "4",
+    name: "Maha Ahmed",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
   {
-    id: '5',
-    name: 'Mohamed Khaled',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "5",
+    name: "Mohamed Khaled",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
   {
-    id: '6',
-    name: 'Mohamed Khaled',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "6",
+    name: "Mohamed Khaled",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
   {
-    id: '7',
-    name: 'Mohamed Khaled',
-    role: 'UX / UI Designer',
-    avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+    id: "7",
+    name: "Mohamed Khaled",
+    role: "UX / UI Designer",
+    avatar: "https://www.w3schools.com/howto/img_avatar.png",
   },
 ];
 function MeetingDetails() {
   const color = useThemeColor();
+
 
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
@@ -72,7 +73,7 @@ function MeetingDetails() {
         }
       />
       <View
-        style={{ flex: 1 , gap:16 , paddingHorizontal: 16, paddingBottom: 20 }}
+        style={{ flex: 1, gap: 16, paddingHorizontal: 16, paddingBottom: 20 }}
       >
         <MeetingDetailsCard
           host="John Doe"
@@ -83,7 +84,6 @@ function MeetingDetails() {
         />
 
         <MeetingGuestList guests={guests} />
-
       </View>
     </View>
   );

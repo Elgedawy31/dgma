@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useThemeColor } from '@hooks/useThemeColor';
+import { router, useLocalSearchParams } from 'expo-router';
 
 type MeetingDetailsCardProps = {
   title: string;
@@ -21,6 +22,8 @@ const MeetingDetailsCard = ({
   onJoin
 }: MeetingDetailsCardProps) => {
     const color = useThemeColor()
+  const {id} = useLocalSearchParams();
+
   return (
     <View style={styles(color).container}>
       <View style={styles(color).content}>
@@ -55,7 +58,7 @@ const MeetingDetailsCard = ({
 
         <TouchableOpacity 
           style={styles(color).joinButton}
-          onPress={onJoin}
+          onPress={() => router.push(`/meetings/${id}/ReviewMeetings`)} 
         >
           <Text style={styles(color).joinButtonText}>Join meeting</Text>
         </TouchableOpacity>
