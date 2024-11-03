@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Feather } from "@expo/vector-icons"; // Make sure to install expo/vector-icons
 import ProfileStack from "@components/PoepleComponent";
 import { useThemeColor } from "@hooks/useThemeColor";
+import { router } from "expo-router";
 
 type AssignedTo = {
     id: string;
@@ -11,10 +12,12 @@ type AssignedTo = {
     avatar: string;
   };
 const MeetingCard = ({
+  id,
   title,
   description,
   assignedTo
 }: {
+  id:string ;
   title: string;
   description: string;
   assignedTo: AssignedTo[];
@@ -39,7 +42,7 @@ const color = useThemeColor();
           <ProfileStack profiles={assignedTo} maxDisplay={3} />
           </View>
 
-          <TouchableOpacity style={styles(color).joinButton}>
+          <TouchableOpacity onPress={() => router.push(`/meetings/${id}`)} style={styles(color).joinButton}>
             <Feather
               name="video"
               size={16}

@@ -5,9 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 function Profilelayout() {
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <Stack initialRouteName='index'>
+            <Stack >
                 <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name='[id]' options={{ headerShown: false }} />
             </Stack>
         </SafeAreaView>
     )

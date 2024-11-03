@@ -101,7 +101,7 @@ function Meetings() {
           <Ionicons
             name="chevron-back"
             size={24}
-            color="black"
+            color={color.text}
             onPress={() => {
               router.back();
             }}
@@ -116,6 +116,7 @@ function Meetings() {
         {MOCK_MEETINGS.length > 0 ? (
           MOCK_MEETINGS.map((meeting) => (
             <MeetingCard
+            id={meeting.id}
               key={meeting.id}
               title={meeting.title}
               description={meeting.description}
