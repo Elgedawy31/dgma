@@ -1,9 +1,9 @@
 import Text from '@blocks/Text';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import StackUI from '@blocks/StackUI';
 import AppBar from '@blocks/AppBar';
 import { memo, useContext } from 'react';
-import { Link, Tabs } from 'expo-router';
+import { Link, router, Tabs } from 'expo-router';
 import ImageAvatar from '@blocks/ImageAvatar';
 import { TabBarItem } from '@blocks/TabBarItem';
 import { useThemeColor } from '@hooks/useThemeColor';
@@ -50,13 +50,15 @@ function TabLayout() {
               headerShown: tab.hasHeader,
               header: () =>
                 <AppBar leading='avatar'
-                  action={<View style={{ backgroundColor: '#F1F9FF', borderRadius: 50, padding: 8 }}>
+                  action={<TouchableOpacity onPress={() => router.push('/meetings')} style={{ backgroundColor: '#F1F9FF', borderRadius: 50, padding: 8 }}>
                     <StackUI value={{ vertical: -5, horizontal: -1.5 }}
                       position={{ vertical: 'bottom', horizontal: 'right' }}
-                      sec={<Octicons name="dot-fill" size={24} color="#09419A" />}
-                      base={<Ionicons name="calendar-clear-outline" size={24} color="#09419A" />}
+                      // sec={<Octicons name="dot-fill" size={24} color="#09419A" />}
+                      base={<Ionicons name="videocam-outline" size={24} color="#09419A" />}
+
+                      
                     />
-                  </View>
+                  </TouchableOpacity>
                   }
                 />,
               tabBarIcon: ({ color, focused }) => (
