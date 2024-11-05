@@ -4,11 +4,10 @@ import Text from "@blocks/Text";
 import ChatCard from "@cards/ChatCard";
 import { usersData } from "@data/users";
 import { useThemeColor } from "@hooks/useThemeColor";
-import UserModel from "@model/user";
 import Button from "@ui/Button";
 import { Link, router } from "expo-router";
-import { memo } from "react";
-import { FlatList, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { memo, useState } from "react";
+import { FlatList, StyleSheet, TextInput, TouchableOpacity, View  , Text as TextR} from "react-native";
 import StackUI from "@blocks/StackUI";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -26,6 +25,10 @@ const ChannelItem = memo(({ item }: { item: string }) => (
 function Messaging() {
   const colors = useThemeColor();
   const channelData = Array.from({ length: 12 }, (_, i) => ({ id: i + 1 }));
+  const [activeTab, setActiveTab] = useState('All');
+  
+  const tabs = ['All', 'Chats', 'group', 'Unread'];
+
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -37,7 +40,7 @@ function Messaging() {
         }
         action={
           <TouchableOpacity
-            onPress={() => router.push("/(tabs)/calendar")}
+            onPress={() => router.push("/newGroup")} 
             style={{ backgroundColor: "#F1F9FF", borderRadius: 50, padding: 8 }}
           >
             <StackUI
@@ -56,6 +59,25 @@ function Messaging() {
           placeholder="Search"
           placeholderTextColor="#444"
         />
+      </View>
+      <View style={styles.tabsContainer}>
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab}
+          style={[
+            styles.tabButton,
+            activeTab === tab && styles.activeTabButton
+          ]}
+          onPress={() => setActiveTab(tab)}
+        >
+          <TextR style={[
+            styles.tabText,
+            activeTab === tab && styles.activeTabText
+          ]}>
+            {tab}
+          </TextR>
+        </TouchableOpacity>
+      ))}
       </View>
       <View style={{ flex: 1 }}>
         <FlatList
@@ -110,6 +132,28 @@ const styles = StyleSheet.create({
     color: '#444',
     fontWeight:'600',
     paddingVertical: 8,
+  },
+  tabsContainer:{
+    flexDirection: 'row',
+    padding: 8,
+    gap: 8,
+    justifyContent:'space-around'
+  },
+  tabButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  activeTabButton: {
+    backgroundColor: '#002B7F', // Dark blue color for active tab
+  },
+  tabText: {
+    color: '#666666',
+    fontSize: 16,
+  },
+  activeTabText: {
+    color: 'white',
   },
 });
 
