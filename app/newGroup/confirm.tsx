@@ -62,6 +62,7 @@ const confirm = () => {
       <FlatList
         data={selectedMembers}
         keyExtractor={(item) => item.id}
+        numColumns={3}
         contentContainerStyle={styles(colors).memberList}
         renderItem={({ item }) => (
           <View style={styles(colors).memberItem}>
@@ -121,14 +122,12 @@ const styles = (colors: any) =>
       color: colors.text,
     },
     memberList: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "center",
-      marginVertical: 24,
+      paddingHorizontal: 16,
+      paddingVertical: 24,
     },
     memberItem: {
       alignItems: "center",
-      marginHorizontal: 8,
+      width: "33.33%",
       marginVertical: 12,
     },
     memberImage: {
