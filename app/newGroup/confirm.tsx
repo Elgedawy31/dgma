@@ -59,6 +59,9 @@ const confirm = () => {
         />
       </View>
 
+      <TextR style={{ color: colors.text, marginVertical: 16 }}>
+        Group members: {selectedMembers.length} of 10 
+      </TextR>
       <FlatList
         data={selectedMembers}
         keyExtractor={(item) => item.id}
@@ -76,8 +79,8 @@ const confirm = () => {
         )}
       />
 
-      {/* "Create Group" button */}
-      {groupName?.length > 0 && (
+    
+      {groupName?.length > 0 && ( 
         <TouchableOpacity
           style={[
             styles(colors).createButton,
