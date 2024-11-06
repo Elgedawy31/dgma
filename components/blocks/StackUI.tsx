@@ -2,7 +2,7 @@ import { View } from 'react-native'
 import { memo, ReactElement } from 'react'
 type StackUIProps = {
     base: ReactElement,
-    sec?: ReactElement,
+    sec: ReactElement,
     position: {
         vertical: 'bottom' | 'top'
         horizontal: 'left' | 'right'

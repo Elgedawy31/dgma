@@ -22,7 +22,7 @@ function Login() {
     const { setUserData, user } = useContext(userContext);
     const { post } = useAxios();
     const { control, handleSubmit, formState: { errors }, } =
-        useForm<LoginModel>({ defaultValues: { email: "", password: "", }, });
+        useForm<LoginModel>({ defaultValues: { email: "admin@admin.com", password: "admin", }, });
 
 
     const onSubmit = handleSubmit(async (data: LoginModel) => {

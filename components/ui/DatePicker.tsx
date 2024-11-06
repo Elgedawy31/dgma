@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View } from 'react-native'
+import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 import { memo, useCallback, useState } from 'react'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import TextInputField from '@ui/TextInputField';
@@ -31,8 +31,8 @@ const DatePicker = ({
     }, [])
     return (
         <View style={styles.container}>
-            <Text type='label' title={label} />
-            <View style={{ flexDirection: "row", position: "relative", alignItems: "center" }}>
+            <Text color={colors.primary} type='label' title={label} />
+            <Pressable onPress={() => { console.log("Press"); if (!showPicker) setShowPicker(true) }}>
                 <TextInput
                     value={date.toDateString()}
                     editable={false}
@@ -45,13 +45,9 @@ const DatePicker = ({
                     placeholder={`Enter ${label}`}
                     onChangeText={onChangeText}
                 />
-                <Icon icon='calendar-number'
-                    style={{ position: "absolute", right: 10 }}
-                    onPress={() => { if (!showPicker) setShowPicker(true) }}
-                />
+            </Pressable>
 
 
-            </View>
             {
                 showPicker && <DateTimePicker
                     mode={mode}

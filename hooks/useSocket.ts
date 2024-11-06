@@ -1,10 +1,8 @@
-// import { SERVER_URL } from '@env';
+// import { 'SERVER_URL' } from '@env';
 import { Socket, io } from 'socket.io-client';
 import useSecureStorage from './useSecureStorage';
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 
-
-let SERVER_URL = 'http://192.168.1.71:5001';
 // Types
 interface MessageModel {
     content: string;
@@ -33,7 +31,7 @@ const useSocket = () => {
     const socketConnect = useCallback(async () => {
         try {
             const token = await readStorage('token');
-            socketRef.current = io(SERVER_URL, { auth: { token }, });
+            socketRef.current = io('http://192.168.1.5:5001', { auth: { token }, });
             setSocket(socketRef.current);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Connection failed');

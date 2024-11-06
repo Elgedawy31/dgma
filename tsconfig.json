@@ -7,28 +7,32 @@
       "@data/*": ["./data/*"],
       "@hooks/*": ["./hooks/*"],
       "@model/*": ["./models/*"],
-        //Assets
-        "@fonts/*": ["./assets/fonts/*"],
-        "@images/*": ["./assets/images/*"],
-        
-        //Controllers | Context 
-        "@ThemeContext":["./controllers/context/ThemeContextProvider.tsx"],
-        "@UserContext": ["./controllers/context/UserContextProvider.tsx"],
-        "@ProjectsContext": ["./controllers/context/ProjectsContextProvider.tsx"],
-        "@MeetingContext": ["./controllers/context/MeetingContextProvider.tsx"],
-        "@ProviderContext": ["./controllers/context/Providers.tsx"],
-        "@context/*": ["./controllers/context/*"],
-        
-        // Constants
-        "@colors": ["./constants/Colors.ts"],
-        "@routes": ["./constants/Routes.ts"],
-  
-         //Components | Blocks | UI 
+
+      //Assets
+      "@fonts/*": ["./assets/fonts/*"],
+      "@images/*": ["./assets/images/*"],
+      
+      //Controllers | Context 
+      "@ThemeContext":["./controllers/context/ThemeContextProvider.tsx"],
+      "@UserContext": ["./controllers/context/UserContextProvider.tsx"],
+      "@ProjectsContext": ["./controllers/context/ProjectsContextProvider.tsx"],
+      "@MeetingContext": ["./controllers/context/MeetingContextProvider.tsx"],
+      "@ProviderContext": ["./controllers/context/Providers.tsx"],
+      "@ProjectDetailsContext": ["./controllers/context/ProjectDetailsContextProvider.tsx"],
+      "@context/*": ["./controllers/context/*"],
+      
+      // Constants
+      "@colors": ["./constants/Colors.ts"],
+      "@routes": ["./constants/Routes.ts"],
+
+      //Components | Blocks | UI 
       "@ui/*": ["./components/ui/*"],
       "@container": ["./components/blocks/Container.tsx"],
       "@cards/*": ["./components/cards/*"],
       "@blocks/*": ["./components/blocks/*"],
+      "@project-details/*":["./components/project-details/*"],
       "@components/*": ["./components/*"],
+      
 
       //Root
       "@/*": ["./*"]

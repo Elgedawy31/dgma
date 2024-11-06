@@ -38,8 +38,8 @@ function AppBar({ center = false, leading, title, action, dark, height = 1 }: Ap
                 </View>
                 {/* /** Trailing Icon | Notification | Title */}
                 <View>
-                    {typeof title === 'object' && title}
                     {leading === 'avatar' && <Text type='subtitle' color={dark ? 'white' : 'black'} title={title as string || `Welcome ${role === 'admin' ? "Admin" : first}!`} />}
+                    {title}
                 </View>
             </View>
             {/* /** Action Buttons */}

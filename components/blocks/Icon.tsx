@@ -1,17 +1,13 @@
-import { memo, ReactNode, useCallback } from 'react'
+import { memo } from 'react'
 import IconModel from '@model/icon'
-import { Pressable, StyleSheet, View } from 'react-native'
 import * as IconLibraries from '@expo/vector-icons'
 import { useThemeColor } from '@hooks/useThemeColor'
+import { Pressable, StyleSheet, View } from 'react-native'
 
 
 
-type IconMapping = {
-    [K in IconModel]: {
-        library: keyof typeof IconLibraries;
-        name: string;
-    }
-}
+type IconMapping =
+    { [K in IconModel]: { name: string; library: keyof typeof IconLibraries; } }
 
 const iconMapping: IconMapping = {
     'add': { library: 'Ionicons', name: 'add' },
@@ -33,25 +29,27 @@ const iconMapping: IconMapping = {
     'mic-off': { library: 'MaterialCommunityIcons', name: 'microphone-off' },
     'calendar-number': { library: 'Ionicons', name: 'calendar-number-outline' },
     'edit-img': { library: 'MaterialCommunityIcons', name: 'image-edit-outline' },
-
+    'file': { library: 'FontAwesome', name: 'file' },
+    'file-pdf': { library: 'FontAwesome', name: 'file-pdf-o' },
+    'file-image': { library: 'FontAwesome', name: 'file-image-o' },
 }
 
 type IconProps = {
     style?: any,
+    border?: boolean,
     icon: IconModel;
     black?: boolean;
     bgColor?: string;
     gap?: number;
     iconColor?: string;
     onPress?: () => void;
-    disabledPress?: boolean;
     type?: 'simple' | 'complex';
     size?: 18 | 24 | 26 | 28 | 30 | 32 | 34;
 }
 
 function Icon({
-    iconColor, bgColor, style,
-    icon, onPress, black, disabledPress,
+    iconColor, bgColor, style, border,
+    icon, onPress, black,
     size = 24, type = 'simple', gap = 2,
 }: IconProps) {
     const colors = useThemeColor();
@@ -59,10 +57,23 @@ function Icon({
     const IconComponent = IconLibraries[iconMapping[icon].library] as any;
 
     return (
-        disabledPress ?
-            <View style={[styles[type],
-            type === 'complex' && { width: size * gap, borderRadius: (size * gap) / 2, backgroundColor: colors.secondary },
+        onPress ?
+            <Pressable onPress={onPress} style={[styles[type],
+            type === 'complex' && { width: (size * gap + (border ? 3 : 0)), borderRadius: (size * gap + (border ? 3 : 0)) / 2, backgroundColor: colors.secondary },
             bgColor && { backgroundColor: bgColor },
+            border && { borderWidth: 1.5, borderColor: 'white' },
+                style]}
+            >
+                <IconComponent
+                    size={size} name={iconConfig.name}
+                    color={iconColor || (black && 'black') || (type === 'simple' ? 'black' : colors.primary)}
+                />
+            </Pressable>
+            :
+            <View style={[styles[type],
+            type === 'complex' && { width: (size * gap + (border ? 3 : 0)), borderRadius: (size * gap + (border ? 3 : 0)) / 2, backgroundColor: colors.secondary },
+            bgColor && { backgroundColor: bgColor },
+            border && { borderWidth: 1, borderColor: 'white' },
                 style]}
             >
                 <IconComponent
@@ -70,16 +81,8 @@ function Icon({
                     color={iconColor || (black && 'black') || (type === 'simple' ? 'black' : colors.primary)}
                 />
             </View>
-            :
-            <Pressable onPress={onPress} style={[styles[type],
-            type === 'complex' && { width: size * gap, borderRadius: (size * gap) / 2, backgroundColor: colors.secondary },
-            bgColor && { backgroundColor: bgColor }, style]}
-            >
-                <IconComponent
-                    size={size} name={iconConfig.name}
-                    color={iconColor || (black && 'black') || (type === 'simple' ? 'black' : colors.primary)}
-                />
-            </Pressable>
+
+
     )
 
 }

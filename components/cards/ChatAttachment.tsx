@@ -14,7 +14,7 @@ const ChatAttachment = ({ icon, title, onPress }: ChatAttachmentProps) => {
     console.log("ChatAttachment");
     return (
         <Pressable style={styles.container} onPress={onPress}>
-            <Icon disabledPress type='complex' icon={icon} />
+            <Icon  type='complex' icon={icon} />
             <Text type='small' title={title} />
         </Pressable>
     )

@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import React, { memo } from 'react'
 import { router } from 'expo-router'
 
@@ -9,19 +9,17 @@ type ImageAvatarProps = {
     size?: 50 | 60 | 70 | 80 | 90 | 100
 }
 function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
-    return (
-        <TouchableOpacity onPress={onPress}>
-            <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
-                source={{
-                    uri: url ||
-                        (type === 'project' && 'https://th.bing.com/th/id/OIP.JRrDtLz53jNL0MAtrOWRHwHaEK?w=321&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7') ||
-                        'https://cdn.dribbble.com/users/5534/screenshots/14230133/profile_4x.jpg'
-                }}
-            />
-        </TouchableOpacity>
-        // />
-    )
-
+    return onPress ? <Pressable onPress={onPress}>
+        <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
+            source={!url && type === 'project' ? require('@images/select.png') :
+                { uri: url || 'https://cdn.dribbble.com/users/5534/screenshots/14230133/profile_4x.jpg' }}
+        />
+    </Pressable>
+        :
+        <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
+            source={!url && type === 'project' ? require('@images/select.png') :
+                { uri: url || 'https://cdn.dribbble.com/users/5534/screenshots/14230133/profile_4x.jpg' }}
+        />
 }
 
 export default memo(ImageAvatar)

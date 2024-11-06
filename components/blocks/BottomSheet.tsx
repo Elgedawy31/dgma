@@ -1,44 +1,54 @@
 import { StyleSheet } from 'react-native';
-import { forwardRef, memo, ReactNode, useCallback, useMemo } from 'react';
+import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 
 type BottomSheetProps = {
     index?: number;
+    open?: boolean;
     children: ReactNode;
 };
 
-const BottomSheet = forwardRef<BottomSheetModal, BottomSheetProps>(
-    ({ children, index }, ref) => {
-        const snapPoints = useMemo(() => ['25%', '50%', '75%', '100%'], []);
+const BottomSheet: React.FC<BottomSheetProps> = ({ children, open, index }) => {
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-        const handleSheetChanges = useCallback((index: number) => console.log('handleSheetChanges', index), []);
+    const snapPoints = useMemo(() => ['25%', '50%', '75%', '100%'], []);
 
-        const renderBackdrop = useCallback(
-            (props: any) => (
-                <BottomSheetBackdrop
-                    disappearsOnIndex={-1}
-                    appearsOnIndex={0}
-                    {...props}
-                />
-            ),
-            []
-        );
+    const handleSheetChanges = useCallback((index: number) => console.log('handleSheetChanges', index), []);
 
-        return (
-            <BottomSheetModal
-                ref={ref}
-                index={index}
-                snapPoints={snapPoints}
-                // onChange={handleSheetChanges}
-                backdropComponent={renderBackdrop}
-            >
-                <BottomSheetView style={styles.contentContainer}>
-                    {children}
-                </BottomSheetView>
-            </BottomSheetModal>
-        );
-    }
-);
+    useEffect(() => {
+        console.log("Open", open);
+        if (open) {
+            bottomSheetModalRef.current?.present();
+        } else {
+            bottomSheetModalRef.current?.dismiss();
+        }
+    }, [open]);
+
+    const renderBackdrop = useCallback(
+        (props: any) => (
+            <BottomSheetBackdrop
+                disappearsOnIndex={-1}
+                appearsOnIndex={0}
+                {...props}
+            />
+        ),
+        []
+    );
+
+    return (
+        <BottomSheetModal
+            ref={bottomSheetModalRef}
+            index={index}
+            snapPoints={snapPoints}
+            // onChange={handleSheetChanges}
+            backdropComponent={renderBackdrop}
+        >
+            <BottomSheetView style={styles.contentContainer}>
+                {children}
+            </BottomSheetView>
+        </BottomSheetModal>
+    );
+}
 
 const styles = StyleSheet.create({
     contentContainer: {

@@ -33,7 +33,7 @@ function Text({
                 color && { color },
                 size && { fontSize: size },
                 { textAlign: align || 'left' },
-                bold && { fontWeight: 500 },
+                bold && { fontWeight: 700 },
                 {
                     textTransform: capitalized ? 'capitalize' : 'none',
                     textDecorationLine: underline ? 'underline' : 'none',
