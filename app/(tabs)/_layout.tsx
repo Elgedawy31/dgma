@@ -1,15 +1,11 @@
-import Text from '@blocks/Text';
-import { TouchableOpacity, View } from 'react-native';
-import StackUI from '@blocks/StackUI';
+import Icon from '@blocks/Icon';
 import AppBar from '@blocks/AppBar';
 import { memo, useContext } from 'react';
-import { Link, router, Tabs } from 'expo-router';
-import ImageAvatar from '@blocks/ImageAvatar';
+import { router, Tabs } from 'expo-router';
+import { userContext } from '@UserContext';
 import { TabBarItem } from '@blocks/TabBarItem';
 import { useThemeColor } from '@hooks/useThemeColor';
-import { Ionicons, Octicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { userContext } from '@UserContext';
 
 const tabs = [
   { name: 'index', label: 'Home', icon: 'home', hasHeader: true },
@@ -18,22 +14,18 @@ const tabs = [
   { name: 'calendar', label: 'Calendar', icon: 'calendar', hasHeader: false },
 ];
 function TabLayout() {
-  // const colorScheme = useColorScheme();
   const colors = useThemeColor();
-  const { user: { role, profilePicture, name: { first } } } = useContext(userContext);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Tabs
         initialRouteName="index"
         screenOptions={{
-          tabBarItemStyle: {
-            backgroundColor: 'transparent',
-          },
           headerShown: false,
           tabBarActiveTintColor: colors.activeTab,
           tabBarInactiveTintColor: colors.inactiveTab,
           tabBarActiveBackgroundColor: colors.primary,
+          tabBarItemStyle: { backgroundColor: 'transparent', },
           tabBarStyle: {
             height: 60,
             borderTopLeftRadius: 18,
@@ -50,15 +42,10 @@ function TabLayout() {
               headerShown: tab.hasHeader,
               header: () =>
                 <AppBar leading='avatar'
-                  action={<TouchableOpacity onPress={() => router.push('/meetings')} style={{ backgroundColor: '#F1F9FF', borderRadius: 50, padding: 8 }}>
-                    <StackUI value={{ vertical: -5, horizontal: -1.5 }}
-                      position={{ vertical: 'bottom', horizontal: 'right' }}
-                      // sec={<Octicons name="dot-fill" size={24} color="#09419A" />}
-                      base={<Ionicons name="videocam-outline" size={24} color="#09419A" />}
-
-                      
-                    />
-                  </TouchableOpacity>
+                  action={
+                    <Icon
+                      icon='video' type='complex' iconColor='#09419A'
+                      onPress={() => router.push('/meetings')} />
                   }
                 />,
               tabBarIcon: ({ color, focused }) => (

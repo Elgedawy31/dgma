@@ -11,6 +11,12 @@ export default function useFilePicker() {
     const { post } = useAxios();
     const [loading, setLoading] = useState(false);
 
+    const validateFileName = useCallback((name: string) => {
+        return name.replace(/\s/g, '_')
+            .replace(/[^a-zA-Z0-9._]/g, '')
+            .toLowerCase();
+    }, [])
+
     const imagePicker = useCallback(async ({ multiple = true }: PickerModel = {}) => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -20,7 +26,15 @@ export default function useFilePicker() {
                 allowsEditing: false,
                 allowsMultipleSelection: multiple
             });
-            return result.canceled ? null : result.assets
+            return result.canceled ? null
+                : result.assets.map((file: ImagePicker.ImagePickerAsset) => (
+                    {
+                        uri: file.uri,
+                        size: file.fileSize,
+                        name: validateFileName(file.fileName!),
+                        mimeType: file.mimeType || 'image/jpeg'
+                    } as FileModel
+                ))
         }
         catch (error) { console.error('Error picking image:', error); return null }
     }, []);
@@ -32,45 +46,39 @@ export default function useFilePicker() {
                 type: '*/*',
                 multiple: multiple
             });
-            return result.canceled ? null : result.assets
+            return result.canceled ? null
+                : result.assets.map((file: DocumentPicker.DocumentPickerAsset) => {
+                    console.log('file', file.name);
+                    return {
+                        uri: file.uri,
+                        size: file.size,
+                        name: validateFileName(file.name!),
+                        mimeType: file.mimeType || 'application/pdf'
+                    } as FileModel
+                })
         }
         catch (error) { console.error('Error picking document:', error); return null }
     }, []);
 
 
 
-    const uploadFiles = useCallback(async (file: FileModel) => {
-        // const uploadFiles = useCallback(async (files: FileModel[]) => {
-        // if (!files.length) return null; /** Files array is empty */
+    const uploadFiles = useCallback(async (files: FileModel[]) => {
+        if (!files.length) return null;
         setLoading(true);
         const formData = new FormData();
-        // files.forEach(file => {
-        //     formData.append('files', {
-        //         name: file.name,
-        //         type: file.mimeType,
-        //         uri: Platform.OS === 'android' ? file.uri.replace('file://', '') : file.uri,
-        //     } as any);
-        //     return formData
-        // })
-        console.log("Uploading Logo", file);
-        formData.append('files', {
-            name: file.name,
-            type: file.mimeType,
-            uri: file.uri,
-        } as any);
-        console.log("formData", JSON.stringify(formData));
 
-        await axios.post('http://localhost:5001/api/files/upload-file', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'Accept': 'application/json',
-                Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MDNiZGQ1ODhkZmY1MGFmNGIyNWUxOCIsImlhdCI6MTcyOTc2MDQzN30.-ib2nVrDrhrTP-6W1_4xmNb4Q5UeeLeT-i3r0MRnyiA`
-            }
-        }).then(res => console.log(res)).catch(err => console.log(err)).finally(() => setLoading(false));
-        // return post({ endPoint: 'files/upload-file', body: formData, isMedia: true })
-        //     .then(res => { console.log(res); return res })
-        //     .catch(err => console.log(err))
-        //     .finally(() => setLoading(false));
+        files.forEach(file => {
+            formData.append('files', {
+                type: file.mimeType,
+                name: file.name,
+                uri: file.uri,
+            } as any);
+        })
+        console.log('formData', JSON.stringify(formData));
+        return post({ endPoint: 'files/upload-file', body: formData, isMedia: true })
+            .then(res => { console.log(res); return res })
+            .catch(err => console.log(err))
+            .finally(() => setLoading(false));
     }, []);
 
 

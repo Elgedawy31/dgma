@@ -3,15 +3,52 @@ import Icon from '@blocks/Icon';
 import IconModel from '@model/icon';
 import FileModel from '@model/file';
 import { StyleSheet, View } from 'react-native';
-import React, { memo, ReactNode, useCallback } from 'react'
+import React, { memo, ReactNode, useCallback, useMemo } from 'react'
+import { useThemeColor } from '@hooks/useThemeColor';
 
 type FileProps = {
     src: FileModel,
-    color?: string,
-    action?: ReactNode,
+    onPress?: () => void;
+    type: 'view' | 'attachment'
 }
 
-function File({ color, src, action }: FileProps) {
+function File({ src, type, onPress }: FileProps) {
+    const colors = useThemeColor();
+
+    const styles = useMemo(() => StyleSheet.create({
+        viewContainer: {
+            gap: 4,
+            paddingVertical: 8,
+            borderBottomWidth: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderBottomColor: '#E1E1E1',
+            justifyContent: 'space-between',
+        },
+        viewContent: {
+            gap: 8,
+            alignItems: 'center',
+            flexDirection: 'row',
+        },
+        attachmentContainer: {
+            gap: 4,
+            borderRadius: 8,
+            borderWidth: 1,
+            paddingVertical: 6,
+            paddingHorizontal: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderColor: colors.primary,
+            justifyContent: 'space-between',
+        },
+        attachmentContent: {
+            gap: 8,
+            alignItems: 'center',
+            flexDirection: 'row',
+        }
+
+    }), [colors]);
+
     const file = useCallback(() => {
         const type = src.mimeType;
         const fileName: string = src.name;
@@ -47,49 +84,17 @@ function File({ color, src, action }: FileProps) {
     }, [src]);
 
     return (
-        <View style={styles.container}>
-            <View style={styles.content}>
-                <Icon icon={file().icon} iconColor={color} />
+        <View style={styles[`${type}Container`]}>
+            <View style={styles[`${type}Content`]}>
+                <Icon icon={file().icon} size={24} iconColor={colors.primary} />
                 <View style={{ flexDirection: 'column', justifyContent: 'flex-start' }}>
-                    <Text type='subtitle' title={file().title} />
-                    <Text type='small' title={`${file().size} ${file().measure}`} />
+                    <Text bold color={colors.text} type='details' title={file().title} />
+                    <Text bold color={colors.body} type='small' title={`${file().size} ${file().measure}`} />
                 </View>
             </View>
-            {action}
+            {onPress && <Icon icon='delete' iconColor={type === 'view' ? colors.primary : colors.cancel} onPress={onPress} />}
         </View>
     );
 }
 
 export default memo(File);
-
-const styles = StyleSheet.create({
-    container: {
-        gap: 4,
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomColor: '#E1E1E1',
-        justifyContent: 'space-between',
-    },
-    content: {
-        gap: 8,
-        alignItems: 'center',
-        flexDirection: 'row',
-    }
-});
-
-/**
- * {"mimeType": "image/jpeg", "name": "Brunching-In-Style-1024x1024.jpg", "size": 179670,
- *  "uri": "file:///data/user/0/host.exp.exponent/cache/DocumentPicker/ce8a0296-aa7f-49b0-b9f2-64fac5ad7542.jpg"}
- * 
- * {"mimeType": "application/pdf", "name": "dummy-pdf_2.pdf", "size": 7478, 
- * "uri": "file:///data/user/0/host.exp.exponent/cache/DocumentPicker/c1b15ebb-0515-41ae-a491-1f7fc973f414.pdf"}
- * 
- * 
- * 
- * 
- * {"assetId": null, "base64": null, "duration": null, "exif": null, "fileName": "zoeyshen_dashboard3_2x.png", 
- * "fileSize": 482387, "height": 600, "mimeType": "image/png", "rotation": null, "type": "image", "width": 800
- * "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FDevGlobal-e92551a9-9074-4959-88ad-d0799d805cb8/ImagePicker/83e6a7e0-6a03-49ca-8dd4-a474aec010aa.png"}
- */

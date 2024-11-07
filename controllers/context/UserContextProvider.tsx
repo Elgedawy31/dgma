@@ -12,7 +12,7 @@ type UserType = {
     createdAt: string,
     updatedAt: string | null,
     role: 'admin' | 'user' | null,
-    profilePicture: string | null,
+    avatar: string | null,
     name: { first: string, last: string },
     notifications?: { type: string, data: any, isRead: boolean, createdAt: string }[]
 }
@@ -28,7 +28,7 @@ function UserContextProvider({ children }: { children: ReactNode }) {
         createdAt: "",
         updatedAt: "",
         notifications: [],
-        profilePicture: null,
+        avatar: null,
         name: { first: "", last: "" },
     })
 
@@ -37,18 +37,13 @@ function UserContextProvider({ children }: { children: ReactNode }) {
     }, [])
 
     const loadUserData = useCallback(async () => {
-        await readStorage('role').then((role) => {
-            if (role) { setUser((prev) => ({ ...prev, role: role as UserType['role'] })); }
-        })
-
-
-        await readStorage('name').then((name) => {
-            if (name) {
-                const [first, last] = name.split(' ');
-                setUser((prev) => ({ ...prev, name: { first, last } }));
-            }
-        });
+        await readStorage('user')
+            .then(
+                (user) =>
+                    user && setUser(
+                        (prev) => ({ ...prev, ...JSON.parse(user) })))
     }, []);
+
     const resetUser = useCallback(() => {
         setUser({
             id: "",
@@ -57,20 +52,27 @@ function UserContextProvider({ children }: { children: ReactNode }) {
             createdAt: "",
             updatedAt: "",
             notifications: [],
-            profilePicture: null,
+            avatar: null,
             name: { first: "", last: "" },
         })
     }, [])
+    
     const setUserData = useCallback(async (token: string, user: UserType) => {
         setUser({ ...user });
         await storeToken('token', token);
-        await writeStorage('role', user.role || '');
-        await writeStorage('name', `${user.name.first} ${user.name.last}`);
+        await writeStorage('user', JSON.stringify({
+            name: { ...user.name },
+            role: user.role,
+            email: user.email,
+            avatar: user.avatar,
+            id: user.id
+        }));
     }, [])
 
     const obj = useMemo(() => ({
         user, setUserData, resetUser
     }), [user, setUserData, resetUser])
+
     return (
         <userContext.Provider value={obj}>
             {children}

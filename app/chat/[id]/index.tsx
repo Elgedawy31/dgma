@@ -23,7 +23,7 @@ function Chat() {
     const { socket, error, sendMessage: sendMessageToSocket } = useSocket();
     const colors = useThemeColor();
     const flatListRef = useRef(null);
-    const { user: { profilePicture } } = useContext(userContext);
+    const { user: { avatar: userAvatar } } = useContext(userContext);
     const [expand, setExpand] = useState(false);
     const { id, user } = useLocalSearchParams<{ id: string, user: string }>();
     const { user: { avatar, name: { first, last } } } = JSON.parse(user);
@@ -51,7 +51,7 @@ function Chat() {
                     <Pressable
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
                         onPress={() => router.push({ pathname: '/chat/[id]/attachments', params: { id, user: JSON.stringify({ user: { avatar, name: { first, last } } }) } })}  >
-                        <ImageAvatar type='avatar' url={avatar} />
+                        <ImageAvatar type='avatar' url={userAvatar} />
                         <Text type='subtitle' title={`${first} ${last}`} />
                     </Pressable>
                 }
@@ -73,7 +73,7 @@ function Chat() {
                     renderItem={({ item, index }) => (
                         <MessageCard key={item.id} msg={item.msg}
                             isSameNextUser={item.receiver === chat[index + 1]?.receiver}
-                            receiver={item.receiver} avatar={item.receiver ? avatar : profilePicture}
+                            receiver={item.receiver} avatar={item.receiver ? avatar : avatar}
                         />
                     )}
                 />

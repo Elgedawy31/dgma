@@ -29,6 +29,7 @@ const iconMapping: IconMapping = {
     'mic-off': { library: 'MaterialCommunityIcons', name: 'microphone-off' },
     'calendar-number': { library: 'Ionicons', name: 'calendar-number-outline' },
     'edit-img': { library: 'MaterialCommunityIcons', name: 'image-edit-outline' },
+    'delete': { library: 'MaterialCommunityIcons', name: 'delete-outline' },
     'file': { library: 'FontAwesome', name: 'file' },
     'file-pdf': { library: 'FontAwesome', name: 'file-pdf-o' },
     'file-image': { library: 'FontAwesome', name: 'file-image-o' },

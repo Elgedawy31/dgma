@@ -5,6 +5,7 @@ export const Colors = (theme: string) => ({
   // Main Colors
   black: '#000',
   white: '#fff',
+  cancel: '#F22A2A',
 
   // Color Palette
   card: theme === 'light' ? '#FCFCFC' : '#FCFCFC',

@@ -1,8 +1,8 @@
 type UserModel = {
-    _id?: string,
+    id: string,
     email: string,
-    specialty: string,
     avatar: string | null,
+    role: 'admin' | 'user',
     name: { first: string, last: string, second?: string },
 }
 

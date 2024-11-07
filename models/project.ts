@@ -1,3 +1,5 @@
+import FileModel from "@model/file";
+
 type ProjectModel = {
     _id?: string,
     logo: string,
@@ -8,8 +10,8 @@ type ProjectModel = {
     createdAt: string;
     updatedAt: string;
     description: string,
+    attachments: FileModel[];
     team: ProjectMemberModel[];
-    attachments: ProjectAttachmentModel[];
     status: 'overdue' | 'pending' | 'progress' | 'review' | 'completed' | 'cancelled';
     createdBy: { _id: string, email: string, name: { first: string, last: string } };
 }
@@ -24,12 +26,7 @@ type ProjectMemberModel = {
     name: { first: string, last: string }
 }
 
-type ProjectAttachmentModel = {
-    _id?: string,
-    name: string,
-    size: number,
-    type: 'pdf' | 'image' //| 'video' | 'audio' | 'docx' | 'pptx' | 'xlsx' | 'file',
-}
+
 
 type ProjectCreatedByModel = {
     _id: string,
@@ -37,4 +34,4 @@ type ProjectCreatedByModel = {
     name: { first: string, last: string }
 }
 
-export { ProjectMemberModel, ProjectAttachmentModel, ProjectCreatedByModel }
+export { ProjectMemberModel, ProjectCreatedByModel }

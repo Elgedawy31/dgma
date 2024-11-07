@@ -10,15 +10,17 @@ import { projectDetailsContext } from '@ProjectDetailsContext'
 import { useThemeColor } from '@hooks/useThemeColor'
 import { usersData } from '@data/users'
 import { useForm } from 'react-hook-form'
+import UserModel from '@model/user'
+import index from '@/app/newGroup'
 type TeamUserModel = {
-    _id: string,
+    id: string,
     avatar: string | null,
     name: { first: string, last: string }
 }
 
 
 type MembersModel = {
-    _id: string,
+    id: string,
     avatar: string
 }
 
@@ -29,34 +31,20 @@ type FlatListComponentProps = {
 const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
     const { get } = useAxios();
     const colors = useThemeColor();
-    const [members, setMembers] = useState<MembersModel[]>([])
-    const { project: { team } } = useContext(projectDetailsContext)
+    const [users, setUsers] = useState<UserModel[]>([]);
     const { control, watch, } = useForm<{ teamValue: string }>({});
+    const { members, addProjectMember, removeProjectMember } = useContext(projectDetailsContext)
 
     const removeMember =
-        useCallback((id: string) => {
-            console.log("id", id);
-            setMembers(prevMembers => prevMembers
-                .filter(member => member._id !== id)
-            );
-        }, [])
+        useCallback((id: string) => removeProjectMember(id), [removeProjectMember])
 
-    const addNewMember = useCallback((member: MembersModel) => {
-        !members.length && setMembers([member]);
-        setMembers(prev =>
-            prev.some(mem =>
-                mem._id === member._id) ?
-                [...prev, member] : prev);
-
-    }, [])
+    const addNewMember = useCallback((member: MembersModel) => addProjectMember(member), [addProjectMember])
 
     useEffect(() => {
-        // const getUsers = async () => {
-        //     await get({ endPoint: "users" }).then(res => {
-        //         // res.map((user: any) => { setTeam(prev => [...prev, { _id: user.id, avatar: user.avatar, name: { ...user.name }, }]) })
-        //     })
-        // }
-        // getUsers();
+        const getUsers = async () => {
+            await get({ endPoint: "users" }).then(res => setUsers(res))
+        }
+        getUsers();
     }, [])
 
     return (
@@ -65,7 +53,7 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
                 {!members.length ? <Text italic type='label' color={'red'} title='No Members Assigned to This Project' /> :
                     members.map((member) =>
-                        <Pressable key={member._id} onPress={() => removeMember(member._id)}>
+                        <Pressable key={member.id} onPress={() => removeMember(member.id)}>
                             <StackUI
                                 position={{ vertical: 'bottom', horizontal: 'right' }} value={{ vertical: 2, horizontal: -2 }}
                                 sec={<Icon border iconColor='white' bgColor='red' type='complex' gap={1} icon='close' size={18} />}
@@ -75,28 +63,31 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                     )
                 }
             </View>
-            {members.length !== usersData.length && <TextInputField
+            {members.length !== users.length && <TextInputField
                 noLabel
                 name='teamValue'
                 control={control}
                 placeholder='Search for Project Members By Name '
             />}
-            {watch('teamValue') && <View style={{ gap: 8, marginVertical: 8 }}>
-                <View style={{ height: 195 }}>
+            {users.length > 0 && <View style={{ gap: 8, marginVertical: 8 }}>
+                <View style={{ height: 220 }}>
                     <FlatList
-                        data={[...usersData]
-                            .filter((user) => !members.some((mem) => mem._id === user._id))
+                        data={[...users]
+                            .filter((user) => !members.some((mem) => mem.id === user.id))
                             .filter(({ name: { first, last } }) =>
-                                first.toLowerCase().includes(watch('teamValue').toLowerCase()) ||
-                                last.toLowerCase().includes(watch('teamValue').toLowerCase())
+                            (!watch('teamValue') ? true
+                                : first.toLowerCase().includes(watch('teamValue').toLowerCase())
+                                || last.toLowerCase().includes(watch('teamValue').toLowerCase())
+                            )
                             )}
                         onScrollBeginDrag={onScrollBegin}
                         onScrollEndDrag={onScrollEnd}
                         onMomentumScrollEnd={onScrollEnd}
-                        renderItem={({ item: { avatar, name: { first, last }, _id } }) => (
-                            <Pressable key={_id} style={{ marginVertical: 2 }}
-                                onPress={() => addNewMember({ avatar: avatar || '', _id: _id || Date.now().toString() })}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} key={_id}>
+                        keyExtractor={item => item.id}
+                        renderItem={({ item: { avatar, name: { first, last }, id }, index }) => (
+                            <Pressable style={{ marginVertical: 2 }}
+                                onPress={() => addNewMember({ avatar: avatar || '', id: id || Date.now().toString() })}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} key={id}>
                                     <ImageAvatar type='avatar' url={avatar} size={50} />
                                     <Text type='subtitle' title={`${first} ${last}`} />
                                 </View>
@@ -104,7 +95,8 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                         )}
                     />
                 </View>
-            </View>}
+            </View>
+            }
         </View>
     )
 }

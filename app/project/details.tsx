@@ -15,33 +15,24 @@ import ProjectAttachments from '@project-details/ProjectAttachments'
 import ProjectTeamMembers from '@project-details/ProjectTeamMembers'
 import { set } from 'react-hook-form'
 import Dot from '@ui/dot'
+import useAxios from '@hooks/useAxios'
 const uploadProcess = [
     { id: "logo", label: 'Upload Logo ', success: 'Logo is Uploaded Successfully' },
     { id: "attachments", label: 'Uploading Attachments', success: 'Attachments is Uploaded Successfully' },
     { id: "project", label: 'Creating Project', success: 'Project is Created Successfully' }]
 function ProjectDetails() {
     //#region State and Initial Data
+    const { post } = useAxios();
     const colors = useThemeColor();
     const { uploadFiles } = useFilePicker();
     const [openModal, setOpenModal] = useState(false);
     const [isNew, setIsNew] = useState<boolean>(true);
-    const [uploadStep, setUploadStep] = useState/*<0 | 1 | 2>*/(0);
-    const { project, logoFile, attachmentsFiles, isDataDone, loadProjectDetails } = useContext(projectDetailsContext)
+    const [uploadStep, setUploadStep] = useState<0 | 1 | 2>(0);
+    const { project, logoFile, members, attachmentsFiles, isDataDone, loadProjectDetails } = useContext(projectDetailsContext)
     const [scrollEnabled, setScrollEnabled] = useState(true);
     //#endregion
 
-    //#region Get Params Data
-    const localParams = useLocalSearchParams<{ project: string }>();
-    const param: ProjectModel | undefined =
-        localParams?.project ? JSON.parse(localParams.project) : undefined;
-    //#endregion
 
-    useEffect(() => {
-        if (param?._id) {
-            setIsNew(false);
-            loadProjectDetails(param);
-        }
-    }, []);
 
     useEffect(() => {
         console.log("Model State", openModal);
@@ -52,29 +43,41 @@ function ProjectDetails() {
     const handleFlatListScrollEnd = () => setScrollEnabled(true);
 
     const onSubmit = useCallback(async () => {
-        console.log("Data", project);
         if (isNew) {/**Submit Create Action */
             try {
+                console.log("\n\n\n============================================================\nProject", project);
+                console.log("\n\nLogo", logoFile);
+                console.log("\n\nAttachments", attachmentsFiles);
+                console.log("\n\nMembers", members);
+
                 setOpenModal(true);
-                const logoURL = await uploadFiles(logoFile!);
+
+                // Step 1: Upload Logo
+                const logoURL = await uploadFiles([logoFile!]);
                 console.log("Logo URL", logoURL);
                 setUploadStep(1);
 
-                setTimeout(() => {
-                    console.log("Uploading Files", attachmentsFiles);
-                    // uploadFiles(attachmentsFiles)
-                    setUploadStep(2);
-                }, 10000)
-                setTimeout(() => {
-                    setOpenModal(false);
-                }, 10000)
-
-            } catch (error) {
-                console.log("Error", error);
-
-            }
-            setTimeout(() => { console.log('Step 1 is Running now'); setUploadStep(1) }, 5000)
-            setTimeout(() => { console.log('Step 2 is Running now'); setUploadStep(2) }, 7000)
+                // Step 2: Upload Attachments
+                // const files = await uploadFiles(attachmentsFiles)
+                const files = attachmentsFiles.map(file => file.name)
+                console.log("Files URL", files);
+                setUploadStep(2);
+                const { name, description, deadline, startDate } = project;
+                // Step 3: Create Project
+                await post({
+                    endPoint: '/projects', body: {
+                        "name": name,
+                        "logo": logoURL,
+                        "deadline": deadline,
+                        "startDate": startDate,
+                        "description": description,
+                        "team": members.map(member => member.id),
+                        "attachments": files
+                    }
+                })
+                setOpenModal(false);
+            } catch (error) { console.log("Error", error); }
+            finally { setOpenModal(false); }
         }
         // else {
         //     if (updated) {/**Submit Edit Action */
@@ -83,21 +86,21 @@ function ProjectDetails() {
         //         alert("Delete Project")
         //     }
         // }
-    }, [project]);
+    }, [project, attachmentsFiles, members]);
 
     return (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
             <AppBar
                 leading='back'
-                title={<Text type='subtitle' title={isNew ? 'Create New' : project?.name || 'Project Title'} />}
+                title={<Text type='subtitle' title={isNew ? 'New Project' : project?.name || 'Project Title'} />}
                 action={!isDataDone ? <View /> : <Pressable onPress={onSubmit} >
                     <Text type='subtitle' bold
                         title={isNew ? 'Create' : /*updated ? 'Edit' :*/ 'Delete'}
-                        color={isNew ? colors.primary : /*updated ? colors.text :*/ '#F22A2A'} />
+                        color={isNew ? colors.primary : /*updated ? colors.text :*/ colors.cancel} />
                 </Pressable>}
             />
             <View style={{ paddingHorizontal: 16, justifyContent: 'space-between', flex: 1, paddingVertical: 8, }}>
-                <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled               >
+                <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={{ gap: 16, paddingBottom: 16 }}>
                         <ProjectGeneralData />
 

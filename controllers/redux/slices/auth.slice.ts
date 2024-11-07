@@ -10,7 +10,7 @@ export const userSlice = createSlice({
             token: "",
             createdAt: "",
             updatedAt: "",
-            profilePicture: null,
+            avatar: null,
             name: { first: "", last: "" },
         },
     },
@@ -30,7 +30,7 @@ export const userSlice = createSlice({
       "last": "Admin"
     },
     "role": "admin",
-    "profilePicture": null,
+    "avatar": null,
     "createdAt": "2024-10-07T10:54:13.454Z",
     "updatedAt": "2024-10-11T23:19:57.886Z"
   },
