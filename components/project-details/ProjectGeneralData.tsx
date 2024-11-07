@@ -39,7 +39,7 @@ const ProjectGeneralData = () => {
                 name: res[0].fileName
             } as any);
             console.log("Uploading Logo", JSON.stringify(formData));
-            await axios.post('http://192.168.1.5:5001/api/files/upload-file', formData, {
+            await axios.post('http://192.168.1.71:5001/api/files/upload-file', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Accept': 'application/json',
