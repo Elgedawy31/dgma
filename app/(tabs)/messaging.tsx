@@ -6,29 +6,59 @@ import { usersData } from "@data/users";
 import { useThemeColor } from "@hooks/useThemeColor";
 import Button from "@ui/Button";
 import { Link, router } from "expo-router";
-import { memo, useState } from "react";
-import { FlatList, StyleSheet, TextInput, TouchableOpacity, View  , Text as TextR} from "react-native";
+import { memo, useEffect, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Text as TextR,
+  Image,
+} from "react-native";
 import StackUI from "@blocks/StackUI";
 import { Ionicons } from "@expo/vector-icons";
+import useAxios from "@hooks/useAxios";
 
-const ChannelItem = memo(({ item }: { item: string }) => (
-  <View style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}>
-    <ImageAvatar
-      size={100}
-      type="project"
-      url="https://th.bing.com/th/id/OIP.JRrDtLz53jNL0MAtrOWRHwHaEK?w=321&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7"
+type channel = {
+  _id: string;
+  name: string;
+
+}
+
+const ChannelItem = memo(({ item }: { item: channel }) => (
+  <TouchableOpacity style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}>
+    <Image
+    style={{width:60 , height:60, borderRadius: 30} }
+      source={require("@/assets/images/groups-no-img.png")}
     />
-    <Text type="subtitle" title="Channel" />
-  </View>
+    <Text type="body" title={item.name} />
+  </TouchableOpacity>
 ));
 
 function Messaging() {
   const colors = useThemeColor();
-  const channelData = Array.from({ length: 12 }, (_, i) => ({ id: i + 1 }));
-  const [activeTab, setActiveTab] = useState('All');
-  
-  const tabs = ['Chats', 'Channels', 'Groups'];
+  const [activeTab, setActiveTab] = useState("Chats");
+  const [channelsData, setChannelsData] = useState<channel[]>([]);
+  const { get } = useAxios();
 
+  const tabs = ["Chats", "Groups"];
+
+  useEffect(() => {
+    const getChannelsFunction = async () => {
+      await get({ endPoint: "channels/all?type=channel" })
+        .then((res) => {
+          if (res?.results) {
+            setChannelsData(res.results);
+          }
+        })
+        .catch((err) => {
+          console.error(`Error: ${err}`);
+        });
+    };
+
+    getChannelsFunction();
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -40,7 +70,7 @@ function Messaging() {
         }
         action={
           <TouchableOpacity
-            onPress={() => router.push("/newGroup")} 
+            onPress={() => router.push("/newGroup")}
             style={{ backgroundColor: "#F1F9FF", borderRadius: 50, padding: 8 }}
           >
             <StackUI
@@ -52,8 +82,13 @@ function Messaging() {
           </TouchableOpacity>
         }
       />
-       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#666" style={styles.icon} />
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search-outline"
+          size={20}
+          color="#666"
+          style={styles.icon}
+        />
         <TextInput
           style={styles.input}
           placeholder="Search"
@@ -61,33 +96,35 @@ function Messaging() {
         />
       </View>
       <View style={styles.tabsContainer}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab}
-          style={[
-            styles.tabButton,
-            activeTab === tab && styles.activeTabButton
-          ]}
-          onPress={() => setActiveTab(tab)}
-        >
-          <TextR style={[
-            styles.tabText,
-            activeTab === tab && styles.activeTabText
-          ]}>
-            {tab}
-          </TextR>
-        </TouchableOpacity>
-      ))}
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[
+              styles.tabButton,
+              activeTab === tab && styles.activeTabButton,
+            ]}
+            onPress={() => setActiveTab(tab)}
+          >
+            <TextR
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.activeTabText,
+              ]}
+            >
+              {tab}
+            </TextR>
+          </TouchableOpacity>
+        ))}
       </View>
       <View style={{ flex: 1 }}>
-        <FlatList
+     {activeTab === 'Chats' &&    <FlatList
           data={[...usersData, ...usersData, ...usersData]}
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
             <ChatCard msgID={`ChatID-${index}`} user={item} />
           )}
           keyExtractor={(item, index) => item._id! + index.toString()}
-        />
+        />}
       </View>
       <View style={{ marginVertical: 12 }}>
         <View
@@ -102,13 +139,13 @@ function Messaging() {
           <Text type="title" title="Channels" />
           <Button type="text" label="see all" />
         </View>
-        <FlatList
+      {channelsData.length > 0  ?   <FlatList
           horizontal
-          data={channelData}
-          renderItem={({ item }) => <ChannelItem item={item.id.toString()} />}
-          keyExtractor={(item) => item.id.toString()}
+          data={channelsData} 
+          renderItem={({ item }) => <ChannelItem item={item} />}
+          keyExtractor={(item) => item._id.toString()}
           showsHorizontalScrollIndicator={false}
-        />
+        /> : <View style={{paddingVertical:20 , alignItems:'center' , justifyContent:'center'}}><Text type="body" title="No channels found" /></View>}
       </View>
     </View>
   );
@@ -117,9 +154,9 @@ function Messaging() {
 const styles = StyleSheet.create({
   searchContainer: {
     margin: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF1F3',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EEF1F3",
     borderRadius: 8,
     paddingHorizontal: 12,
   },
@@ -129,31 +166,31 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#444',
-    fontWeight:'600',
+    color: "#444",
+    fontWeight: "600",
     paddingVertical: 8,
   },
-  tabsContainer:{
-    flexDirection: 'row',
+  tabsContainer: {
+    flexDirection: "row",
     padding: 8,
     gap: 8,
-    justifyContent:'space-around'
+    justifyContent: "space-around",
   },
   tabButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   activeTabButton: {
-    backgroundColor: '#002B7F', // Dark blue color for active tab
+    backgroundColor: "#002B7F", // Dark blue color for active tab
   },
   tabText: {
-    color: '#666666',
+    color: "#666666",
     fontSize: 16,
   },
   activeTabText: {
-    color: 'white',
+    color: "white",
   },
 });
 
