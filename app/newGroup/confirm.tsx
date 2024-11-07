@@ -71,8 +71,6 @@ const confirm = () => {
         setGroupLogo(res[0]); 
        }
     }
-    // res && uploadFiles(res);
-    // res && setProjectLogo(res[0]);
 }, []);
 
 
