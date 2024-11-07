@@ -7,7 +7,7 @@ import useFilePicker from '@hooks/useFileUpload';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { DocumentPickerAsset } from 'expo-document-picker';
 import { projectDetailsContext } from '@ProjectDetailsContext';
-import { FC, memo, useCallback, useContext, useState } from 'react';
+import { FC, memo, useCallback, useContext, useEffect, useState } from 'react';
 
 type FlatListComponentProps = {
     onScrollBegin: () => void;
@@ -15,9 +15,14 @@ type FlatListComponentProps = {
 };
 const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
     const colors = useThemeColor();
-    const { uploadFiles, documentPicker } = useFilePicker();
+    const { documentPicker } = useFilePicker();
     const [files, setFiles] = useState<FileModel[]>([])
-    const { project: { attachments } } = useContext(projectDetailsContext)
+    const { setProjectAttachments, project: { attachments }, } = useContext(projectDetailsContext)
+
+    useEffect(() => {
+        setProjectAttachments(files);
+    }, [files])
+
     const pickFiles = useCallback(async () => {
         const res = await documentPicker();
         if (res) {
@@ -28,6 +33,11 @@ const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
             setFiles(files);
         }
     }, []);
+    const removeFile = useCallback((file: FileModel) => {
+        setFiles(files.filter((f) => f.uri !== file.uri));
+    }, [files]);
+
+
     return (
         <View style={{ gap: attachments.length ? 8 : 4 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -44,14 +54,20 @@ const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                     }
                 ]}>
                     {!files.length ? <Text italic type='label' color={'red'} title='No Resources Uploaded' /> :
-                        <View style={{ height: 195, width: '100%' }}>
-                            <FlatList data={[/*...attachments,*/ ...files]}
-                                style={{ paddingHorizontal: 8 }} nestedScrollEnabled
-                                onScrollBeginDrag={onScrollBegin}
+                        <View style={{ maxHeight: 195, width: '100%' }}>
+                            <FlatList
+                                nestedScrollEnabled
+                                style={{ paddingHorizontal: 8 }}
+                                data={[...attachments, ...files]}
+                                contentContainerStyle={{ gap: 10 }}
+                                showsVerticalScrollIndicator={false}
                                 onScrollEndDrag={onScrollEnd}
+                                onScrollBeginDrag={onScrollBegin}
                                 onMomentumScrollEnd={onScrollEnd}
-                                renderItem={({ item }) => (
-                                    <File key={item.name} src={item} />
+                                renderItem={({ item: file }) => (
+                                    <File src={file}
+                                        key={file.name} type='attachment'
+                                        onPress={() => removeFile(file)} />
                                 )}
                             />
                         </View>

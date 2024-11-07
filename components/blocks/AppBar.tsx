@@ -16,10 +16,10 @@ type AppBarProps = {
     title?: string | ReactElement,
     leading?: 'avatar' | 'back' | ReactElement,
 }
-// 'calendar' | 'search' | 'chat' | 'settings' | 'more' | 'edit' |
-function AppBar({ center = false, leading, title, action, dark, height = 1 }: AppBarProps) {
-    const { user: { profilePicture, role, name: { first } } } = useContext(userContext);
+const AppBar = ({ center = false, leading, title, action, dark, height = 1 }: AppBarProps) => {
+    const { user: { avatar, role, name: { first } } } = useContext(userContext);
     const colors = useThemeColor();
+    console.log("AppBar", avatar);
     return (
         <View style={[
             styles.container,
@@ -33,7 +33,7 @@ function AppBar({ center = false, leading, title, action, dark, height = 1 }: Ap
                 <View>
                     {typeof leading === 'object' && leading}
                     {leading === 'back' && <Icon icon='back' iconColor={dark ? 'white' : 'black'} size={24} onPress={() => router.back()} />}
-                    {leading === 'avatar' && <ImageAvatar type="avatar" url={profilePicture} onPress={() => router.push('/profile')} />}
+                    {leading === 'avatar' && <ImageAvatar type="avatar" url={avatar} onPress={() => router.push('/profile')} />}
                 </View>
                 {/* /** Trailing Icon | Notification | Title */}
                 <View>
@@ -54,6 +54,6 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 16, paddingVertical: 8,
         flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'space-between', //backgroundColor: 'red'
+        justifyContent: 'space-between',
     },
 })

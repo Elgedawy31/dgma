@@ -8,6 +8,8 @@ import { useThemeColor } from '@hooks/useThemeColor'
 import { projectDetailsContext } from '@ProjectDetailsContext'
 import { memo, useCallback, useContext, useEffect } from 'react'
 import axios from 'axios'
+import useSecureStorage from '@hooks/useSecureStorage'
+import useAxios from '@hooks/useAxios'
 
 type ProjectDetailsInputsProps = {
     name: string;
@@ -16,6 +18,7 @@ type ProjectDetailsInputsProps = {
     description: string;
 }
 const ProjectGeneralData = () => {
+    const { post } = useAxios();
     const colors = useThemeColor();
     const { imagePicker, uploadFiles } = useFilePicker();
     const { project: { _id, name, description, deadline, startDate }, logoFile, setProjectLogo, setProjectGeneralData } = useContext(projectDetailsContext);
@@ -32,22 +35,12 @@ const ProjectGeneralData = () => {
     const pickLogoImage = useCallback(async () => {
         const res = await imagePicker({ multiple: false });
         if (res) {
-            const formData = new FormData();
-            formData.append('files', {
-                uri:Platform.OS === 'android' ? res[0].uri.replace('file://', '') : res[0].uri,
-                type: res[0].type,
-                name: res[0].fileName
-            } as any);
-            console.log("Uploading Logo", JSON.stringify(formData));
-            await axios.post('http://192.168.1.71:5001/api/files/upload-file', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json',
-                    Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MDNiZGQ1ODhkZmY1MGFmNGIyNWUxOCIsImlhdCI6MTcyOTc2MDQzN30.-ib2nVrDrhrTP-6W1_4xmNb4Q5UeeLeT-i3r0MRnyiA`
-                }
-            }).then(resp => console.log(resp)).catch(err => console.log(err));
-            res && setProjectLogo(res[0]);
+            const file = uploadFiles(res);
+            console.log("File", file);
+            setProjectLogo(res[0]);
         }
+        // res && uploadFiles(res);
+        // res && setProjectLogo(res[0]);
     }, []);
 
     const onDateSelect = useCallback((name: string, value: Date | undefined) => {

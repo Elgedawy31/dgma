@@ -110,7 +110,7 @@ function profile() {
       >
         <View style={{ width: "100%", alignItems: "center" }}>
           <View style={{ marginBottom: 24 }}>
-            <ImageAvatar size={100} type="avatar" url={user.profilePicture} />
+            <ImageAvatar size={100} type="avatar" url={user.avatar} />
           </View>
           <View style={{ width: "100%", gap: 24 }}>
             <TextInputField

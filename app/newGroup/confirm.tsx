@@ -35,10 +35,10 @@ const confirm = () => {
   const colors = useThemeColor();
   const  [loading, setLoading] = useState(false);
   const [groupName, setGroupName] = useState("");
+  const { imagePicker, uploadFiles } = useFilePicker();
   const [groupLogo, setGroupLogo] = useState<any>(null);
   const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
-  const { imagePicker } = useFilePicker();
-  const { readStorage: readToken } = useSecureStorage();
+
   const handleCreateGroup = async () => {
     setLoading(true);
     await post({
@@ -48,9 +48,9 @@ const confirm = () => {
         photo: groupUploadedImg,
         members:selectedMembers,
         type: "group",
-      },
+      }, 
     })
-      .then((res) => {
+      .then((res) => { 
         if (res) {
           router.replace("/(tabs)/messaging"); 
         }
@@ -60,35 +60,23 @@ const confirm = () => {
         console.error(`Error: ${err}`);
         setLoading(false);
       });
-  };
+  }; 
 
-  const pickLogoImage = useCallback(async () => {
-    const res = await imagePicker({ multiple: false }); 
-    let token = await readToken("token");
-
-    if (res) { 
-      const formData = new FormData(); 
-      formData.append("files", {
-        uri: res[0].uri,
-        type: res[0].mimeType,
-        name: res[0].uri,
-      } as any);
-      console.log("Uploading Logo", JSON.stringify(formData));
-      await axios
-        .post("http://192.168.1.71:5001/api/files/upload-file", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((resp) => setGroupUploadedImg(resp?.data[0]?.name))
-        .catch((err) => console.log(err));
-      res && setGroupLogo(res[0]);
+  const pickLogoImage = useCallback(async () => { 
+    const res = await imagePicker({ multiple: false });
+    if (res) {
+        const file =await uploadFiles(res);
+       if(file?.length > 0){
+        setGroupUploadedImg(file[0]?.name); 
+        setGroupLogo(res[0]); 
+       }
     }
-  }, []);
+    // res && uploadFiles(res);
+    // res && setProjectLogo(res[0]);
+}, []);
 
-  console.log('imgname' , groupUploadedImg)
+
+  console.log( groupUploadedImg) 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar
