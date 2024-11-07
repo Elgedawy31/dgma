@@ -7,71 +7,38 @@ import {
     StyleSheet,
     TextInput,
   } from "react-native";
-  import React, { useState } from "react";
+  import React, { useEffect, useState } from "react";
   import { useThemeColor } from "@hooks/useThemeColor";
   import AppBar from "@blocks/AppBar";
   import Text from "@blocks/Text";
   import { router } from "expo-router";
   import StackUI from "@blocks/StackUI";
   import { AntDesign, Ionicons } from "@expo/vector-icons";
+import useAxios from "@hooks/useAxios";
   
-  type MemberProps = {
-    id: string;
-    name: string;
-    role: string;
-    image: string;
+type MemberProps = {
+  id: string;
+  name: {
+      first: string;
+      last: string;
   };
-  
+  role: string;
+  avatar: string;
+};
   const index = () => {
     const colors = useThemeColor();
     const [search, setSearch] = useState("");
     const [showSearch, setShowSearch] = useState(false);
-    const members: MemberProps[] = [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        role: "Product Designer",
-        image: "https://i.pravatar.cc/150?img=1",
-      },
-      {
-        id: "2",
-        name: "Michael Chen",
-        role: "UX / UI Designer",
-        image: "https://i.pravatar.cc/150?img=2",
-      },
-      {
-        id: "3",
-        name: "Emma Wilson",
-        role: "Visual Designer",
-        image: "https://i.pravatar.cc/150?img=3",
-      },
-      {
-        id: "4",
-        name: "David Kim",
-        role: "UX / UI Designer",
-        image: "https://i.pravatar.cc/150?img=4",
-      },
-      {
-        id: "5",
-        name: "Julia Smith",
-        role: "UI Designer",
-        image: "https://i.pravatar.cc/150?img=5",
-      },
-      {
-        id: "6",
-        name: "Alex Brown",
-        role: "UX / UI Designer",
-        image: "https://i.pravatar.cc/150?img=6",
-      },
-    ];
-  
+    const {get} = useAxios();
+    const [members , setMembers]  =useState<MemberProps[]>([]);
+
     const [selectedMembers, setSelectedMembers] = useState(new Set());
   
     const filteredMembers = members.filter(
       (member) =>
-        member.name.toLowerCase().includes(search.toLowerCase()) ||
-        member.role.toLowerCase().includes(search.toLowerCase())
-    );
+          `${member.name.first} ${member.name.last}`.toLowerCase().includes(search.toLowerCase()) ||
+          member.role.toLowerCase().includes(search.toLowerCase())
+  );
   
     const toggleMember = (id: string) => {
       const newSelected = new Set(selectedMembers);
@@ -82,16 +49,28 @@ import {
       }
       setSelectedMembers(newSelected);
     };
-  
+ 
+    useEffect(() => {
+      get({ endPoint: "users" })
+        .then((res) => {
+          if (res) {
+            setMembers(res); 
+          }
+        })
+        .catch((err) => {
+          console.error(`Error: ${err}`);
+        });
+    } , [])
+       
     const renderMember = ({ item }: { item: MemberProps }) => (
       <TouchableOpacity
         style={styles(colors).memberItem}
         onPress={() => toggleMember(item.id)}
       >
         <View style={styles(colors).memberInfo}>
-          <Image source={{ uri: item.image }} style={styles(colors).avatar} />
+          <Image source={{ uri: item.avatar }} style={styles(colors).avatar} />
           <View style={styles(colors).textContainer}>
-            <TextR style={styles(colors).name}>{item.name}</TextR>
+            <TextR style={styles(colors).name}>{item.name.first} {item.name.last}</TextR>
             <TextR style={styles(colors).role}>{item.role}</TextR>
           </View>
         </View>
@@ -107,8 +86,6 @@ import {
         </View>
       </TouchableOpacity>
     );
-  
-     console.log(selectedMembers)
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <AppBar
@@ -181,7 +158,8 @@ import {
                 router.push({
                   pathname: '/newGroup/confirm',
                   params: {
-                    members: JSON.stringify(selectedMembersData)
+                    members: JSON.stringify(selectedMembersData),
+                    totalNum: members?.length,
                   }
                 });
               }}

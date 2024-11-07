@@ -6,32 +6,89 @@ import {
   FlatList,
   Image,
   Text as TextR,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
 import AppBar from "@blocks/AppBar";
 import Text from "@blocks/Text";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
+import useFilePicker from "@hooks/useFileUpload";
+import axios from "axios";
+import useSecureStorage from "@hooks/useSecureStorage";
+import useAxios from "@hooks/useAxios";
 
 type MemberProps = {
   id: string;
-  name: string;
+  name: {
+    first: string;
+    last: string;
+  };
   role: string;
-  image: string;
-};
-
+  avatar: string;
+}; 
 const confirm = () => {
-  const { members } = useLocalSearchParams();
+  const { members, totalNum } = useLocalSearchParams();
   const selectedMembers: MemberProps[] = JSON.parse(members as string);
+  const { post } = useAxios();
   const colors = useThemeColor();
+  const  [loading, setLoading] = useState(false);
   const [groupName, setGroupName] = useState("");
-
-  const handleCreateGroup = () => {
-    // Perform group creation logic here
-    console.log("Creating group:", groupName, selectedMembers);
+  const [groupLogo, setGroupLogo] = useState<any>(null);
+  const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
+  const { imagePicker } = useFilePicker();
+  const { readStorage: readToken } = useSecureStorage();
+  const handleCreateGroup = async () => {
+    setLoading(true);
+    await post({
+      endPoint: "channels", 
+      body: {
+        name: groupName,  
+        photo: groupUploadedImg,
+        members:selectedMembers,
+        type: "group",
+      },
+    })
+      .then((res) => {
+        if (res) {
+          router.replace("/(tabs)/messaging"); 
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(`Error: ${err}`);
+        setLoading(false);
+      });
   };
 
+  const pickLogoImage = useCallback(async () => {
+    const res = await imagePicker({ multiple: false }); 
+    let token = await readToken("token");
+
+    if (res) { 
+      const formData = new FormData(); 
+      formData.append("files", {
+        uri: res[0].uri,
+        type: res[0].mimeType,
+        name: res[0].uri,
+      } as any);
+      console.log("Uploading Logo", JSON.stringify(formData));
+      await axios
+        .post("http://192.168.1.71:5001/api/files/upload-file", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((resp) => setGroupUploadedImg(resp?.data[0]?.name))
+        .catch((err) => console.log(err));
+      res && setGroupLogo(res[0]);
+    }
+  }, []);
+
+  console.log('imgname' , groupUploadedImg)
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar
@@ -45,10 +102,17 @@ const confirm = () => {
 
       <View style={styles(colors).inputContainer}>
         <TouchableOpacity
-          onPress={() => console.log("object")}
+          onPress={pickLogoImage}
           style={styles(colors).iconContainer}
         >
-          <Ionicons name="camera-outline" size={24} color={colors.primary} />
+          {groupLogo ? (
+            <Image
+              source={{ uri: groupLogo.uri }}
+              style={{ width: 48, height: 48, borderRadius: 24 }}
+            />
+          ) : (
+            <Ionicons name="camera" size={24} color={colors.primary} />
+          )}
         </TouchableOpacity>
         <TextInput
           style={styles(colors).input}
@@ -59,8 +123,15 @@ const confirm = () => {
         />
       </View>
 
-      <TextR style={{ color: colors.text, marginVertical: 16 }}>
-        Group members: {selectedMembers.length} of 10 
+      <TextR
+        style={{
+          color: colors.text,
+          margin: 16,
+          fontWeight: "500",
+          fontSize: 18,
+        }}
+      >
+        Group members: {selectedMembers.length} of {totalNum}
       </TextR>
       <FlatList
         data={selectedMembers}
@@ -70,17 +141,18 @@ const confirm = () => {
         renderItem={({ item }) => (
           <View style={styles(colors).memberItem}>
             <Image
-              source={{ uri: item.image }}
+              source={{ uri: item.avatar }}
               style={styles(colors).memberImage}
             />
-            <TextR style={styles(colors).memberName}>{item.name}</TextR>
+            <TextR style={styles(colors).memberName}>
+              {item.name.first} {item.name.last}
+            </TextR>
             <TextR style={styles(colors).memberRole}>{item.role}</TextR>
           </View>
         )}
       />
 
-    
-      {groupName?.length > 0 && ( 
+      {groupName?.length > 3 && (
         <TouchableOpacity
           style={[
             styles(colors).createButton,
@@ -88,7 +160,11 @@ const confirm = () => {
           ]}
           onPress={handleCreateGroup}
         >
-          <TextR style={styles(colors).createButtonText}>Create Group</TextR>
+          {loading ? (
+            <ActivityIndicator size="small" color='white' />
+          ) : (
+            <TextR style={styles(colors).createButtonText}>Create Group</TextR>
+          )}
         </TouchableOpacity>
       )}
     </View>

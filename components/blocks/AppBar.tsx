@@ -20,7 +20,6 @@ type AppBarProps = {
 function AppBar({ center = false, leading, title, action, dark, height = 1 }: AppBarProps) {
     const { user: { profilePicture, role, name: { first } } } = useContext(userContext);
     const colors = useThemeColor();
-    console.log("AppBar");
     return (
         <View style={[
             styles.container,

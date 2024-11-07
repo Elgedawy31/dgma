@@ -23,13 +23,12 @@ import useAxios from "@hooks/useAxios";
 type channel = {
   _id: string;
   name: string;
-
-}
+};
 
 const ChannelItem = memo(({ item }: { item: channel }) => (
   <TouchableOpacity style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}>
     <Image
-    style={{width:60 , height:60, borderRadius: 30} }
+      style={{ width: 60, height: 60, borderRadius: 30 }}
       source={require("@/assets/images/groups-no-img.png")}
     />
     <Text type="body" title={item.name} />
@@ -40,6 +39,7 @@ function Messaging() {
   const colors = useThemeColor();
   const [activeTab, setActiveTab] = useState("Chats");
   const [channelsData, setChannelsData] = useState<channel[]>([]);
+  const [groupData, setGroupData] = useState<any>([]);
   const { get } = useAxios();
 
   const tabs = ["Chats", "Groups"];
@@ -59,7 +59,23 @@ function Messaging() {
 
     getChannelsFunction();
   }, []);
+  useEffect(() => {
+    const getChannelsFunction = async () => {
+      await get({ endPoint: "channels/all?type=group" })
+        .then((res) => {
+          if (res?.results) {
+            setGroupData(res.results);
+          }
+        })
+        .catch((err) => {
+          console.error(`Error: ${err}`);
+        });
+    };
 
+    getChannelsFunction(); 
+  }, []);
+
+  console.log(groupData)
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar
@@ -117,14 +133,26 @@ function Messaging() {
         ))}
       </View>
       <View style={{ flex: 1 }}>
-     {activeTab === 'Chats' &&    <FlatList
-          data={[...usersData, ...usersData, ...usersData]}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <ChatCard msgID={`ChatID-${index}`} user={item} />
-          )}
-          keyExtractor={(item, index) => item._id! + index.toString()}
-        />}
+        {activeTab === "Chats" && (
+          <FlatList
+            data={[...usersData, ...usersData, ...usersData]}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => (
+              <ChatCard msgID={`ChatID-${index}`} user={item} />
+            )}
+            keyExtractor={(item, index) => item._id! + index.toString()}
+          />
+        )}
+        {activeTab === "Groups" && (
+          <FlatList
+            data={groupData}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => (
+              <ChatCard msgID={`ChatID-${index}`} user={item} />
+            )}
+            keyExtractor={(item, index) => item._id! + index.toString()}
+          />
+        )}
       </View>
       <View style={{ marginVertical: 12 }}>
         <View
@@ -139,13 +167,25 @@ function Messaging() {
           <Text type="title" title="Channels" />
           <Button type="text" label="see all" />
         </View>
-      {channelsData.length > 0  ?   <FlatList
-          horizontal
-          data={channelsData} 
-          renderItem={({ item }) => <ChannelItem item={item} />}
-          keyExtractor={(item) => item._id.toString()}
-          showsHorizontalScrollIndicator={false}
-        /> : <View style={{paddingVertical:20 , alignItems:'center' , justifyContent:'center'}}><Text type="body" title="No channels found" /></View>}
+        {channelsData.length > 0 ? (
+          <FlatList
+            horizontal
+            data={channelsData}
+            renderItem={({ item }) => <ChannelItem item={item} />}
+            keyExtractor={(item) => item._id.toString()}
+            showsHorizontalScrollIndicator={false}
+          />
+        ) : (
+          <View
+            style={{
+              paddingVertical: 20,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text type="body" title="No channels found" />
+          </View>
+        )}
       </View>
     </View>
   );
