@@ -50,7 +50,7 @@ function Login() {
                 <View style={styles.form}>
                     <Text type='title' title='Welcome Back.' />
                     <View style={styles.header}>
-                        <TextInputField
+                        <TextInputField 
                             name="email"
                             type="email"
                             label="Email"

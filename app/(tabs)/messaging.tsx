@@ -27,7 +27,7 @@ function Messaging() {
   const channelData = Array.from({ length: 12 }, (_, i) => ({ id: i + 1 }));
   const [activeTab, setActiveTab] = useState('All');
   
-  const tabs = ['All', 'Chats', 'group', 'Unread'];
+  const tabs = ['Chats', 'Channels', 'Groups'];
 
 
   return (
