@@ -9,17 +9,15 @@ type ChatCardProps = {
     msgID: string
 }
 
-function ChatCard({ msgID, user: { avatar, specialty: specialty, name: { first, last } } }: ChatCardProps) {
+function ChatCard({ msgID, user: { avatar,  name: { first, last } } }: ChatCardProps) {
     return (
-        <Pressable onPress={() => router.push({ pathname: '/chat/[id]', params: { id: msgID, user: JSON.stringify({ user: { avatar, specialty, name: { first, last } } }) } })}>
+        <Pressable onPress={() => router.push({ pathname: '/chat/[id]', params: { id: msgID, user: JSON.stringify({ user: { avatar, name: { first, last } } }) } })}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
                 <ImageAvatar size={50} type='avatar' url={avatar} />
                 <View style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E1E1E1' }}>
                     <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', paddingRight: 8 }}>
                         <Text type='subtitle' title={`${first} ${last}`} />
-                        <Text type='label' capitalized title='3:00 AM' />
                     </View>
-                    <Text type='details' title={specialty} />
                 </View>
             </View>
         </Pressable>

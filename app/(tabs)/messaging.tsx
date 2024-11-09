@@ -2,11 +2,10 @@ import AppBar from "@blocks/AppBar";
 import ImageAvatar from "@blocks/ImageAvatar";
 import Text from "@blocks/Text";
 import ChatCard from "@cards/ChatCard";
-import { usersData } from "@data/users";
 import { useThemeColor } from "@hooks/useThemeColor";
 import Button from "@ui/Button";
 import { Link, router } from "expo-router";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState, useMemo } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -21,12 +20,26 @@ import { Ionicons } from "@expo/vector-icons";
 import useAxios from "@hooks/useAxios";
 import GroupCard from "@cards/GroupCard";
 
-type channel = {
+type Channel = {
   _id: string;
   name: string;
 };
 
-const ChannelItem = memo(({ item }: { item: channel }) => (
+type User = {
+  _id: string;
+  name: {
+    first: string;
+    last: string;
+  };
+  role: string;
+};
+
+type Group = {
+  _id: string;
+  name: string;
+};
+
+const ChannelItem = memo(({ item }: { item: Channel }) => (
   <TouchableOpacity style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}>
     <Image
       style={{ width: 60, height: 60, borderRadius: 30 }}
@@ -39,44 +52,87 @@ const ChannelItem = memo(({ item }: { item: channel }) => (
 function Messaging() {
   const colors = useThemeColor();
   const [activeTab, setActiveTab] = useState("Chats");
-  const [channelsData, setChannelsData] = useState<channel[]>([]);
-  const [groupData, setGroupData] = useState<any>([]);
+  const [channelsData, setChannelsData] = useState<Channel[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [groupData, setGroupData] = useState<Group[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const { get } = useAxios();
 
   const tabs = ["Chats", "Groups"];
 
+  // Get filtered data based on active tab
+  const filteredData = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    
+    if (!query) {
+      return activeTab === "Chats" ? users : groupData;
+    }
+
+    if (activeTab === "Chats") {
+      return users.filter((user) => {
+        const fullName = `${user.name.first} ${user.name.last}`.toLowerCase();
+        return fullName.includes(query) || user.role.toLowerCase().includes(query);
+      });
+    } else {
+      return groupData.filter((group) => 
+        group.name.toLowerCase().includes(query)
+      );
+    }
+  }, [activeTab, searchQuery, users, groupData]);
+
   useEffect(() => {
     const getChannelsFunction = async () => {
-      await get({ endPoint: "channels/all?type=channel" })
-        .then((res) => {
-          if (res?.results) {
-            setChannelsData(res.results);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error: ${err}`);
-        });
+      try {
+        const res = await get({ endPoint: "channels/all?type=channel" });
+        if (res?.results) {
+          setChannelsData(res.results);
+        }
+      } catch (err) {
+        console.error(`Error: ${err}`);
+      }
     };
 
     getChannelsFunction();
-  }, []); 
-  useEffect(() => {
-    const getChannelsFunction = async () => {
-      await get({ endPoint: "channels/all?type=group" })
-        .then((res) => {
-          if (res?.results) {
-            setGroupData(res.results);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error: ${err}`);
-        });
-    };
-
-    getChannelsFunction(); 
   }, []);
 
-  console.log(groupData)
+  useEffect(() => {
+    const getGroupsFunction = async () => {
+      try {
+        const res = await get({ endPoint: "channels/all?type=group" });
+        if (res?.results) {
+          setGroupData(res.results);
+        }
+      } catch (err) {
+        console.error(`Error: ${err}`);
+      }
+    };
+
+    getGroupsFunction();
+  }, []);
+
+  useEffect(() => {
+    const getUsersFunction = async () => {
+      try {
+        const res = await get({ endPoint: "users" });
+        if (res) {
+          setUsers(res);
+        }
+      } catch (err) {
+        console.error(`Error: ${err}`);
+      }
+    };
+
+    getUsersFunction();
+  }, []);
+
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar
@@ -93,7 +149,6 @@ function Messaging() {
             <StackUI
               value={{ vertical: -5, horizontal: -1.5 }}
               position={{ vertical: "bottom", horizontal: "right" }}
-              // sec={<Octicons name="dot-fill" size={24} color="#09419A" />}
               base={<Ionicons name="add" size={24} color="#09419A" />}
             />
           </TouchableOpacity>
@@ -108,10 +163,18 @@ function Messaging() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Search"
+          placeholder={`Search ${activeTab.toLowerCase()}...`}
           placeholderTextColor="#444"
+          value={searchQuery}
+          onChangeText={handleSearch}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={clearSearch}>
+            <Ionicons name="close-circle" size={20} color="#666" />
+          </TouchableOpacity>
+        )}
       </View>
+
       <View style={styles.tabsContainer}>
         {tabs.map((tab) => (
           <TouchableOpacity
@@ -120,7 +183,10 @@ function Messaging() {
               styles.tabButton,
               activeTab === tab && styles.activeTabButton,
             ]}
-            onPress={() => setActiveTab(tab)}
+            onPress={() => {
+              setActiveTab(tab);
+              setSearchQuery(""); // Clear search when switching tabs
+            }}
           >
             <TextR
               style={[
@@ -133,40 +199,35 @@ function Messaging() {
           </TouchableOpacity>
         ))}
       </View>
-      <View style={{ flex: 1 }}>
-        {activeTab === "Chats" && (
-          <FlatList
-            data={[...usersData, ...usersData, ...usersData]}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item, index }) => (
+
+      <View style={styles.contentContainer}>
+        <FlatList
+          data={filteredData}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) =>
+            activeTab === "Chats" ? (
               <ChatCard msgID={`ChatID-${index}`} user={item} />
-            )}
-            keyExtractor={(item, index) => item._id! + index.toString()}
-          />
-        )}
-        {activeTab === "Groups" && (
-          <FlatList
-            data={groupData}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item, index }) => (
+            ) : (
               <GroupCard msgID={`ChatID-${index}`} group={item} />
-            )}
-            keyExtractor={(item, index) => item._id! + index.toString()}
-          />
-        )}
+            )
+          }
+          keyExtractor={(item, index) => item._id + index.toString()}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Text 
+                type="body" 
+                title={`No ${activeTab.toLowerCase()} found${
+                  searchQuery ? ' for your search' : ''
+                }`} 
+              />
+            </View>
+          )}
+        />
       </View>
-      <View style={{ marginVertical: 12 }}>
-        <View
-          style={{
-            paddingHorizontal: 16,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
+
+      <View style={styles.channelsSection}>
+        <View style={styles.channelsHeader}>
           <Text type="title" title="Channels" />
-          <Button type="text" label="see all" />
         </View>
         {channelsData.length > 0 ? (
           <FlatList
@@ -177,13 +238,7 @@ function Messaging() {
             showsHorizontalScrollIndicator={false}
           />
         ) : (
-          <View
-            style={{
-              paddingVertical: 20,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View style={styles.emptyContainer}>
             <Text type="body" title="No channels found" />
           </View>
         )}
@@ -224,7 +279,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   activeTabButton: {
-    backgroundColor: "#002B7F", // Dark blue color for active tab
+    backgroundColor: "#002B7F",
   },
   tabText: {
     color: "#666666",
@@ -232,6 +287,24 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: "white",
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  emptyContainer: {
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  channelsSection: {
+    marginVertical: 12,
+  },
+  channelsHeader: {
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
 });
 

@@ -17,7 +17,6 @@ function GroupCard({ msgID, group: { photo,  name } }: GroupCardProps) {
                 <View style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E1E1E1' }}>
                     <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', paddingRight: 8 }}>
                         <Text type='subtitle' title={name} />
-                        <Text type='label' capitalized title='3:00 AM' />
                     </View>
                 </View>
             </View>
