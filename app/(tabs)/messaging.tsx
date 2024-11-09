@@ -19,6 +19,7 @@ import {
 import StackUI from "@blocks/StackUI";
 import { Ionicons } from "@expo/vector-icons";
 import useAxios from "@hooks/useAxios";
+import GroupCard from "@cards/GroupCard";
 
 type channel = {
   _id: string;
@@ -58,7 +59,7 @@ function Messaging() {
     };
 
     getChannelsFunction();
-  }, []);
+  }, []); 
   useEffect(() => {
     const getChannelsFunction = async () => {
       await get({ endPoint: "channels/all?type=group" })
@@ -148,7 +149,7 @@ function Messaging() {
             data={groupData}
             showsVerticalScrollIndicator={false}
             renderItem={({ item, index }) => (
-              <ChatCard msgID={`ChatID-${index}`} user={item} />
+              <GroupCard msgID={`ChatID-${index}`} group={item} />
             )}
             keyExtractor={(item, index) => item._id! + index.toString()}
           />
