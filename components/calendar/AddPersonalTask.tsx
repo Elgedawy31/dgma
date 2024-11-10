@@ -21,7 +21,7 @@ interface Project {
 }
 
 interface User {
-  _id: string;
+  id: string;
   name: {
     first: string;
     last: string;
@@ -70,7 +70,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const { post, get } = useAxios();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers] = useState<User[]>([ { _id:'1' , role:'admin' , name:{first:'mo' , last:'gad'}}, { _id:'2' , role:'user' , name:{first:'mo' , last:'gimmy'}}]);
+  const [users, setUsers] = useState<User[]>([]);
   const { user } = useContext(userContext);
 
   const {
@@ -98,7 +98,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const selectedProjectId = watch("projectId");
   const selectedStatus = watch("status");
 
-  const selectedProject = projects.find((p) => p._id === selectedProjectId);
+  const selectedProject = projects.find((p:any) => p.id === selectedProjectId);
   const selectedStatusLabel = TASK_STATUSES.find(
     (s) => s.id === selectedStatus
   )?.label;
@@ -324,7 +324,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
           <TouchableOpacity
             style={styles.submitButton}
-            onPress={handleSubmit(onSubmitForm)}
+            onPress={() => handleSubmit(onSubmitForm)}
           >
             <Text style={styles.submitButtonText}>Add task</Text>
           </TouchableOpacity>
@@ -348,17 +348,17 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             <Text style={styles.selectorTitle}>Select Project</Text>
             {projects.map((project) => (
               <TouchableOpacity
-                key={project._id}
+                key={project.id}
                 style={[
                   styles.selectorOption,
-                  selectedProjectId === project._id && styles.selectedOption,
+                  selectedProjectId === project.id && styles.selectedOption,
                 ]}
-                onPress={() => handleProjectSelect(project._id)}
+                onPress={() => handleProjectSelect(project.id)}
               >
                 <Text
                   style={[
                     styles.selectorOptionText,
-                    selectedProjectId === project._id &&
+                    selectedProjectId === project.id &&
                       styles.selectedOptionText,
                   ]}
                 >
@@ -378,12 +378,12 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             <Text style={styles.selectorTitle}>Select Users</Text>
             {users.map((user: User) => (
               <TouchableOpacity
-                key={user._id}
+                key={user.id}
                 style={[
                   styles.selectorOption,
-                  selectedUsers.includes(user._id) && styles.selectedOption,
+                  selectedUsers.includes(user.id) && styles.selectedOption,
                 ]}
-                onPress={() => handleUserSelect(user._id)}
+                onPress={() => handleUserSelect(user.id)}
               >
                 <View
                   style={{
@@ -395,13 +395,13 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                   <Text
                     style={[
                       styles.selectorOptionText,
-                      selectedUsers.includes(user._id) &&
+                      selectedUsers.includes(user.id) &&
                         styles.selectedOptionText,
                     ]}
                   >
                     {`${user.name.first} ${user.name.last}`}
                   </Text>
-                  {selectedUsers.includes(user._id) && (
+                  {selectedUsers.includes(user.id) && (
                     <Ionicons name="checkmark" size={24} color="#002B5B" />
                   )}
                 </View>
