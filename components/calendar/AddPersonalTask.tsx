@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
 import IconWrapper from "@components/IconWrapper";
 import CustomDatePicker from "./CustomDatePicker";
+import useFilePicker from "@hooks/useFile";
 import { userContext } from "@UserContext";
 import useAxios from "@hooks/useAxios";
 
@@ -29,6 +30,21 @@ interface User {
   role: string;
 }
 
+// First add these interfaces for files
+interface FileType {
+  uri: string;
+  type: string;
+  name: string;
+  size?: number;
+}
+
+interface UploadedFile {
+  name: string;
+  type: string;
+  url: string;
+}
+
+// Update TaskData interface
 interface TaskData {
   title: string;
   description: string;
@@ -38,6 +54,7 @@ interface TaskData {
   projectId: string | null;
   assignedTo: string[];
   status: string;
+  attachments: UploadedFile[]; // Add this line
 }
 
 interface TaskFormModalProps {
@@ -55,6 +72,24 @@ const TASK_STATUSES = [
   { id: "cancelled", label: "Cancelled" },
 ];
 
+const FileItem = ({ file, onRemove }: { file: UploadedFile; onRemove: () => void }) => {
+  console.log(file)
+  return <View style={styles.fileItem}>
+    <View style={styles.fileInfo}>
+      <Ionicons 
+        name={!file?.name.includes('pdf') ? "image" : "document"} 
+        size={24} 
+        color="#515151" 
+      />
+      <Text style={styles.fileName} numberOfLines={1}>
+        {file.name}
+      </Text>
+    </View>
+    <TouchableOpacity onPress={onRemove}>
+      <Ionicons name="close-circle" size={20} color="#515151" />
+    </TouchableOpacity>
+  </View>
+};
 const TaskFormModal: React.FC<TaskFormModalProps> = ({
   isVisible,
   onClose,
@@ -68,6 +103,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const [statusSelectorVisible, setStatusSelectorVisible] = useState(false);
   const [userSelectorVisible, setUserSelectorVisible] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const { post, get } = useAxios();
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -97,6 +133,9 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const deadline = watch("deadline");
   const selectedProjectId = watch("projectId");
   const selectedStatus = watch("status");
+  const { imagePicker, uploadFiles } = useFilePicker();
+  const [groupLogo, setGroupLogo] = useState<any>(null);
+  const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
 
   const selectedProject = projects.find((p:any) => p.id === selectedProjectId);
   const selectedStatusLabel = TASK_STATUSES.find(
@@ -152,32 +191,33 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   };
 
   const onSubmitForm = handleSubmit(async (data: TaskData) => {
-    const finalData = {
-      ...data,
-      assignedTo: user?.role === "admin" ? selectedUsers : [user?.id],
-    };
+    console.log(data)
+    // const finalData = {
+    //   ...data,
+    //   assignedTo: user?.role === "admin" ? selectedUsers : [user?.id],
+    // };
 
-    await post({ endPoint: "tasks/", body: finalData, hasToken: true })
-      .then((res) => {
-        if (res) {
-          onClose();
-          reset({
-            title: "",
-            description: "",
-            type: "personal",
-            startDate: null,
-            deadline: null,
-            projectId: null,
-            assignedTo: user?.role === "admin" ? [] : [user?.id],
-            status: "pending",
-          });
-          setSelectedUsers([]);
-          setTaskAdded((prev) => !prev);
-        }
-      })
-      .catch((err) => {
-        console.error(`Error: ${err}`);
-      });
+    // await post({ endPoint: "tasks/", body: finalData, hasToken: true })
+    //   .then((res) => {
+    //     if (res) {
+    //       onClose();
+    //       reset({
+    //         title: "",
+    //         description: "",
+    //         type: "personal",
+    //         startDate: null,
+    //         deadline: null,
+    //         projectId: null,
+    //         assignedTo: user?.role === "admin" ? [] : [user?.id],
+    //         status: "pending",
+    //       });
+    //       setSelectedUsers([]);
+    //       setTaskAdded((prev) => !prev);
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.error(`Error: ${err}`);
+    //   });
   });
 
   useEffect(() => {
@@ -232,6 +272,59 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     return null;
   };
 
+  const handleFilePick = useCallback(async () => {
+    try {
+      const result = await imagePicker({ 
+        multiple: true,
+      });
+
+      if (result) {
+        const files = await uploadFiles(result);
+        if (files?.length > 0) {
+          const newFiles = files.map((file: any) => ({
+            name: file.name,
+            type: file.type,
+            url: file.url
+          }));
+          setUploadedFiles(prev => [...prev, ...newFiles]);
+          setValue('attachments', [...uploadedFiles, ...newFiles]);
+        }
+      }
+    } catch (error) {
+      console.error('Error picking file:', error);
+    }
+  }, [uploadedFiles]);
+  const handleRemoveFile = (index: number) => {
+    const newFiles = uploadedFiles.filter((_, i) => i !== index);
+    setUploadedFiles(newFiles);
+    setValue('attachments', newFiles);
+  };
+  const renderFileSection = () => (
+    <View style={styles.fileSection}>
+      <View style={styles.fileSectionHeader}>
+        <Text style={styles.label}>Attachments</Text>
+        <TouchableOpacity
+          style={styles.addFileButton}
+          onPress={handleFilePick}
+        >
+          <Ionicons name="attach" size={20} color="#002B5B" />
+          <Text style={styles.addFileText}>Add File</Text>
+        </TouchableOpacity>
+      </View>
+      
+      {uploadedFiles.length > 0 && (
+        <View style={styles.fileList}>
+          {uploadedFiles.map((file, index) => (
+            <FileItem
+              key={index}
+              file={file}
+              onRemove={() => handleRemoveFile(index)}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
   return (
     <Modal
       isVisible={isVisible}
@@ -245,14 +338,13 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       <View style={styles.modalView}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.handleBar} />
-
           <View style={styles.header}>
             <Text style={styles.title}>New personal task</Text>
             <IconWrapper
               onPress={onClose}
               size={36}
               Icon={<Ionicons name="close" size={24} color="#000" />}
-            />
+              />
           </View>
 
           <Text style={styles.label}>Task title</Text>
@@ -320,7 +412,9 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                 <Text>{formatDate(deadline)}</Text>
               </TouchableOpacity>
             </View>
+
           </View>
+            {renderFileSection()}
 
           <TouchableOpacity
             style={styles.submitButton}
@@ -409,11 +503,57 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             ))}
           </View>
         </Modal>
+        
       </View>
     </Modal>
   );
 };
 const styles = StyleSheet.create({
+  fileSection: {
+    marginBottom: 15,
+  },
+  fileSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  addFileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F0FE',
+    padding: 8,
+    borderRadius: 8,
+  },
+  addFileText: {
+    color: '#002B5B',
+    marginLeft: 5,
+    fontWeight: '500',
+  },
+  fileList: {
+    gap: 8,
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8F9FA',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  fileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  fileName: {
+    flex: 1,
+    fontSize: 14,
+    color: '#515151',
+  },
   modal: {
     justifyContent: "flex-end",
     margin: 0,

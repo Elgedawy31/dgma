@@ -28,7 +28,7 @@ function CurrentProjects() {
                 <ScrollView horizontal style={styles.scrolled}
                     showsHorizontalScrollIndicator={false}>
                     <View style={styles.cards}>
-                        {projects.slice(0, projects.length > 3 ? 3 : projects.length).map((proj) => (
+                        {projects?.slice(0, projects.length > 3 ? 3 : projects.length).map((proj) => (
                             <Link key={proj._id} href={{ pathname: '/project/[id]', params: { id: proj._id!, project: JSON.stringify(proj) } }}>
                                 <View style={{ paddingLeft: 16 }}>
                                     <ProjectCard project={proj} />

@@ -44,6 +44,7 @@ const explore = () => {
         .then((res) => {
           if (res) {
           setTasks(res)
+        
           }
         })
         .catch((err) => {
