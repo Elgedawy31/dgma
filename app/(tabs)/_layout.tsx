@@ -17,20 +17,22 @@ function TabLayout() {
   const colors = useThemeColor();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 , backgroundColor:colors.background }}>
       <Tabs
         initialRouteName="index"
         screenOptions={{
           headerShown: false,
+          
           tabBarActiveTintColor: colors.activeTab,
           tabBarInactiveTintColor: colors.inactiveTab,
-          tabBarActiveBackgroundColor: colors.primary,
+          tabBarActiveBackgroundColor: colors.primaryTab,
           tabBarItemStyle: { backgroundColor: 'transparent', },
           tabBarStyle: {
             height: 60,
             borderTopLeftRadius: 18,
             borderTopRightRadius: 18,
-            backgroundColor: colors.primary,
+            backgroundColor: colors.primaryTab,
+            borderTopWidth:0
           },
         }}>
         {tabs.map((tab) => (
@@ -44,7 +46,7 @@ function TabLayout() {
                 <AppBar leading='avatar'
                   action={
                     <Icon
-                      icon='video' type='complex' iconColor='#09419A'
+                      icon='video' type='complex' iconColor={colors.primary}
                       onPress={() => router.push('/meetings')} />
                   }
                 />,

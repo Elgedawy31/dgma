@@ -7,6 +7,7 @@ import { router } from 'expo-router'
 import ImageAvatar from '@blocks/ImageAvatar'
 import { userContext } from '@UserContext';
 import Text from '@blocks/Text'
+import { ThemeContext } from '@ThemeContext'
 
 type AppBarProps = {
     dark?: boolean,
@@ -18,27 +19,26 @@ type AppBarProps = {
 }
 const AppBar = ({ center = false, leading, title, action, dark, height = 50 }: AppBarProps) => {
     const { user: { avatar, role, name: { first } } } = useContext(userContext);
-    const colors = useThemeColor();
-    console.log("AppBar");
+    const Colors = useThemeColor();
+
     return (
         <View style={[
             styles.container,
             { minHeight: height },
-            { backgroundColor: dark ? colors.primary : colors.white },
+            { backgroundColor: dark ?  'white' : Colors.card},
         ]}>
             <StatusBar dark={dark} />
-            {/* Leading && Trailing */}
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
                 {/* /**Leading Icon | Profile-Image */}
                 <View>
                     {typeof leading === 'object' && leading}
-                    {leading === 'back' && <Icon icon='back' iconColor={dark ? 'white' : 'black'} size={24} onPress={() => router.back()} />}
+                    {leading === 'back' && <Icon icon='back' iconColor={Colors.text} size={24} onPress={() => router.back()} />}
                     {leading === 'avatar' && <ImageAvatar type="avatar" url={avatar} onPress={() => router.push('/profile')} />}
                 </View>
                 {/* /** Trailing Icon | Notification | Title */}
                 <View>
-                    {leading === 'avatar' && <Text type='subtitle' color={dark ? 'white' : 'black'} title={title as string || `Welcome ${role === 'admin' ? "Admin" : first}!`} />}
-                    {typeof title === 'string' ? <Text type='subtitle' color={dark ? 'white' : 'black'} title={title} /> : title}
+                    {leading === 'avatar' && <Text type='subtitle' color={Colors.text} title={title as string || `Welcome ${role === 'admin' ? "Admin" : first}!`} />}
+                    {typeof title === 'string' ? <Text type='subtitle' color={Colors.text} title={title} /> : title}
                 </View>
             </View>
             {/* /** Action Buttons */}
