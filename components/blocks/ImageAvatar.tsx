@@ -12,14 +12,20 @@ function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
     console.log(url)
     return onPress ? <Pressable onPress={onPress}>
         <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
-            source={!url && (type === 'project' ? require('@images/select.png') : require('@images/user.png')) ||
-                { uri: url || 'https://cdn.dribbble.com/users/5534/screenshots/14230133/profile_4x.jpg' }}
+            source={url && { uri: url } ||
+                (type === 'project' ?
+                    require('@images/select.png')
+                    : require('@images/user.png')
+                )}
         />
     </Pressable>
         :
         <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
-            source={!url ? (type === 'project' ? require('@images/select.png') : require('@images/user.png')) :
-                { uri: url || 'https://cdn.dribbble.com/users/5534/screenshots/14230133/profile_4x.jpg' }}
+            source={url && { uri: url } ||
+                (type === 'project' ?
+                    require('@images/select.png')
+                    : require('@images/user.png')
+                )}
         />
 }
 

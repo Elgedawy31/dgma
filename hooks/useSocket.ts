@@ -31,7 +31,7 @@ const useSocket = () => {
     const socketConnect = useCallback(async () => {
         try {
             const token = await readStorage('token');
-            socketRef.current = io('http://192.168.1.71:5001', { auth: { token }, });
+            socketRef.current = io('http://192.168.1.5:5001', { auth: { token }, });
             setSocket(socketRef.current);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Connection failed');

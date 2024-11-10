@@ -16,10 +16,10 @@ type AppBarProps = {
     title?: string | ReactElement,
     leading?: 'avatar' | 'back' | ReactElement,
 }
-const AppBar = ({ center = false, leading, title, action, dark, height = 1 }: AppBarProps) => {
+const AppBar = ({ center = false, leading, title, action, dark, height = 50 }: AppBarProps) => {
     const { user: { avatar, role, name: { first } } } = useContext(userContext);
     const colors = useThemeColor();
-    console.log("AppBar", avatar);
+    console.log("AppBar");
     return (
         <View style={[
             styles.container,
@@ -38,7 +38,7 @@ const AppBar = ({ center = false, leading, title, action, dark, height = 1 }: Ap
                 {/* /** Trailing Icon | Notification | Title */}
                 <View>
                     {leading === 'avatar' && <Text type='subtitle' color={dark ? 'white' : 'black'} title={title as string || `Welcome ${role === 'admin' ? "Admin" : first}!`} />}
-                    {title}
+                    {typeof title === 'string' ? <Text type='subtitle' color={dark ? 'white' : 'black'} title={title} /> : title}
                 </View>
             </View>
             {/* /** Action Buttons */}
@@ -53,7 +53,7 @@ export default memo(AppBar)
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 16, paddingVertical: 8,
-        flexDirection: 'row', alignItems: 'center',
+        flexDirection: 'row', alignItems: 'flex-end',
         justifyContent: 'space-between',
     },
 })

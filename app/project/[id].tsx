@@ -16,14 +16,15 @@ function ProjectDetails() {
     const { user: { role } } = useContext(userContext)
     const { project } = useLocalSearchParams<{ project: string }>();
     const { name, description, attachments, team } = JSON.parse(project);
+    console.log("attachments", attachments);
     return (
         <View style={{ flex: 1, backgroundColor: colors.primary, gap: 16 }}>
             <AppBar dark title={name} leading='back'
-                action={role === 'user' ? <View /> :
-                    <MaterialIcons size={24} color="white" name="mode-edit-outline"
-                        onPress={() => router.push({ pathname: Routes.projectDetails, params: { project: project } })}
-                    />
-                }
+                // action={role === 'user' ? <View /> :
+                //     <MaterialIcons size={24} color="white" name="mode-edit-outline"
+                //         onPress={() => router.push({ pathname: Routes.projectDetails, params: { project: project } })}
+                //     />
+                // }
             />
             <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, borderTopEndRadius: 30, borderTopStartRadius: 30, backgroundColor: colors.background }}>
                 <ScrollView showsVerticalScrollIndicator={false}>

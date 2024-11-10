@@ -14,7 +14,6 @@ function ForgetPassword() {
         useForm<{ email: string }>({ defaultValues: { email: "" } });
 
     const onSubmit = handleSubmit((data: { email: string }) => {
-        console.log(data);
         router.push('/(auth)/verification-code')
     });
     //#region UI

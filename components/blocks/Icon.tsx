@@ -15,6 +15,7 @@ const iconMapping: IconMapping = {
     'image': { library: 'Ionicons', name: 'image' },
     'close': { library: 'Ionicons', name: 'close' },
     'camera': { library: 'Feather', name: 'camera' },
+    'download': { library: 'Feather', name: 'download' },
     'search': { library: 'Ionicons', name: 'search' },
     'back': { library: 'Ionicons', name: 'chevron-back' },
     'show-password': { library: 'Ionicons', name: 'eye' },

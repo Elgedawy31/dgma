@@ -1,11 +1,11 @@
 //#region Imports
 import Text from '@blocks/Text';
 import PieChart from 'react-native-pie-chart';
-import { Pressable, StyleSheet, View } from 'react-native';
 import { TaskColors } from '@/constants/Colors';
+import { projectsContext } from '@ProjectsContext';
 import { useThemeColor } from '@hooks/useThemeColor';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { memo, useCallback, useContext, useEffect, useState } from 'react';
-import {projectsContext} from '@ProjectsContext'
 //#endregion
 type ProjectStatusModel = {
     id: string;
@@ -20,21 +20,21 @@ function ProjectOverview() {
     const [statusPercent, setStatusPercent] = useState<number>(0);
     const adjustProjectsStatus = useCallback(() => {
         const res = [
-            { id: 'overdue', label: 'Overdue', value: 0, color: TaskColors.overdue },
+            // { id: 'overdue', label: 'Overdue', value: 0, color: TaskColors.overdue },
             { id: 'review', label: 'In Review', value: 0, color: TaskColors.review },
             { id: 'pending', label: 'Pending', value: 0, color: TaskColors.pending },
             { id: 'progress', label: 'In Progress', value: 0, color: TaskColors.progress },
             { id: 'completed', label: 'Completed', value: 0, color: TaskColors.completed },
-            { id: 'cancelled ', label: 'Cancelled ', value: 0, color: TaskColors.cancelled },
+            // { id: 'cancelled ', label: 'Cancelled ', value: 0, color: TaskColors.cancelled },
         ]
         projects?.forEach((project) => {
             switch (project.status) {
-                case 'review': res[1].value += 1; break;
-                case 'overdue': res[0].value += 1; break;
-                case 'pending': res[2].value += 1; break;
-                case 'progress': res[3].value += 1; break;
-                case 'completed': res[4].value += 1; break;
-                case 'cancelled': res[5].value += 1; break;
+                case 'In Review': res[0].value += 1; break;
+                // case 'overdue': res[0].value += 1; break;
+                case 'Pending': res[1].value += 1; break;
+                case 'In Progress': res[2].value += 1; break;
+                case 'Completed': res[3].value += 1; break;
+                // case 'cancelled': res[5].value += 1; break;
             }
         })
         setProjectsStatus([...res]);
@@ -51,12 +51,12 @@ function ProjectOverview() {
             {projectsStatus.length > 0 &&
                 <View style={styles.container}>
                     <View style={{ position: 'relative' }}>
-                        {/* <PieChart
+                        <PieChart
                             coverRadius={0.6}
                             widthAndHeight={175}
                             series={projectsStatus.map((item) => item.value)}
                             sliceColor={projectsStatus.map((item) => item.color)}
-                        /> */}
+                        />
                         <View style={styles.conChartContent}>
                             <Text type='label' size={20} color={projectsStatus[statusPercent].color}
                                 title={((projectsStatus[statusPercent].value / projectsStatus.reduce((a, b) => a + b.value, 0)) * 100).toFixed(2) + '%'} />

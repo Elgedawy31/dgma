@@ -1,98 +1,78 @@
-import ProjectModel, { ProjectAttachmentModel, ProjectMemberModel } from "@model/project";
+import ProjectModel, { ProjectMemberModel } from "@model/project";
 
-const createdAt = '2021-08-10';
-const updatedAt = '2021-08-12';
-const deadline = "2024-09-13T16:47:13.534Z";
-const startDate = "2024-09-13T16:47:13.534Z";
-const createdBy = { _id: '1', email: '', name: { first: 'John', last: 'Doe' } };
-const description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam condimentum maximus ultrices. Curabitur et neque felis. Donec aliquam sapien sed leo egestas porttitor. Morbi faucibus nec ante a dapibus.';
+const deadline = "2024-12-31T00:01:00.000+00:00";
+const startDate = "2024-11-01T00:01:00.000+00:00";
+const description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam condimentum maximus ultrices. Curabitur et neque felis.';
 
-const attachments: ProjectAttachmentModel[] = [
-    { _id: '1', name: 'Project Requirements', size: 10, type: 'pdf' },
-    { _id: '2', name: 'Project Report', size: 8, type: 'pdf' },
-    { _id: '3', name: 'Project Design', size: 12, type: 'image' },
-    { _id: '4', name: 'Project Video', size: 20, type: 'image' },
-    { _id: '5', name: 'Project Audio', size: 15, type: 'pdf' },
-    { _id: '6', name: 'Project Video', size: 2, type: 'image' },
+const attachments: string[] = [
+    "1731026975069_dummy.pdf",
+    "1731026975069_sample.pdf",
+    "1731026975068_dummydummy.pdf",
+    "1731026975069_dummypdf_2.pdf"
 ]
 
-const team: ProjectMemberModel[] = [{
-    _id: "1", name: { first: "John", last: "Doe" },
-    email: "JohnDoe@gmail.com", specialty: 'Frontend Developer',
-    avatar: "https://d2qp0siotla746.cloudfront.net/img/use-cases/profile-picture/template_0.jpg"
-},
-{
-    _id: "2", name: { first: "Mary", last: "McKinney" },
-    email: "MaryMcKinney@gmail", specialty: 'UI UX Designer',
-    avatar: "https://images.squarespace-cdn.com/content/v1/5cb74196f8135a3abbc8f25f/1673914262865-TF2D05LE7I6MXEDOK4BV/IMG_6816.jpg"
-},
-{
-    _id: "3", name: { first: "Patrick", last: "House" },
-    email: "PatrickHouse@gmail", specialty: 'Backend Developer',
-    avatar: "https://mir-s3-cdn-cf.behance.net/user/276/8051fa194165537.614d528de211b.jpg"
-},
-{
-    _id: "4", name: { first: "Cory", last: "House" },
-    email: "CoryHouse@gmail", specialty: 'Graphic Designer',
-    avatar: "https://writestylesonline.com/wp-content/uploads/2017/04/Brunching-In-Style-1024x1024.jpg"
-},
-
+const team: string[] = [
+    '66e2afe3a76d0d78d527f6eb',
+    '672ccb98967c579a82d4f7e1',
+    '672ccd2a967c579a82d4f7e8',
+    '672ccd60967c579a82d4f7e9',
+    '672ccd7f967c579a82d4f7ea',
 ]
 
- export const projectsData: ProjectModel[] = [
+export const projectsData: ProjectModel[] = [
     {
-        _id: '1', name: 'DevGlobal LLC Web App', status: 'pending', progress: 23,
-        startDate, deadline, createdAt, updatedAt, createdBy, team: [], attachments: [], description,
-        logo: 'https://images.creativetemplate.net/wp-content/uploads/2018/03/Best-Blog-Design-Template.png',
+        name: 'DevGlobal LLC Web App', status: 'Pending', progress: 23,
+        startDate, deadline, team: [], attachments: [], description,
+        logo: '1731024594378_bestblogdesigntemplate.png',
     },
     {
-        _id: '2', name: 'DevGlobal LLC Mobile App', status: 'cancelled', progress: 62,
-        startDate, deadline, createdAt, updatedAt, createdBy, description,
-        logo: 'https://cdn.dribbble.com/users/1435588/screenshots/4825006/012.png',
+        name: 'DevGlobal LLC Mobile App', status: 'Pending', progress: 62,
+        startDate, deadline, description,
+        logo: '1731026355406_012.png',
         team: [team[0], team[1]],
         attachments: [attachments[0], attachments[1],]
 
     },
     {
-        _id: '3', name: 'DevGlobal LLC Desktop App', status: 'progress', progress: 92,
-        startDate, deadline, createdAt, updatedAt, createdBy, team, attachments, description,
-        logo: 'https://cdn.dribbble.com/users/827126/screenshots/6485455/zoeyshen_dashboard3_2x.png',
+        name: 'DevGlobal LLC Desktop App', status: 'In Progress', progress: 92,
+        startDate, deadline, team, attachments, description,
+        logo: '1731026479790_zoeyshen_dashboard3_2x.png',
 
     },
     {
-        _id: '4', name: 'Web Project', status: 'completed', progress: 27,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy, description,
-        logo: 'https://images.creativetemplate.net/wp-content/uploads/2018/03/Best-Blog-Design-Template.png',
+        name: 'Web Project', status: 'Completed', progress: 100,
+        startDate, deadline, team, attachments, description,
+        logo: '1731024594378_bestblogdesigntemplate.png',
     },
     {
-        _id: '5', name: 'Mobile Project', status: 'completed', description, progress: 45,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy,
-        logo: 'https://cdn.dribbble.com/users/1435588/screenshots/4825006/012.png',
+        name: 'Mobile Project', status: 'Completed', description, progress: 100,
+        startDate, deadline, team, attachments,
+        logo: '1731026355406_012.png',
     },
     {
-        _id: '6', name: 'Design Project', status: 'review', progress: 78,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy, description,
-        logo: 'https://cdn.dribbble.com/users/827126/screenshots/6485455/zoeyshen_dashboard3_2x.png',
+        name: 'Design Project', status: 'In Review', progress: 78,
+        startDate, deadline, team, attachments, description,
+        logo: '1731026479790_zoeyshen_dashboard3_2x.png',
     },
     {
-        _id: '7', name: 'Web Project', status: 'review', progress: 34,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy, description,
-        logo: 'https://images.creativetemplate.net/wp-content/uploads/2018/03/Best-Blog-Design-Template.png',
+        name: 'Web Project', status: 'In Review', progress: 34,
+        startDate, deadline, team, attachments, description,
+        logo: '1731024594378_bestblogdesigntemplate.png',
     },
     {
-        _id: '8', name: 'Mobile Project', status: 'progress', description, progress: 56,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy,
-        logo: 'https://cdn.dribbble.com/users/1435588/screenshots/4825006/012.png',
+        name: 'Mobile Project', status: 'In Progress', description, progress: 56,
+        startDate, deadline, team, attachments,
+        logo: '1731026355406_012.png',
     },
     {
-        _id: '9', name: 'Design Project', status: 'overdue', progress: 89,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy, description,
-        logo: 'https://cdn.dribbble.com/users/827126/screenshots/6485455/zoeyshen_dashboard3_2x.png',
+        name: 'Design Project', status: 'Pending', progress: 89,
+        startDate, deadline, team, attachments, description,
+        logo: '1731026479790_zoeyshen_dashboard3_2x.png',
     },
     {
-        _id: '10', name: 'Web Project', status: 'progress', progress: 45,
-        startDate, deadline, team, attachments, createdAt, updatedAt, createdBy, description,
-        logo: 'https://images.creativetemplate.net/wp-content/uploads/2018/03/Best-Blog-Design-Template.png',
+        name: 'Web Project', status: 'In Progress', progress: 45,
+        startDate, deadline, team, attachments, description,
+        logo: '1731024594378_bestblogdesigntemplate.png',
     },
 ];
 

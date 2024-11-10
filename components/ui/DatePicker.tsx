@@ -7,7 +7,7 @@ import { useThemeColor } from '@hooks/useThemeColor';
 import Icon from '@blocks/Icon';
 
 type DatePickerProps = {
-    value?: Date;
+    value?: string;
     label: string;
     display?: | 'spinner' | 'calendar' | 'clock';
     mode?: 'countdown' | 'date' | 'datetime' | 'time';
@@ -15,11 +15,11 @@ type DatePickerProps = {
 }
 const DatePicker = ({
     label, onChange,
-    value = new Date(),
+    value,
     mode = 'date', display = 'spinner',
 }: DatePickerProps) => {
     const colors = useThemeColor()
-    const [date, setDate] = useState(value);
+    const [date, setDate] = useState<Date>(value ? new Date(value) : new Date());
     const [showPicker, setShowPicker] = useState(false);
     const onChangeText = useCallback((text: string) => {
         setDate(new Date(text));
@@ -51,7 +51,7 @@ const DatePicker = ({
             {
                 showPicker && <DateTimePicker
                     mode={mode}
-                    value={value}
+                    value={date}
                     display={display}
                     onChange={onDateChange}
                     minimumDate={new Date()}

@@ -3,10 +3,10 @@ import { useForm } from 'react-hook-form'
 import ImageAvatar from '@blocks/ImageAvatar'
 import { Platform, StyleSheet, View } from 'react-native'
 import TextInputField from '@ui/TextInputField'
-import useFilePicker from '@hooks/useFileUpload'
+import useFile from '@hooks/useFile'
 import { useThemeColor } from '@hooks/useThemeColor'
 import { projectDetailsContext } from '@ProjectDetailsContext'
-import { memo, useCallback, useContext, useEffect } from 'react'
+import { memo, useCallback, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import useSecureStorage from '@hooks/useSecureStorage'
 import useAxios from '@hooks/useAxios'
@@ -20,27 +20,27 @@ type ProjectDetailsInputsProps = {
 const ProjectGeneralData = () => {
     const { post } = useAxios();
     const colors = useThemeColor();
-    const { imagePicker, uploadFiles } = useFilePicker();
-    const { project: { _id, name, description, deadline, startDate }, logoFile, setProjectLogo, setProjectGeneralData } = useContext(projectDetailsContext);
+    const { imagePicker, uploadFiles } = useFile();
+    const [isNew, setIsNew] = useState<boolean>(true);
     const { control, reset, watch, setValue, formState: { errors } } = useForm<ProjectDetailsInputsProps>({});
+    const { project: { _id, logo, name, description, deadline, startDate }, logoFile, setProjectLogo, setProjectGeneralData } = useContext(projectDetailsContext);
 
     useEffect(() => {
         if (_id)
-            reset({
-                name, description,
-                startDate, deadline
-            })
-    }, [])
+            if (_id) {
+                setIsNew(false);
+                reset({ name, description, deadline, startDate });
+            }
+    }, [_id])
 
     const pickLogoImage = useCallback(async () => {
         const res = await imagePicker({ multiple: false });
         if (res) {
-            const file = uploadFiles(res);
-            console.log("File", file);
-            setProjectLogo(res[0]);
+            const uploaded = await uploadFiles(res);
+            console.log("Uploaded", uploaded);
+            // setProjectLogo(res[0]);
         }
-        // res && uploadFiles(res);
-        // res && setProjectLogo(res[0]);
+        res && setProjectLogo(res[0]);
     }, []);
 
     const onDateSelect = useCallback((name: string, value: Date | undefined) => {
@@ -57,9 +57,9 @@ const ProjectGeneralData = () => {
     return (
         <View style={{ gap: 16, }}>
             <View style={[styles.logo, { backgroundColor: colors.card }, !logoFile?.uri && { paddingHorizontal: 60, paddingVertical: 20, }]}>
-                <ImageAvatar onPress={pickLogoImage} type='project' url={logoFile?.uri || ''} />
+                <ImageAvatar onPress={pickLogoImage} type='project' url={logoFile?.uri || logo || ''} />
             </View>
-            {<TextInputField
+            {isNew && <TextInputField
                 name='name'
                 control={control}
                 label='Project title'
@@ -82,8 +82,8 @@ const ProjectGeneralData = () => {
             />
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 24 }}>
-                <DatePicker label='Start Date' onChange={(d) => onDateSelect('startDate', d)} />
-                <DatePicker label='End Date' onChange={(d) => onDateSelect('deadline', d)} />
+                <DatePicker value={startDate} label='Start Date' onChange={(d) => onDateSelect('startDate', d)} />
+                <DatePicker value={deadline} label='End Date' onChange={(d) => onDateSelect('deadline', d)} />
             </View>
         </View>
     )

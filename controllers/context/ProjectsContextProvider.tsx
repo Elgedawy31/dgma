@@ -23,12 +23,12 @@ function ProjectsContextProvider({ children }: { children: React.ReactNode }) {
     const loadProjects = async () => {
         const token = await readStorage('token');
         if (token) {
-            // setLoading(true);
-            // await get({ endPoint: '/projects' })
-            //     .then(res => setProjects(res))
-            //     .finally(() => setLoading(false))
-            //     .catch(err => console.log(`Error: ${err}`));
-            setProjects([...projectsData]);
+            setLoading(true);
+            await get({ endPoint: '/projects' })
+                .then(res => setProjects(res))
+                .finally(() => setLoading(false))
+                .catch(err => console.log(`Error: ${err}`));
+            // setProjects([...projectsData]);
         }
     }
     useEffect(() => { loadProjects(); }, [])
