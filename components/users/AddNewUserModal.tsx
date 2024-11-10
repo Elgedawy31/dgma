@@ -1,16 +1,20 @@
-import React, { useContext, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
 import IconWrapper from "@components/IconWrapper";
 import useAxios from "@hooks/useAxios";
+import useFilePicker from "@hooks/useFile";
 
 interface NewUserProps {
   isVisible: boolean;
@@ -26,6 +30,7 @@ interface UserData {
     second?: string;
     last: string;
   };
+  avatar?: string;
 }
 
 const NewUser: React.FC<NewUserProps> = ({
@@ -43,27 +48,58 @@ const NewUser: React.FC<NewUserProps> = ({
       email: "",
       password: "",
       name: { first: "", second: "", last: "" },
+      avatar: "",
     },
   });
 
-  const {post} = useAxios();
+  const { post } = useAxios();
+  const { imagePicker, uploadFiles } = useFilePicker();
+  const [groupLogo, setGroupLogo] = useState<any>(null);
+  const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
+  const [loading , setLoading] = useState(false);
+
+  const pickLogoImage = useCallback(async () => {
+    const res = await imagePicker({ multiple: false });
+    if (res) {
+      const file = await uploadFiles(res);
+      if (file?.length > 0) {
+        setGroupUploadedImg(file[0]?.name);
+        setGroupLogo(res[0]);
+      }
+    }
+  }, []);
 
   const onSubmitForm = handleSubmit(async (data: UserData) => {
-    await post({ endPoint: "users/", body: data, hasToken: true })
+    // Include the image in the submission data
+    setLoading(true);
+    const submissionData = {
+      ...data,
+      avatar: groupUploadedImg,
+    };
+
+    await post({ endPoint: "users/", body: submissionData, hasToken: true })
       .then((res) => {
         if (res) {
+          setLoading(false)
           onClose();
           reset({
             email: "",
             password: "",
             name: { first: "", second: "", last: "" },
+            avatar: "",
           });
+          setGroupLogo(null);
+          setGroupUploadedImg(null);
           setTaskAdded((prev) => !prev);
         }
       })
       .catch((err) => {
         console.error(`Error: ${err}`);
+        setLoading(false)
+
       });
+      setLoading(false)
+
   });
 
   return (
@@ -76,7 +112,7 @@ const NewUser: React.FC<NewUserProps> = ({
       propagateSwipe
       avoidKeyboard
     >
-      <View style={styles.modalView}>
+      <ScrollView style={styles.modalView}>
         <View style={styles.handleBar} />
 
         <View style={styles.header}>
@@ -86,6 +122,23 @@ const NewUser: React.FC<NewUserProps> = ({
             size={36}
             Icon={<Ionicons name="close" size={24} color="#000" />}
           />
+        </View>
+
+        {/* Image Upload Section */}
+        <View style={styles.imageUploadContainer}>
+          <TouchableOpacity style={styles.uploadButton} onPress={pickLogoImage}>
+            {groupLogo ? (
+              <Image source={{ uri: groupLogo.uri }} style={styles.previewImage} />
+            ) : (
+              <>
+                <Ionicons name="cloud-upload-outline" size={24} color="#002B5B" />
+                <Text style={styles.uploadText}>Upload Logo</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          {groupUploadedImg && (
+            <Text style={styles.fileName}>File: {groupUploadedImg}</Text>
+          )}
         </View>
 
         {/* Email */}
@@ -179,13 +232,10 @@ const NewUser: React.FC<NewUserProps> = ({
           <Text style={styles.errorText}>{errors.name.last.message}</Text>
         )}
 
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={() => handleSubmit(onSubmitForm)}
-        >
-          <Text style={styles.submitButtonText}>Submit</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={onSubmitForm}>
+         {loading ?<ActivityIndicator size='small' color='white' /> :  <Text style={styles.submitButtonText}>Submit</Text>}
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </Modal>
   );
 };
@@ -219,6 +269,40 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
+  },
+  imageUploadContainer: {
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  uploadButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    padding:8 ,
+    borderWidth: 2,
+    borderColor: "#002B5B",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    overflow: "hidden",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  uploadText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#002B5B",
+    fontWeight: "500",
+  },
+
+  fileName: {
+    marginTop: 8,
+    fontSize: 12,
+    color: "#666",
   },
   label: {
     fontSize: 16,

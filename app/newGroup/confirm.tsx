@@ -71,8 +71,6 @@ const confirm = () => {
     }
 }, []);
 
-
-  console.log( groupUploadedImg) 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar

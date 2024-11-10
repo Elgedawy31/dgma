@@ -15,6 +15,7 @@ import CustomDatePicker from "./CustomDatePicker";
 import useFilePicker from "@hooks/useFile";
 import { userContext } from "@UserContext";
 import useAxios from "@hooks/useAxios";
+import attachments from "@/app/chat/[id]/attachments";
 
 interface Project {
   _id: string;
@@ -133,7 +134,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const deadline = watch("deadline");
   const selectedProjectId = watch("projectId");
   const selectedStatus = watch("status");
-  const { imagePicker, uploadFiles } = useFilePicker();
+  const { documentPicker, uploadFiles } = useFilePicker();
   const [groupLogo, setGroupLogo] = useState<any>(null);
   const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
 
@@ -191,33 +192,33 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   };
 
   const onSubmitForm = handleSubmit(async (data: TaskData) => {
-    console.log(data)
-    // const finalData = {
-    //   ...data,
-    //   assignedTo: user?.role === "admin" ? selectedUsers : [user?.id],
-    // };
+    const finalData = {
+      ...data,
+      assignedTo: user?.role === "admin" ? selectedUsers : [user?.id],
+      attachments:data?.attachments.map(attachments => attachments.name)
+    };
 
-    // await post({ endPoint: "tasks/", body: finalData, hasToken: true })
-    //   .then((res) => {
-    //     if (res) {
-    //       onClose();
-    //       reset({
-    //         title: "",
-    //         description: "",
-    //         type: "personal",
-    //         startDate: null,
-    //         deadline: null,
-    //         projectId: null,
-    //         assignedTo: user?.role === "admin" ? [] : [user?.id],
-    //         status: "pending",
-    //       });
-    //       setSelectedUsers([]);
-    //       setTaskAdded((prev) => !prev);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     console.error(`Error: ${err}`);
-    //   });
+    await post({ endPoint: "tasks/", body: finalData, hasToken: true })
+      .then((res) => {
+        if (res) {
+          onClose();
+          reset({
+            title: "",
+            description: "",
+            type: "personal",
+            startDate: null,
+            deadline: null,
+            projectId: null,
+            assignedTo: user?.role === "admin" ? [] : [user?.id],
+            status: "pending",
+          });
+          setSelectedUsers([]);
+          setTaskAdded((prev) => !prev);
+        }
+      })
+      .catch((err) => {
+        console.error(`Error: ${err}`);
+      });
   });
 
   useEffect(() => {
@@ -231,7 +232,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         console.error(`Error: ${err}`);
       }
     };
-    fetchProjects();
+    fetchProjects(); 
   }, []);
 
   useEffect(() => {
@@ -274,7 +275,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
   const handleFilePick = useCallback(async () => {
     try {
-      const result = await imagePicker({ 
+      const result = await documentPicker({ 
         multiple: true,
       });
 
@@ -418,7 +419,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
           <TouchableOpacity
             style={styles.submitButton}
-            onPress={() => handleSubmit(onSubmitForm)}
+            onPress={ handleSubmit(onSubmitForm)}
           >
             <Text style={styles.submitButtonText}>Add task</Text>
           </TouchableOpacity>

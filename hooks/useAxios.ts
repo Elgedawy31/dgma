@@ -20,7 +20,7 @@ export default function useAxios() {
             .catch(err => console.log(`Error: ${err}`))
     }, []);
 
-    const post = useCallback(async ({ endPoint, body, isMedia = false, hasToken = true }: AxiosParams) => {
+    const post = useCallback(async ({ endPoint, body, isMedia = false, hasToken = true }: AxiosParams) => { 
         const token = await readStorage('token');
         console.log("Token", token);
         const headers = {
@@ -34,6 +34,18 @@ export default function useAxios() {
             .catch(err => console.log(`Error: ${err} `));
 
     }, []);
+    const deleteFunc = useCallback(async ({ endPoint, hasToken = true }: AxiosParams) => {
+        const token = await readStorage('token');
+        const headers = {
+            'Accept': 'application/json',
+            Authorization: hasToken ? `Bearer ${token}` : '',
+        };
+        return await axios
+            .delete(`${SERVER_URL}/api/${endPoint}`, { headers })
+            .then(res => res.data)
+            .catch(err => console.log(`Error: ${err} `));
 
-    return { get, post };
+    }, []);
+
+    return { get, post , deleteFunc };
 }

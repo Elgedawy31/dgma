@@ -23,88 +23,6 @@ interface Resource {
   type: "pdf" | "doc" | "image";
   url?: string;
 }
-const sampleResources: Resource[] = [
-  {
-    id: "1",
-    name: "Project Requirements.pdf",
-    size: "87MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "project-requirements.pdf",
-      android: "file:///android_asset/project-requirements.pdf",
-    }),
-  },
-  {
-    id: "2",
-    name: "Design Guidelines.pdf",
-    size: "45MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "design-guidelines.pdf",
-      android: "file:///android_asset/design-guidelines.pdf",
-    }),
-  },
-  {
-    id: "43",
-    name: "Design Guidelines.pdf",
-    size: "45MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "design-guidelines.pdf",
-      android: "file:///android_asset/design-guidelines.pdf",
-    }),
-  },
-  {
-    id: "2333",
-    name: "Design Guidelines.pdf",
-    size: "45MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "design-guidelines.pdf",
-      android: "file:///android_asset/design-guidelines.pdf",
-    }),
-  },
-  {
-    id: "3",
-    name: "Technical Specifications.pdf",
-    size: "92MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "technical-specs.pdf",
-      android: "file:///android_asset/technical-specs.pdf",
-    }),
-  },
-  {
-    id: "4",
-    name: "User Research Data.pdf",
-    size: "67MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "user-research.pdf",
-      android: "file:///android_asset/user-research.pdf",
-    }),
-  },
-  {
-    id: "443",
-    name: "User Research Data.pdf",
-    size: "67MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "user-research.pdf",
-      android: "file:///android_asset/user-research.pdf",
-    }),
-  },
-  {
-    id: "45666",
-    name: "User Research Data.pdf",
-    size: "67MB",
-    type: "pdf",
-    url: Platform.select({
-      ios: "user-research.pdf",
-      android: "file:///android_asset/user-research.pdf",
-    }),
-  },
-];
 
 const Task = () => {
   const color = useThemeColor();
@@ -159,7 +77,7 @@ const Task = () => {
 
   }, [id]);  
 
-
+console.log(task.attachments)
 
   return (
     <View style={{ marginBottom: 24, gap:24 , backgroundColor: color.background  , flex:1}}>
@@ -172,8 +90,7 @@ const Task = () => {
           endDate={dayjs(task?.deadline).format('DD MMM')}
         />
         <ResourcesList
-          resources={sampleResources}
-          onDownload={sampleHandlers.handleDownload}
+          resources={task.attachments || []}
           onSeeAll={sampleHandlers.handleSeeAll}
         />
         <View style={{ gap: 16 , marginTop:16 }}>
