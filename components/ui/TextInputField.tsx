@@ -10,6 +10,7 @@ import IconModel from '@model/icon';
 type InputType = 'text' | 'email' | 'password' | 'date';
 
 interface InputFieldProps extends Omit<TextInputProps, 'onChangeText'> {
+    editable?:boolean
     label?: string;
     labelColor?: any;
     type?: InputType;
@@ -46,6 +47,7 @@ const styles = StyleSheet.create({
 });
 
 const InputField: React.FC<InputFieldProps> = ({
+    editable=true ,
     label, labelColor,
     hasIcon,
     type = 'text',
@@ -99,6 +101,7 @@ const InputField: React.FC<InputFieldProps> = ({
             {!noLabel && <Text color={labelColor} type='label' title={label} />}
             <View style={{ flexDirection: "row", position: "relative", alignItems: "center" }}>
                 <TextInput
+                editable={editable}
                     style={[
                         styles.input,
 

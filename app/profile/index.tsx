@@ -8,7 +8,6 @@ import ImageAvatar from "@blocks/ImageAvatar";
 import { userContext } from "@UserContext";
 import { useForm } from "react-hook-form";
 import TextInputField from "@ui/TextInputField";
-import Button from "@ui/Button";
 import useAxios from "@hooks/useAxios";
 import useSecureStorage from "@hooks/useSecureStorage";
 import useStorage from "@hooks/useStorage";
@@ -114,6 +113,7 @@ function profile() {
           </View>
           <View style={{ width: "100%", gap: 24 }}>
             <TextInputField
+            editable={false}
               capitalize
               name="name"
               label="Full Name"
@@ -122,6 +122,8 @@ function profile() {
               rules={{ required: "Name is required" }}
             />
             <TextInputField
+            editable={false}
+
               name="role"
               label="Role"
               control={control}
@@ -129,6 +131,8 @@ function profile() {
               rules={{ required: "role is required" }}
             />
             <TextInputField
+            editable={false}
+
               name="email"
               label="Email"
               control={control}
@@ -136,6 +140,8 @@ function profile() {
               rules={{ required: "role is required" }}
             />
             <TextInputField
+            editable={false}
+
               name="birth"
               label="Date of Birth"
               control={control}
