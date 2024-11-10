@@ -1,6 +1,3 @@
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = (theme: string) => ({
   // Main Colors
   black: '#000',
@@ -8,27 +5,24 @@ export const Colors = (theme: string) => ({
   cancel: '#F22A2A',
 
   // Color Palette
-  card: theme === 'light' ? '#FCFCFC' : '#FCFCFC',
-  body: theme === 'light' ? '#444' : '#444',
-  text: theme === 'light' ? '#0F1010' : '#0F1010',
-  primary: theme === 'light' ? '#002d75' : '#002d75',
-  secondary: theme === 'light' ? '#E8F5FF' : '#E8F5FF',
-  background: theme === 'light' ? '#F6F9FC' : '#F6F9FC',
+  card: theme === 'light' ? '#FCFCFC' : '#1E1E1E',
+  body: theme === 'light' ? '#444' : '#E0E0E0',
+  text: theme === 'light' ? '#0F1010' : '#FFFFFF',
+  primary: theme === 'light' ? '#002d75' : '#4B9BFF',
+  secondary: theme === 'light' ? '#E8F5FF' : '#1A365D',
+  background: theme === 'light' ? '#F6F9FC' : '#121212',
 
   // Tabs Colors
-  activeTab: theme === 'light' ? '#E8F5FF' : '#E8F5FF',
-  inactiveTab: theme === 'light' ? '#B3B3B3' : '#B3B3B3',
+  activeTab: theme === 'light' ? '#E8F5FF' : '#1A365D',
+  inactiveTab: theme === 'light' ? '#B3B3B3' : '#4A5568',
 
   // StatusBar Colors
-  statusBar: theme === 'light' ? '#fff' : '#002d75',
+  statusBar: theme === 'light' ? '#fff' : '#1A365D', 
 
-  //Message Colors : Sender | Receiver
-  sender: theme === 'light' ? '#3FA9F5' : '#002d75',
-  receiver: theme === 'light' ? '#E3E3E3' : '#002d75',
-
+  // Message Colors : Sender | Receiver
+  sender: theme === 'light' ? '#3FA9F5' : '#4B9BFF',
+  receiver: theme === 'light' ? '#E3E3E3' : '#2D3748',
 });
-
-
 export const TaskColors = Object.freeze({
   review: '#2684FF',
   overdue: '#E54C4C',

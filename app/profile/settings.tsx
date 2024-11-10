@@ -4,13 +4,21 @@ import CustomSwitch from "@components/CustomSwitch";
 import CustomListItem from "@components/SettingsListItem";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
+import { ThemeContext } from "@ThemeContext";
 import { router } from "expo-router";
-import { memo, useState } from "react";
+import { memo, useContext } from "react";
 import { View } from "react-native";
 
 function Settings() {
   const color = useThemeColor();
-  const [isActive, setIsActive] = useState(false);
+  const { theme, setTheme } = useContext(ThemeContext);
+  
+  // Helper function to handle theme toggle
+  const handleThemeToggle = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  console.log(theme)
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
       <AppBar
@@ -20,18 +28,18 @@ function Settings() {
           <Ionicons
             name="chevron-back"
             size={24}
-            color="black"
+            color={theme === 'dark' ? 'white' : 'black'}
             onPress={() => {
               router.back();
             }}
           />
         }
       />
-
-      <View style={{ marginTop: 24  }}>
+      
+      <View style={{ marginTop: 24 }}>
         <CustomListItem
-        isActive={isActive}
-        setIsActive={setIsActive}
+          isActive={false}
+          setIsActive={() => {}}
           text="Users List"
           icon={
             <Ionicons
@@ -44,8 +52,8 @@ function Settings() {
           type="navigate"
         />
         <CustomListItem
-            isActive={isActive}
-            setIsActive={setIsActive}
+          isActive={theme === 'dark'}
+          setIsActive={() => handleThemeToggle()}
           text="Dark Mode"
           icon={
             <Ionicons
@@ -54,11 +62,12 @@ function Settings() {
               color={color.primary}
             />
           }
-          onPress={() =>  setIsActive(!isActive)} 
+          onPress={handleThemeToggle}
           type="switch"
         />
       </View>
     </View>
   );
 }
+
 export default memo(Settings);
