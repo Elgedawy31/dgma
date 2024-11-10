@@ -40,7 +40,7 @@ function ProjectDetailsContextProvider({ children }: { children: React.ReactNode
         createdAt: '',
         updatedAt: '',
         description: '',
-        status: 'pending',
+        status: 'Pending',
         team: [], attachments: [],
         deadline: new Date().toISOString(),
         startDate: new Date().toISOString(),
@@ -50,7 +50,7 @@ function ProjectDetailsContextProvider({ children }: { children: React.ReactNode
     const loadProjectDetails = useCallback((data: ProjectModel)
         : void => setProject({ ...data })
         , [])
-
+    useEffect(() => { console.log(project) }, [project]);
     const setProjectLogo = useCallback((file: FileModel)
         : void => setLogoFile({ ...file })
         , [])
@@ -59,12 +59,34 @@ function ProjectDetailsContextProvider({ children }: { children: React.ReactNode
         : void => setProject({ ...project, ...data })
         , [])
 
-    const { name, startDate, deadline, description, team } = useMemo(() => project, [project]);
+    const resetProjectData = useCallback(()
+        : void => {
+        setLogoFile(null);
+        setAttachmentsFiles([]);
+        setMembers([]);
+        setProject({
+            logo: '',
+            name: '',
+            progress: 0,
+            createdAt: '',
+            updatedAt: '',
+            description: '',
+            status: 'Pending',
+            team: [], attachments: [],
+            deadline: new Date().toISOString(),
+            startDate: new Date().toISOString(),
+            createdBy: { _id: '', email: '', name: { first: '', last: '' } },
+        })
+    }, [])
+
+    const { name, startDate, deadline, description } = useMemo(() => project, [project]);
 
     useEffect(() => {
+        console.log("\n\n\nModel State", name, startDate, deadline, description,
+            logoFile?.uri, members.length, "\n\n\n");
         name && startDate && deadline && description &&
-            logoFile?.uri && team.length && setIsDataDone(true);
-    }, [project])
+            logoFile?.uri && members.length && setIsDataDone(true);
+    }, [name, startDate, deadline, description, logoFile, members])
 
     const setProjectAttachments = useCallback((data: FileModel[])
         : void => setAttachmentsFiles([...data])

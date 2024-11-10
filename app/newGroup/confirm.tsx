@@ -14,7 +14,7 @@ import AppBar from "@blocks/AppBar";
 import Text from "@blocks/Text";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
-import useFilePicker from "@hooks/useFileUpload";
+import useFilePicker from "@hooks/useFile";
 import axios from "axios";
 import useSecureStorage from "@hooks/useSecureStorage";
 import useAxios from "@hooks/useAxios";

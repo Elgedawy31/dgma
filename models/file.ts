@@ -1,9 +1,9 @@
 type FileModel = {
     uri: string,
     name: string,
-    url?: string,
     size?: number,
     mimeType: string,
+    measure: string
 }
 
 export default FileModel;

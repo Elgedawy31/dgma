@@ -9,13 +9,13 @@ type UserCardModel = {
     user: UserModel | ProjectMemberModel;
 }
 
-function UserCard({ user: { avatar, specialty, name: { first, last } } }: UserCardModel) {
+function UserCard({ user: { avatar, name: { first, last } } }: UserCardModel) {
     return (
         <View style={styles.container}>
             <ImageAvatar url={avatar || 'https://mir-s3-cdn-cf.behance.net/user/276/8051fa194165537.614d528de211b.jpg'} type="avatar" />
             <View style={{ justifyContent: 'space-between' }}>
                 <Text type="subtitle" capitalized title={`${first} ${last}`} />
-                <Text type="details" title={specialty} />
+                {/* <Text type="details" title={specialty} /> */}
             </View>
         </View>
     )

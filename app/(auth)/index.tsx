@@ -26,10 +26,8 @@ function Login() {
 
 
     const onSubmit = handleSubmit(async (data: LoginModel) => {
-        console.log(data);
         await post({ endPoint: 'users/login', body: data, hasToken: false })
             .then((res) => {
-                console.log("token", res["token"]);
                 if (res["token"]) {
                     setUserData(res["token"], res["user"]);
                     router.replace('/(tabs)/');
@@ -56,7 +54,7 @@ function Login() {
                             label="Email"
                             control={control}
                             errorMessage={errors.email?.message}
-                            rules={{ required: 'Email is required', }}
+                            rules={{ required: 'Email is required' }}
                         />
                         <TextInputField
                             name="password"

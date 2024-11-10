@@ -28,6 +28,7 @@ type FlatListComponentProps = {
     onScrollBegin: () => void;
     onScrollEnd: () => void;
 };
+
 const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
     const { get } = useAxios();
     const colors = useThemeColor();
@@ -45,6 +46,7 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
             await get({ endPoint: "users" }).then(res => setUsers(res))
         }
         getUsers();
+
     }, [])
 
     return (

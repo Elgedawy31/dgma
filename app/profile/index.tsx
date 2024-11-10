@@ -22,23 +22,20 @@ function profile() {
   const { user, resetUser } = useContext(userContext);
   const {
     control,
-    handleSubmit,
     formState: { errors },
   } = useForm({
     defaultValues: {
       name: `${user.name.first} ${user.name.last}`,
       role: user.role,
-      email: user.email || "admin@admin.com",
+      email: user.email,
       birth: "4 - Novmber 1999",
     },
   });
-  console.log(user);
   const onLogoutPress = useCallback(async () => {
+    await removeToken("token");
+    await removeStorage("user");
     await post({ endPoint: "/users/logout" }).then(async (res) => {
-      console.log(res);
-      await removeToken("token");
-      await removeStorage("role");
-      await removeStorage("name");
+
       resetUser();
       router.replace("/(auth)/");
     });
@@ -51,7 +48,7 @@ function profile() {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      position:'relative',
+      position: 'relative',
       padding: 16,
       borderRadius: 16,
       marginBottom: 16,

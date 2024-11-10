@@ -2,7 +2,7 @@ import Text from '@blocks/Text'
 import AppBar from '@blocks/AppBar'
 import ProjectModel from '@model/project'
 import BottomSheet from '@blocks/BottomSheet'
-import useFilePicker from '@hooks/useFileUpload'
+import useFile from '@hooks/useFile'
 import { useLocalSearchParams } from 'expo-router'
 import { useThemeColor } from '@hooks/useThemeColor'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
@@ -16,6 +16,7 @@ import ProjectTeamMembers from '@project-details/ProjectTeamMembers'
 import { set } from 'react-hook-form'
 import Dot from '@ui/dot'
 import useAxios from '@hooks/useAxios'
+import { projectsData } from '@data/projects'
 const uploadProcess = [
     { id: "logo", label: 'Upload Logo ', success: 'Logo is Uploaded Successfully' },
     { id: "attachments", label: 'Uploading Attachments', success: 'Attachments is Uploaded Successfully' },
@@ -24,14 +25,22 @@ function ProjectDetails() {
     //#region State and Initial Data
     const { post } = useAxios();
     const colors = useThemeColor();
-    const { uploadFiles } = useFilePicker();
+    const { uploadFiles } = useFile();
     const [openModal, setOpenModal] = useState(false);
     const [isNew, setIsNew] = useState<boolean>(true);
     const [uploadStep, setUploadStep] = useState<0 | 1 | 2>(0);
-    const { project, logoFile, members, attachmentsFiles, isDataDone, loadProjectDetails } = useContext(projectDetailsContext)
     const [scrollEnabled, setScrollEnabled] = useState(true);
+    // const param = JSON.parse(useLocalSearchParams<{ project: string }>().project);
+    const { project, logoFile, members, attachmentsFiles, isDataDone, } = useContext(projectDetailsContext)
     //#endregion
 
+    // useEffect(() => {
+    //     if (param._id) {
+    //         console.log("Project Details in Main Page", param);
+    //         setIsNew(false);
+    //         loadProjectDetails(param);
+    //     }
+    // }, [])
 
 
     useEffect(() => {
@@ -45,47 +54,74 @@ function ProjectDetails() {
     const onSubmit = useCallback(async () => {
         if (isNew) {/**Submit Create Action */
             try {
-                console.log("\n\n\n============================================================\nProject", project);
-                console.log("\n\nLogo", logoFile);
-                console.log("\n\nAttachments", attachmentsFiles);
-                console.log("\n\nMembers", members);
 
                 setOpenModal(true);
 
                 // Step 1: Upload Logo
                 const logoURL = await uploadFiles([logoFile!]);
-                console.log("Logo URL", logoURL);
                 setUploadStep(1);
 
                 // Step 2: Upload Attachments
                 // const files = await uploadFiles(attachmentsFiles)
                 const files = attachmentsFiles.map(file => file.name)
-                console.log("Files URL", files);
                 setUploadStep(2);
                 const { name, description, deadline, startDate } = project;
                 // Step 3: Create Project
+                const final = {
+                    "name": name,
+                    "logo": logoURL[0].name,
+                    "deadline": deadline,
+                    "startDate": startDate,
+                    "description": description,
+                    "team": members.map(member => member.id),
+                    "attachments": files
+                }
+
                 await post({
                     endPoint: '/projects', body: {
                         "name": name,
-                        "logo": logoURL,
+                        "logo": logoURL[0].name,
                         "deadline": deadline,
                         "startDate": startDate,
                         "description": description,
                         "team": members.map(member => member.id),
                         "attachments": files
                     }
+
+                }).then(res => {
+
                 })
-                setOpenModal(false);
+                    .catch(err => console.log("Error", err))
+                    .finally(() => setOpenModal(false));
             } catch (error) { console.log("Error", error); }
             finally { setOpenModal(false); }
         }
-        // else {
-        //     if (updated) {/**Submit Edit Action */
-        //         alert("Update Project")
-        //     } else {/**Submit Delete Action */
-        //         alert("Delete Project")
-        //     }
-        // }
+
+    }, [project, attachmentsFiles, members]);
+
+
+    const onGenerate = useCallback(async () => {
+        try {
+            setOpenModal(true);
+            projectsData.forEach(async ({ name, description, deadline, startDate, attachments, progress, team, logo, status }) => {
+                await post({
+                    endPoint: '/projects', body: {
+                        "name": name,
+                        "logo": logo,
+                        "team": team,
+                        "status": status,
+                        "progress": progress,
+                        "deadline": deadline,
+                        "startDate": startDate,
+                        "description": description,
+                        "attachments": attachments,
+                    }
+
+                }).then(res => { console.log("\n\n** Response:", res, "\n\n============================================================\n\n\n"); })
+                    .catch(err => console.log("Error", err))
+            })
+        } catch (error) { console.log("Error", error); }
+        finally { setOpenModal(false); }
     }, [project, attachmentsFiles, members]);
 
     return (
@@ -93,11 +129,24 @@ function ProjectDetails() {
             <AppBar
                 leading='back'
                 title={<Text type='subtitle' title={isNew ? 'New Project' : project?.name || 'Project Title'} />}
-                action={!isDataDone ? <View /> : <Pressable onPress={onSubmit} >
-                    <Text type='subtitle' bold
-                        title={isNew ? 'Create' : /*updated ? 'Edit' :*/ 'Delete'}
-                        color={isNew ? colors.primary : /*updated ? colors.text :*/ colors.cancel} />
-                </Pressable>}
+                action={
+                    <View>
+                        {false && <Pressable onPress={onGenerate} >
+                            <Text type='subtitle' bold
+                                title='Generate'
+                                color={isNew ? colors.primary : /*updated ? colors.text :*/ colors.cancel} />
+                        </Pressable>}
+                        {!isNew && <Pressable onPress={onSubmit} >
+                            <Text type='subtitle' bold
+                                title={isNew ? 'Create' : /*updated ? 'Edit' :*/ 'Delete'}
+                                color={isNew ? colors.primary : /*updated ? colors.text :*/ colors.cancel} />
+                        </Pressable>
+                        }
+                        {
+                            !isDataDone && <View />
+                        }
+                    </View>
+                }
             />
             <View style={{ paddingHorizontal: 16, justifyContent: 'space-between', flex: 1, paddingVertical: 8, }}>
                 <ScrollView showsVerticalScrollIndicator={false}>

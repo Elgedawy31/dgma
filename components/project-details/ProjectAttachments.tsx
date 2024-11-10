@@ -3,7 +3,7 @@ import Icon from '@blocks/Icon';
 import Text from '@blocks/Text';
 import FileModel from '@model/file';
 import { FlatList, View } from 'react-native'
-import useFilePicker from '@hooks/useFileUpload';
+import useFile from '@hooks/useFile';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { DocumentPickerAsset } from 'expo-document-picker';
 import { projectDetailsContext } from '@ProjectDetailsContext';
@@ -15,7 +15,7 @@ type FlatListComponentProps = {
 };
 const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
     const colors = useThemeColor();
-    const { documentPicker } = useFilePicker();
+    const { documentPicker, uploadFiles } = useFile();
     const [files, setFiles] = useState<FileModel[]>([])
     const { setProjectAttachments, project: { attachments }, } = useContext(projectDetailsContext)
 
@@ -25,13 +25,7 @@ const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
 
     const pickFiles = useCallback(async () => {
         const res = await documentPicker();
-        if (res) {
-            const files: FileModel[] = res.map((file: DocumentPickerAsset) => ({
-                uri: file.uri, name: file.name,
-                mimeType: file.mimeType || '', size: file.size || 0
-            }));
-            setFiles(files);
-        }
+        res && setFiles(files);
     }, []);
     const removeFile = useCallback((file: FileModel) => {
         setFiles(files.filter((f) => f.uri !== file.uri));
@@ -65,9 +59,10 @@ const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                                 onScrollBeginDrag={onScrollBegin}
                                 onMomentumScrollEnd={onScrollEnd}
                                 renderItem={({ item: file }) => (
-                                    <File src={file}
-                                        key={file.name} type='attachment'
-                                        onPress={() => removeFile(file)} />
+                                    <View />
+                                    // <File src={file}
+                                    //     key={file.name} type='attachment'
+                                    //     onPress={() => removeFile(file)} />
                                 )}
                             />
                         </View>

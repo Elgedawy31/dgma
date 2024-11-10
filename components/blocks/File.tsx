@@ -12,7 +12,7 @@ type FileProps = {
     type: 'view' | 'attachment'
 }
 
-function File({ src, type, onPress }: FileProps) {
+function File({ src: { name, uri, size, mimeType, measure }, type, onPress }: FileProps) {
     const colors = useThemeColor();
 
     const styles = useMemo(() => StyleSheet.create({
@@ -49,51 +49,28 @@ function File({ src, type, onPress }: FileProps) {
 
     }), [colors]);
 
-    const file = useCallback(() => {
-        const type = src.mimeType;
-        const fileName: string = src.name;
-        const sizeInBytes = src.size || 0;
-
-        let icon: IconModel;
-        if (type.includes('image')) {
-            icon = 'file-image';
-        } else if (type.includes('pdf')) {
-            icon = 'file-pdf';
-        } else {
-            icon = 'file';
-        }
-
-        const sizeUnits = ['B', 'KB', 'MB', 'GB'];
-        let size = sizeInBytes;
-        let measure = 'B';
-
-        for (let i = 0; i < sizeUnits.length; i++) {
-            if (size < 1024) {
-                measure = sizeUnits[i];
-                break;
-            }
-            size /= 1024;
-        }
-
-        return {
-            icon,
-            measure,
-            size: size.toFixed(2),
-            title: fileName.slice(0, 20),
-        };
-    }, [src]);
+    const iconMapping = useCallback(() => {
+        return mimeType.includes('pdf') ? 'file-pdf'
+            : mimeType.includes('image') ?
+                'file-image'
+                : 'file';
+    }, []);
 
     return (
-        <View style={styles[`${type}Container`]}>
+        <View style={styles[`${type}Container`]} >
             <View style={styles[`${type}Content`]}>
-                <Icon icon={file().icon} size={24} iconColor={colors.primary} />
+                <Icon icon={iconMapping() as IconModel} size={24} iconColor={colors.primary} />
                 <View style={{ flexDirection: 'column', justifyContent: 'flex-start' }}>
-                    <Text bold color={colors.text} type='details' title={file().title} />
-                    <Text bold color={colors.body} type='small' title={`${file().size} ${file().measure}`} />
+                    <Text bold={type === 'attachment'} color={colors.text} type='details' title={name.slice(0, 50)} />
+                    <Text bold={type === 'attachment'} color={colors.body} type='small' title={`${size} ${measure}`} />
                 </View>
             </View>
-            {onPress && <Icon icon='delete' iconColor={type === 'view' ? colors.primary : colors.cancel} onPress={onPress} />}
-        </View>
+            {onPress && <Icon onPress={onPress}
+                icon={type === 'view' ? 'download' : 'delete'}
+                iconColor={type === 'view' ? colors.primary : colors.cancel}
+            />
+            }
+        </View >
     );
 }
 
