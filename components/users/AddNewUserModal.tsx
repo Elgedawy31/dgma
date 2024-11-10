@@ -181,7 +181,7 @@ const NewUser: React.FC<NewUserProps> = ({
 
         <TouchableOpacity
           style={styles.submitButton}
-          onPress={handleSubmit(onSubmitForm)}
+          onPress={() => handleSubmit(onSubmitForm)}
         >
           <Text style={styles.submitButtonText}>Submit</Text>
         </TouchableOpacity>

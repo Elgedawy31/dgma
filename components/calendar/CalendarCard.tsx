@@ -32,7 +32,7 @@ function CalendarCard({ time, title, state, subTitle , assignedTo  , link}: Cale
       <Text type="body" color="black" title={title} />
       <Text type="small" title={subTitle?.length > 60 ? `${subTitle.slice(0 , 60)}...` : subTitle} />
       <Text type="small" title={time} />
-      <Ionicons
+      {/* <Ionicons
         size={18}
         color="black"
         name="ellipsis-vertical"
@@ -40,7 +40,7 @@ function CalendarCard({ time, title, state, subTitle , assignedTo  , link}: Cale
           alert("hello");
         }}
         style={{ position: "absolute", right: 8, top: 10 }}
-      />
+      /> */}
 
       <View style={styles.people}>
         <ProfileStack profiles={assignedTo} maxDisplay={3} />

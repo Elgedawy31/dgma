@@ -5,8 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from "react-native";
-import { useForm, Controller, useFormContext } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
 import IconWrapper from "@components/IconWrapper";
@@ -17,6 +18,15 @@ import useAxios from "@hooks/useAxios";
 interface Project {
   _id: string;
   name: string;
+}
+
+interface User {
+  _id: string;
+  name: {
+    first: string;
+    last: string;
+  };
+  role: string;
 }
 
 interface TaskData {
@@ -37,12 +47,12 @@ interface TaskFormModalProps {
 }
 
 const TASK_STATUSES = [
-  { id: 'review', label: 'Review' },
-  { id: 'overdue', label: 'Overdue' },
-  { id: 'progress', label: 'In Progress' },
-  { id: 'completed', label: 'Completed' },
-  { id: 'pending', label: 'Pending' },
-  { id: 'cancelled', label: 'Cancelled' }
+  { id: "review", label: "Review" },
+  { id: "overdue", label: "Overdue" },
+  { id: "progress", label: "In Progress" },
+  { id: "completed", label: "Completed" },
+  { id: "pending", label: "Pending" },
+  { id: "cancelled", label: "Cancelled" },
 ];
 
 const TaskFormModal: React.FC<TaskFormModalProps> = ({
@@ -56,9 +66,12 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   >("startDate");
   const [projectSelectorVisible, setProjectSelectorVisible] = useState(false);
   const [statusSelectorVisible, setStatusSelectorVisible] = useState(false);
-  const { post } = useAxios();
-  const { get } = useAxios();
+  const [userSelectorVisible, setUserSelectorVisible] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const { post, get } = useAxios();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([ { _id:'1' , role:'admin' , name:{first:'mo' , last:'gad'}}, { _id:'2' , role:'user' , name:{first:'mo' , last:'gimmy'}}]);
+  const { user } = useContext(userContext);
 
   const {
     control,
@@ -75,8 +88,8 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       startDate: null,
       deadline: null,
       projectId: null,
-      assignedTo: ['671fc07d94590411c0c34263'],
-      status: "pending", // Set a default status
+      assignedTo: user?.role === "admin" ? [] : [user?.id],
+      status: "pending",
     },
   });
 
@@ -86,7 +99,15 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const selectedStatus = watch("status");
 
   const selectedProject = projects.find((p) => p._id === selectedProjectId);
-  const selectedStatusLabel = TASK_STATUSES.find(s => s.id === selectedStatus)?.label;
+  const selectedStatusLabel = TASK_STATUSES.find(
+    (s) => s.id === selectedStatus
+  )?.label;
+
+  useEffect(() => {
+    if (user?.role === "user") {
+      setValue("assignedTo", [user?.id]);
+    }
+  }, [user]);
 
   const handleDateSelect = (
     date: string,
@@ -111,13 +132,32 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     setStatusSelectorVisible(false);
   };
 
+  const handleUserSelect = (userId: string) => {
+    const currentAssigned = watch("assignedTo") || [];
+    let newAssigned;
+
+    if (currentAssigned.includes(userId)) {
+      newAssigned = currentAssigned.filter((id) => id !== userId);
+    } else {
+      newAssigned = [...currentAssigned, userId];
+    }
+
+    setValue("assignedTo", newAssigned);
+    setSelectedUsers(newAssigned);
+  };
+
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return "Select date";
     return new Date(dateString).toLocaleDateString();
   };
 
   const onSubmitForm = handleSubmit(async (data: TaskData) => {
-    await post({ endPoint: "tasks/", body: data, hasToken: true })
+    const finalData = {
+      ...data,
+      assignedTo: user?.role === "admin" ? selectedUsers : [user?.id],
+    };
+
+    await post({ endPoint: "tasks/", body: finalData, hasToken: true })
       .then((res) => {
         if (res) {
           onClose();
@@ -128,9 +168,10 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             startDate: null,
             deadline: null,
             projectId: null,
-            assignedTo: [],
+            assignedTo: user?.role === "admin" ? [] : [user?.id],
             status: "pending",
           });
+          setSelectedUsers([]);
           setTaskAdded((prev) => !prev);
         }
       })
@@ -153,6 +194,44 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     fetchProjects();
   }, []);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await get({ endPoint: "users" });
+        if (res) {
+          setUsers(res);
+        }
+      } catch (err) {
+        console.error(`Error: ${err}`);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const renderAssignedToSection = () => {
+    if (user?.role === "admin") {
+      return (
+        <>
+          <Text style={styles.label}>Assign To</Text>
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => setUserSelectorVisible(true)}
+          >
+            <Text>
+              {selectedUsers.length > 0
+                ? `${selectedUsers.length} users selected`
+                : "Select Users"}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color="#515151" />
+          </TouchableOpacity>
+
+         
+        </>
+      );
+    }
+    return null;
+  };
+
   return (
     <Modal
       isVisible={isVisible}
@@ -164,57 +243,102 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       avoidKeyboard
     >
       <View style={styles.modalView}>
-        <View style={styles.handleBar} />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.handleBar} />
 
-        <View style={styles.header}>
-          <Text style={styles.title}>New personal task</Text>
-          <IconWrapper
-            onPress={onClose}
-            size={36}
-            Icon={<Ionicons name="close" size={24} color="#000" />}
-          />
-        </View>
-
-        {/* Task Title */}
-        <Text style={styles.label}>Task title</Text>
-        <Controller
-          control={control}
-          rules={{ required: "Title is required" }}
-          name="title"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              style={styles.input}
-              onChangeText={onChange}
-              value={value}
-              placeholder="Enter Task Title"
+          <View style={styles.header}>
+            <Text style={styles.title}>New personal task</Text>
+            <IconWrapper
+              onPress={onClose}
+              size={36}
+              Icon={<Ionicons name="close" size={24} color="#000" />}
             />
+          </View>
+
+          <Text style={styles.label}>Task title</Text>
+          <Controller
+            control={control}
+            rules={{ required: "Title is required" }}
+            name="title"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                style={styles.input}
+                onChangeText={onChange}
+                value={value}
+                placeholder="Enter Task Title"
+              />
+            )}
+          />
+          {errors.title && (
+            <Text style={styles.errorText}>{errors.title.message}</Text>
           )}
+
+          <Text style={styles.label}>Project</Text>
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => setProjectSelectorVisible(true)}
+          >
+            <Text>{selectedProject?.name || "Select Project"}</Text>
+            <Ionicons name="chevron-down" size={20} color="#515151" />
+          </TouchableOpacity>
+
+          {renderAssignedToSection()}
+
+          <Text style={styles.label}>Description</Text>
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                onChangeText={onChange}
+                value={value}
+                placeholder="Enter description"
+                multiline
+                numberOfLines={4}
+              />
+            )}
+          />
+
+          <View style={styles.dateContainer}>
+            <View style={styles.dateField}>
+              <Text style={styles.label}>Start Date</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => openDatePicker("startDate")}
+              >
+                <Text>{formatDate(startDate)}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.dateField}>
+              <Text style={styles.label}>Deadline</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => openDatePicker("deadline")}
+              >
+                <Text>{formatDate(deadline)}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit(onSubmitForm)}
+          >
+            <Text style={styles.submitButtonText}>Add task</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <CustomDatePicker
+          isVisible={datePickerVisible}
+          onClose={() => setDatePickerVisible(false)}
+          onDateSelect={handleDateSelect}
+          dateType={datePickerType}
+          selectedStartDate={startDate}
+          selectedDeadline={deadline}
         />
-        {errors.title && (
-          <Text style={styles.errorText}>{errors.title.message}</Text>
-        )}
 
-        {/* Project Selector */}
-        <Text style={styles.label}>Project</Text>
-        <TouchableOpacity
-          style={styles.selectorButton}
-          onPress={() => setProjectSelectorVisible(true)}
-        >
-          <Text>{selectedProject?.name || "Select Project"}</Text>
-          <Ionicons name="chevron-down" size={20} color="#515151" />
-        </TouchableOpacity>
-
-        {/* Status Selector */}
-        <Text style={styles.label}>Status</Text>
-        <TouchableOpacity
-          style={styles.selectorButton}
-          onPress={() => setStatusSelectorVisible(true)}
-        >
-          <Text>{selectedStatusLabel || "Select Status"}</Text>
-          <Ionicons name="chevron-down" size={20} color="#515151" />
-        </TouchableOpacity>
-
-        {/* Project Selection Modal */}
         <Modal
           isVisible={projectSelectorVisible}
           onBackdropPress={() => setProjectSelectorVisible(false)}
@@ -227,8 +351,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                 key={project._id}
                 style={[
                   styles.selectorOption,
-                  selectedProjectId === project._id &&
-                    styles.selectedOption,
+                  selectedProjectId === project._id && styles.selectedOption,
                 ]}
                 onPress={() => handleProjectSelect(project._id)}
               >
@@ -246,98 +369,50 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
           </View>
         </Modal>
 
-        {/* Status Selection Modal */}
         <Modal
-          isVisible={statusSelectorVisible}
-          onBackdropPress={() => setStatusSelectorVisible(false)}
+          isVisible={userSelectorVisible}
+          onBackdropPress={() => setUserSelectorVisible(false)}
           style={styles.selectorModal}
         >
           <View style={styles.selectorContent}>
-            <Text style={styles.selectorTitle}>Select Status</Text>
-            {TASK_STATUSES.map((status) => (
+            <Text style={styles.selectorTitle}>Select Users</Text>
+            {users.map((user: User) => (
               <TouchableOpacity
-                key={status.id}
+                key={user._id}
                 style={[
                   styles.selectorOption,
-                  selectedStatus === status.id &&
-                    styles.selectedOption,
+                  selectedUsers.includes(user._id) && styles.selectedOption,
                 ]}
-                onPress={() => handleStatusSelect(status.id)}
+                onPress={() => handleUserSelect(user._id)}
               >
-                <Text
-                  style={[
-                    styles.selectorOptionText,
-                    selectedStatus === status.id &&
-                      styles.selectedOptionText,
-                  ]}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
                 >
-                  {status.label}
-                </Text>
+                  <Text
+                    style={[
+                      styles.selectorOptionText,
+                      selectedUsers.includes(user._id) &&
+                        styles.selectedOptionText,
+                    ]}
+                  >
+                    {`${user.name.first} ${user.name.last}`}
+                  </Text>
+                  {selectedUsers.includes(user._id) && (
+                    <Ionicons name="checkmark" size={24} color="#002B5B" />
+                  )}
+                </View>
               </TouchableOpacity>
             ))}
           </View>
         </Modal>
-
-        {/* Description */}
-        <Text style={styles.label}>Description</Text>
-        <Controller
-          control={control}
-          name="description"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              onChangeText={onChange}
-              value={value}
-              placeholder="Enter description"
-              multiline
-              numberOfLines={4}
-            />
-          )}
-        />
-
-        {/* Date Selection */}
-        <View style={styles.dateContainer}>
-          <View style={styles.dateField}>
-            <Text style={styles.label}>Start Date</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => openDatePicker("startDate")}
-            >
-              <Text>{formatDate(startDate)}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.dateField}>
-            <Text style={styles.label}>Deadline</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => openDatePicker("deadline")}
-            >
-              <Text>{formatDate(deadline)}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleSubmit(onSubmitForm)}
-        >
-          <Text style={styles.submitButtonText}>Add task</Text>
-        </TouchableOpacity>
-
-        <CustomDatePicker
-          isVisible={datePickerVisible}
-          onClose={() => setDatePickerVisible(false)}
-          onDateSelect={handleDateSelect}
-          dateType={datePickerType}
-          selectedStartDate={startDate}
-          selectedDeadline={deadline}
-        />
       </View>
     </Modal>
   );
 };
-
 const styles = StyleSheet.create({
   modal: {
     justifyContent: "flex-end",
