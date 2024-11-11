@@ -16,15 +16,15 @@ function MeetingCard({ time, title, subTitle, }: TaskCardProps) {
     const colors = useThemeColor()
     //#region UI
     return (
-        <View style={[styles.container, { borderColor: colors.primary }]}>
-            <Text type='body' color='black' title={title} />
+        <View style={[styles.container, { borderColor: colors.primary , backgroundColor:colors.card }]}>
+            <Text type='body' title={title} />
             <Text type='label' title={subTitle} />
             <Text type='label' title={time} />
-            <Ionicons
+            {/* <Ionicons
                 size={18} color="black"
                 name="ellipsis-vertical"
                 onPress={() => { alert("hello") }}
-                style={{ position: 'absolute', right: 8, top: 10 }} />
+                style={{ position: 'absolute', right: 8, top: 10 }} /> */}
         </View >
     )
     //#endregion
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1, gap: 10, padding: 10,
         marginHorizontal: 10, marginBottom: 12,
-        backgroundColor: 'white', borderLeftWidth: 14, borderRadius: 10,
+     borderLeftWidth: 14, borderRadius: 10,
     },
 })
 //#endregion

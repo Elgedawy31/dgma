@@ -24,7 +24,7 @@ const AppBar = ({ center = false, leading, title, action, dark, height = 50 }: A
     return (
         <View style={[
             styles.container,
-            { minHeight: height },
+            { minHeight: height , alignItems:'center' },
             { backgroundColor:  Colors.card},
         ]}>
             <StatusBar dark={dark} />

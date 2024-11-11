@@ -17,7 +17,7 @@ function UpcomingMeetings() {
         <View>
             <View style={styles.container}>
                 <Text type='title' title='Current Projects' />
-                <Ionicons name="add" size={32} color="black" style={{ padding: 2, backgroundColor: colors.secondary, borderRadius: 50 }} />
+                <Ionicons name="add" size={32} color={colors.text} style={{ padding: 2, backgroundColor: colors.secondary, borderRadius: 50 }} />
             </View>
             {meetings.map((meeting, index) => (
                 <MeetingCard

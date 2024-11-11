@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import React, { useEffect } from "react";
 import { useThemeColor } from "@hooks/useThemeColor";
-import { TaskColors } from "@colors";
+import { Colors, TaskColors } from "@colors";
 import IconWrapper from "@components/IconWrapper";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import NewUser from "@components/users/AddNewUserModal";
@@ -114,12 +114,12 @@ const Users = () => {
           />
         }
       />
-      <FlatList
+     {users?.length > 0 ?  <FlatList
         data={users}
         renderItem={renderUserItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles(color).listContainer}
-      />
+      /> : <Text style={{color:color.text , fontSize:18 , marginTop:52 , textAlign:'center'}}>No Users Yet</Text>}
 
       <NewUser
         isVisible={isModalVisible}
