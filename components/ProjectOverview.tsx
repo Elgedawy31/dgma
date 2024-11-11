@@ -5,7 +5,7 @@ import { TaskColors } from '@/constants/Colors';
 import { projectsContext } from '@ProjectsContext';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { memo, useCallback, useContext, useEffect, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 //#endregion
 type ProjectStatusModel = {
     id: string;
@@ -13,11 +13,20 @@ type ProjectStatusModel = {
     value: number;
     color: string;
 }
+
+
 function ProjectOverview() {
     const colors = useThemeColor();
     const { projects } = useContext(projectsContext);
-    const [projectsStatus, setProjectsStatus] = useState<ProjectStatusModel[]>([]);
     const [statusPercent, setStatusPercent] = useState<number>(0);
+    const [projectsStatus, setProjectsStatus] = useState<ProjectStatusModel[]>([]);
+    const [defData] = useState<{ label: string, value: number, color: string }[]>(() => ([
+        { label: 'In Review', value: 1, color: TaskColors.review },
+        { label: 'Pending', value: 1, color: TaskColors.pending },
+        { label: 'In Progress', value: 1, color: TaskColors.progress },
+        { label: 'Completed', value: 1, color: TaskColors.completed },
+    ]));
+
     const adjustProjectsStatus = useCallback(() => {
         const res = [
             // { id: 'overdue', label: 'Overdue', value: 0, color: TaskColors.overdue },
@@ -54,28 +63,45 @@ function ProjectOverview() {
                         <PieChart
                             coverRadius={0.6}
                             widthAndHeight={175}
-                            series={projectsStatus.map((item) => item.value)}
-                            sliceColor={projectsStatus.map((item) => item.color)}
+                            series={projects.length > 0 ? projectsStatus.map((item) => item.value) : defData.map((item) => item.value)}
+                            sliceColor={projects.length > 0 ? projectsStatus.map((item) => item.color) : defData.map((item) => item.color)}
                         />
                         <View style={styles.conChartContent}>
-                            <Text type='label' size={20} color={projectsStatus[statusPercent].color}
-                                title={((projectsStatus[statusPercent].value / projectsStatus.reduce((a, b) => a + b.value, 0)) * 100).toFixed(2) + '%'} />
-                            <Text type='label' title={projectsStatus[statusPercent].label} />
+                            <Text type='label' size={20} color={projects.length > 0 ? projectsStatus[statusPercent].color : defData[statusPercent].color}
+                                title={
+                                    projects.length == 0 ?
+                                        '0%' :
+                                        (((projectsStatus[statusPercent].value / projectsStatus.reduce((a, b) => a + b.value, 0)) * 100).toFixed(2) + '%')
+                                }
+                            />
+
+                            <Text type='label' title={projects.length > 0 ? projectsStatus[statusPercent].label : defData[statusPercent].label} />
                         </View>
                     </View>
                     <View style={[styles.conChartText]}>
                         {
-                            projectsStatus.filter(item => item.value > 0).map((item, index) => (
-                                <Pressable key={item.label} style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }} onPress={() => setStatusPercent(index)}>
-                                    <View style={{ width: 16, aspectRatio: 1, backgroundColor: item.color, borderRadius: 4 }} />
-                                    <Text type='label' title={item.label} />
-                                </Pressable>
-                            ))
+                            projects.length > 0 ?
+                                projectsStatus.filter(item => item.value > 0).map((item, index) => (
+                                    <Pressable key={item.label} onPress={() => setStatusPercent(index)}
+                                        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+                                            <View style={{ width: 16, aspectRatio: 1, backgroundColor: 'red', borderRadius: 4 }} />
+                                            <Text type='label' title={item.label} />
+                                        </View>
+                                        <Text type='label' key={item.label} title={item.value + ""} />
+                                    </Pressable>
+                                )) :
+                                defData.map(({ color, label }, index) => (
+                                    <Pressable key={label} onPress={() => setStatusPercent(index)}
+                                        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+                                            <View style={{ width: 16, aspectRatio: 1, backgroundColor: color, borderRadius: 4 }} />
+                                            <Text type='label' title={label} />
+                                        </View>
+                                        <Text type='label' key={label} title={"0"} />
+                                    </Pressable>
+                                ))
                         }
-                    </View>
-
-                    <View style={styles.conChartText}>
-                        {projectsStatus.filter(item => item.value > 0).map(item => (<Text type='label' key={item.label} title={item.value + ""} />))}
                     </View>
                 </View>
             }
@@ -88,6 +114,7 @@ export default memo(ProjectOverview);
 //#region Styles
 const styles = StyleSheet.create({
     container: {
+        gap: 16,
         marginTop: 16,
         paddingRight: 16,
         flexDirection: 'row',
@@ -102,7 +129,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     conChartText: {
-        gap: 8,
+        flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
     }

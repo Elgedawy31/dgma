@@ -37,8 +37,8 @@ const AppBar = ({ center = false, leading, title, action, dark, height = 50 }: A
                 </View>
                 {/* /** Trailing Icon | Notification | Title */}
                 <View>
-                    {leading === 'avatar' && <Text type='subtitle' color={Colors.text} title={title as string || `Welcome ${role === 'admin' ? "Admin" : first}!`} />}
-                    {typeof title === 'string' ? <Text type='subtitle' color={Colors.text} title={title} /> : title}
+                    {leading === 'avatar' && <Text type='subtitle' color={dark ? 'white' : 'black'} title={title as string || `Welcome ${first}!`} />}
+                    {typeof title === 'string' ? <Text type='subtitle' color={dark ? 'white' : 'black'} title={title} /> : title}
                 </View>
             </View>
             {/* /** Action Buttons */}

@@ -5,10 +5,9 @@ import ProjectModel from "@model/project";
 import { createContext, memo, useCallback, useEffect, useMemo, useState } from "react";
 
 type ProjectContextType = {
-    loading: boolean,
-    error: string | null,
-    projects: ProjectModel[],
-    loadProjects: () => void
+    projects: ProjectModel[];
+    loadProjects: () => void;
+    addNewProject: (data: ProjectModel) => void;
 }
 
 export const projectsContext = createContext({} as ProjectContextType);
@@ -16,26 +15,27 @@ export const projectsContext = createContext({} as ProjectContextType);
 function ProjectsContextProvider({ children }: { children: React.ReactNode }) {
     const { get, post } = useAxios();
     const { readStorage } = useSecureStorage();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [projects, setProjects] = useState<ProjectModel[]>([]);
 
-    const loadProjects = async () => {
+    const loadProjects = useCallback(async () => {
         const token = await readStorage('token');
         if (token) {
-            setLoading(true);
             await get({ endPoint: '/projects' })
-                .then(res => setProjects(res))
-                .finally(() => setLoading(false))
+                .then(res => res && setProjects(res))
                 .catch(err => console.log(`Error: ${err}`));
             // setProjects([...projectsData]);
         }
-    }
+    }, [])
+
+    const addNewProject = useCallback((data: ProjectModel) => {
+        setProjects([...projects, data]);
+    }, [])
+
     useEffect(() => { loadProjects(); }, [])
 
     const obj = useMemo(() => ({
-        projects, loadProjects, loading, error
-    }), [projects, loadProjects]);
+        projects, loadProjects, addNewProject
+    }), [projects, loadProjects, addNewProject]);
     return (
         <projectsContext.Provider value={obj}>
             {children}

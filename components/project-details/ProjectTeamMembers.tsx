@@ -11,7 +11,6 @@ import { useThemeColor } from '@hooks/useThemeColor'
 import { usersData } from '@data/users'
 import { useForm } from 'react-hook-form'
 import UserModel from '@model/user'
-import index from '@/app/newGroup'
 type TeamUserModel = {
     id: string,
     avatar: string | null,
@@ -43,7 +42,7 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
 
     useEffect(() => {
         const getUsers = async () => {
-            await get({ endPoint: "users" }).then(res => setUsers(res))
+            await get({ endPoint: "users" }).then(res => {console.log(res); res && setUsers(res)})
         }
         getUsers();
 
@@ -53,7 +52,7 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
         <View style={{ gap: members.length ? 8 : 4 }}>
             <Text color={colors.primary} type='label' title='Project Members' />
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
-                {!members.length ? <Text italic type='label' color={'red'} title='No Members Assigned to This Project' /> :
+                {users.length > 0 && !members.length ? <Text italic type='error' title='No Members Assigned to This Project' /> :
                     members.map((member) =>
                         <Pressable key={member.id} onPress={() => removeMember(member.id)}>
                             <StackUI
@@ -71,35 +70,40 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                 control={control}
                 placeholder='Search for Project Members By Name '
             />}
-            {users.length > 0 && <View style={{ gap: 8, marginVertical: 8 }}>
-                <View style={{ height: 220 }}>
-                    <FlatList
-                        data={[...users]
-                            .filter((user) => !members.some((mem) => mem.id === user.id))
-                            .filter(({ name: { first, last } }) =>
-                            (!watch('teamValue') ? true
-                                : first.toLowerCase().includes(watch('teamValue').toLowerCase())
-                                || last.toLowerCase().includes(watch('teamValue').toLowerCase())
-                            )
-                            )}
-                        onScrollBeginDrag={onScrollBegin}
-                        onScrollEndDrag={onScrollEnd}
-                        onMomentumScrollEnd={onScrollEnd}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item: { avatar, name: { first, last }, id }, index }) => (
-                            <Pressable style={{ marginVertical: 2 }}
-                                onPress={() => addNewMember({ avatar: avatar || '', id: id || Date.now().toString() })}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} key={id}>
-                                    <ImageAvatar type='avatar' url={avatar} size={50} />
-                                    <Text type='subtitle' title={`${first} ${last}`} />
-                                </View>
-                            </Pressable>
-                        )}
-                    />
+            {users.length === 0 ?
+                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 2, }}>
+                    <Text italic size={14} type='error' title='No Users Found' />
+                    <Icon icon='back' iconColor={colors.primary} />
                 </View>
-            </View>
+                : <View style={{ gap: 8, marginVertical: 8 }}>
+                    <View style={{ height: 220 }}>
+                        <FlatList
+                            data={[...users]
+                                .filter((user) => !members.some((mem) => mem.id === user.id))
+                                .filter(({ name: { first, last } }) =>
+                                (!watch('teamValue') ? true
+                                    : first.toLowerCase().includes(watch('teamValue').toLowerCase())
+                                    || last.toLowerCase().includes(watch('teamValue').toLowerCase())
+                                )
+                                )}
+                            onScrollBeginDrag={onScrollBegin}
+                            onScrollEndDrag={onScrollEnd}
+                            onMomentumScrollEnd={onScrollEnd}
+                            keyExtractor={item => item.id}
+                            renderItem={({ item: { avatar, name: { first, last }, id }, index }) => (
+                                <Pressable style={{ marginVertical: 2 }}
+                                    onPress={() => addNewMember({ avatar: avatar || '', id: id || Date.now().toString() })}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} key={id}>
+                                        <ImageAvatar type='avatar' url={avatar} size={50} />
+                                        <Text type='subtitle' title={`${first} ${last}`} />
+                                    </View>
+                                </Pressable>
+                            )}
+                        />
+                    </View>
+                </View>
             }
-        </View>
+        </View >
     )
 }
 

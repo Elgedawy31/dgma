@@ -16,6 +16,7 @@ function ProjectCard({
     project: { logo, name, startDate, deadline, },
     DateIcon = true, }: ProjectCardProps) {
     const { shortDate } = useDate();
+    console.log("logo", logo);
     //#region UI
     return (
         <View style={styles.container}>

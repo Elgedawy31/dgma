@@ -1,17 +1,30 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import React, { memo } from 'react'
+import React, { memo, useCallback, useContext } from 'react'
 import ImageAvatar from '@blocks/ImageAvatar'
 import Text from '@blocks/Text'
-import {UserModel} from '@model/user'
+import UserModel from '@model/user'
 import { router } from 'expo-router'
+import { userContext } from '@UserContext'
+import useSocket from '@hooks/useSocket'
 type ChatCardProps = {
     user: UserModel
     msgID: string
 }
-
-function ChatCard({ msgID, user: { avatar,  name: { first, last } } }: ChatCardProps) {
+function ChatCard({ msgID, user: { id, avatar, name: { first, last } } }: ChatCardProps) {
+    const socket = useSocket()
+    const { user: { id: userID } } = useContext(userContext)
+    const onPress = useCallback(() => {
+        socket?.emit("joinConversation", {
+            conversationType: "dm",
+            conversationId: `dm_${msgID}`,
+        });
+        router.push({
+            pathname: '/chat/[id]',
+            params: { id: msgID, user: JSON.stringify({ user: { avatar, name: { first, last } } }) }
+        })
+    }, [socket]);
     return (
-        <Pressable onPress={() => router.push({ pathname: '/chat/[id]', params: { id: msgID, user: JSON.stringify({ user: { avatar, name: { first, last } } }) } })}>
+        <Pressable onPress={onPress}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
                 <ImageAvatar size={50} type='avatar' url={avatar} />
                 <View style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E1E1E1' }}>

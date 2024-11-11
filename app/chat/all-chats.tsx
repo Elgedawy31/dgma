@@ -9,7 +9,7 @@ function AllChats() {
         <FlatList showsVerticalScrollIndicator={false}
             data={[...usersData, ...usersData, ...usersData]}
             renderItem={({ item, index }) => <ChatCard msgID={`ChatID-${index}`} user={item} />}
-            keyExtractor={(item, index) => item._id! + index.toString()}
+            keyExtractor={(item, index) => item.id + index.toString()}
         />
     )
 }

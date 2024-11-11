@@ -131,7 +131,7 @@ function ProjectDetails() {
                 title={<Text type='subtitle' title={isNew ? 'New Project' : project?.name || 'Project Title'} />}
                 action={
                     <View>
-                        {false && <Pressable onPress={onGenerate} >
+                        {true && <Pressable onPress={onGenerate} >
                             <Text type='subtitle' bold
                                 title='Generate'
                                 color={isNew ? colors.primary : /*updated ? colors.text :*/ colors.cancel} />

@@ -14,13 +14,18 @@ import { userContext } from '@UserContext';
 import { SERVER_URL } from '@env';
 import { chatData } from '@data/chat';
 import useSocket from '@hooks/useSocket';
-import { io } from 'socket.io-client';
+
+interface MessageModel {
+    content: string;
+    receiverId?: string;
+    attachments?: string[];
+    type: 'channel' | 'group' | 'dm';
+}
 
 function Chat() {
-    const socketRef = useRef<any>(null);
 
     const [users] = useState({ sender: '6703bdd588dff50af4b25e18', receiver: '66e2afe3a76d0d78d527f6eb' })
-    const { socket, error, sendMessage: sendMessageToSocket } = useSocket();
+    const socket = useSocket();
     const colors = useThemeColor();
     const flatListRef = useRef(null);
     const { user: { avatar: userAvatar } } = useContext(userContext);
@@ -32,15 +37,45 @@ function Chat() {
         useForm<{ msg: string }>({ defaultValues: { msg: "" }, });
 
     const sendMessage = useCallback(() => {
-        // socket.emit("sendMessage", messageData);
-        sendMessageToSocket({
+        console.log(watch('msg'));
+        socket?.emit("sendMessage", {
             type: 'dm',
             content: watch('msg'),
             receiverId: users.receiver,
-        })
-        setChat(prevChat => [...prevChat, { id: Date.now().toString(), msg: watch('msg'), receiver: false }]);
+        });
         reset({ msg: '' });
-    }, [watch, reset]);
+
+        // sendMessageToSocket({
+        //     type: 'dm',
+        //     content: watch('msg'),
+        //     receiverId: users.receiver,
+        // })
+        // setChat(prevChat => [...prevChat, { id: Date.now().toString(), msg: watch('msg'), receiver: false }]);
+    }, [socket, watch, reset]);
+    useEffect(() => {
+        socket?.on("connect", () => {
+            console.log("connected");
+        });
+
+        // Handle the received message
+        socket?.on("newMessage", (message) => {
+            console.log('new message', message);
+            // dispatch(addNewMessage(message));
+        });
+
+        // Handle messages received
+        socket?.on("messages", (data) => {
+            console.log('messages', data);
+            // dispatch(addMessages
+        });
+
+        return () => {
+            socket?.off("connect");
+            socket?.off("newMessage");
+            socket?.off("messages");
+        };
+
+    }, [socket]);
     useEffect(() => setExpand(false), [watch('msg')]);
 
     return (
@@ -51,7 +86,7 @@ function Chat() {
                     <Pressable
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
                         onPress={() => router.push({ pathname: '/chat/[id]/attachments', params: { id, user: JSON.stringify({ user: { avatar, name: { first, last } } }) } })}  >
-                        <ImageAvatar type='avatar' url={userAvatar} />
+                        <ImageAvatar type='avatar' url={avatar} />
                         <Text type='subtitle' title={`${first} ${last}`} />
                     </Pressable>
                 }
@@ -73,7 +108,7 @@ function Chat() {
                     renderItem={({ item, index }) => (
                         <MessageCard key={item.id} msg={item.msg}
                             isSameNextUser={item.receiver === chat[index + 1]?.receiver}
-                            receiver={item.receiver} avatar={item.receiver ? avatar : avatar}
+                            receiver={item.receiver} avatar={item.receiver ? avatar : userAvatar}
                         />
                     )}
                 />
@@ -88,7 +123,7 @@ function Chat() {
                             {!watch('msg') && <Icon icon='camera' onPress={() => alert('Camera')} />}
                         </View>
                         <Icon icon='send'
-                            onPress={sendMessage}
+                            onPress={() => sendMessage()}
                             iconColor={watch('msg') && colors.white}
                             bgColor={watch('msg') && colors.primary}
                             type={watch('msg') ? 'complex' : 'simple'}

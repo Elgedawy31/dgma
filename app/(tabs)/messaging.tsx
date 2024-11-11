@@ -5,7 +5,7 @@ import ChatCard from "@cards/ChatCard";
 import { useThemeColor } from "@hooks/useThemeColor";
 import Button from "@ui/Button";
 import { Link, router } from "expo-router";
-import { memo, useEffect, useState, useMemo } from "react";
+import { memo, useEffect, useState, useMemo, useContext } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -19,6 +19,9 @@ import StackUI from "@blocks/StackUI";
 import { Ionicons } from "@expo/vector-icons";
 import useAxios from "@hooks/useAxios";
 import GroupCard from "@cards/GroupCard";
+import Icon from "@blocks/Icon";
+import { userContext } from "@UserContext";
+import UserModel from "@model/user";
 
 type Channel = {
   _id: string;
@@ -50,6 +53,7 @@ const ChannelItem = memo(({ item }: { item: Channel }) => (
 ));
 
 function Messaging() {
+  const { user: { id } } = useContext(userContext)
   const colors = useThemeColor();
   const [activeTab, setActiveTab] = useState("Chats");
   const [channelsData, setChannelsData] = useState<Channel[]>([]);
@@ -62,19 +66,17 @@ function Messaging() {
 
   // Get filtered data based on active tab
   const filteredData = useMemo(() => {
+    console.log("filtered data");
     const query = searchQuery.toLowerCase().trim();
-    
+
     if (!query) {
       return activeTab === "Chats" ? users : groupData;
     }
 
     if (activeTab === "Chats") {
-      return users.filter((user) => {
-        const fullName = `${user.name.first} ${user.name.last}`.toLowerCase();
-        return fullName.includes(query) || user.role.toLowerCase().includes(query);
-      });
+      return users
     } else {
-      return groupData.filter((group) => 
+      return groupData.filter((group) =>
         group.name.toLowerCase().includes(query)
       );
     }
@@ -115,7 +117,7 @@ function Messaging() {
       try {
         const res = await get({ endPoint: "users" });
         if (res) {
-          setUsers(res);
+          setUsers(res.filter((user: UserModel) => { console.log(JSON.stringify(user.name)); return user.id !== id }));
         }
       } catch (err) {
         console.error(`Error: ${err}`);
@@ -148,11 +150,7 @@ function Messaging() {
             onPress={() => router.push("/newGroup")}
             style={{ backgroundColor: "#F1F9FF", borderRadius: 50, padding: 8 }}
           >
-            <StackUI
-              value={{ vertical: -5, horizontal: -1.5 }}
-              position={{ vertical: "bottom", horizontal: "right" }}
-              base={<Ionicons name="add" size={24} color="#09419A" />}
-            />
+            <Icon icon="add" type="simple" />
           </TouchableOpacity>
         }
       />
@@ -216,11 +214,10 @@ function Messaging() {
           keyExtractor={(item, index) => item._id + index.toString()}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
-              <Text 
-                type="body" 
-                title={`No ${activeTab.toLowerCase()} found${
-                  searchQuery ? ' for your search' : ''
-                }`} 
+              <Text
+                type="body"
+                title={`No ${activeTab.toLowerCase()} found${searchQuery ? ' for your search' : ''
+                  }`}
               />
             </View>
           )}

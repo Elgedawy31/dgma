@@ -9,7 +9,7 @@ import { Pressable } from 'react-native';
 import { memo, useContext } from 'react';
 import { userContext } from '@UserContext';
 import { projectsContext } from '@ProjectsContext';
-import Button  from '@ui/Button';
+import Button from '@ui/Button';
 //#endregion
 
 function CurrentProjects() {
@@ -22,24 +22,29 @@ function CurrentProjects() {
             <View style={[styles.container, { paddingHorizontal: 16, }]}>
                 <Text type='title' title='Current Projects' />
                 {role === 'admin' ? <Ionicons name="add" size={32} color="black" onPress={() => router.push(Routes.projectDetails)} />
-                    : <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} />}
+                    : projects.length ? <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} /> : null}
             </View>
             <View>
-                <ScrollView horizontal style={styles.scrolled}
-                    showsHorizontalScrollIndicator={false}>
-                    <View style={styles.cards}>
-                        {projects?.slice(0, projects.length > 3 ? 3 : projects.length).map((proj) => (
-                            <Link key={proj._id} href={{ pathname: '/project/[id]', params: { id: proj._id!, project: JSON.stringify(proj) } }}>
-                                <View style={{ paddingLeft: 16 }}>
-                                    <ProjectCard project={proj} />
-                                </View>
-                            </Link>
-                        ))}
+                {projects.length > 0 ?
+                    <ScrollView horizontal style={styles.scrolled}
+                        showsHorizontalScrollIndicator={false}>
+                        <View style={styles.cards}>
+                            {projects.slice(0, projects.length > 3 ? 3 : projects.length).map((proj) => (
+                                <Link key={proj._id} href={{ pathname: '/project/[id]', params: { id: proj._id!, project: JSON.stringify(proj) } }}>
+                                    <View style={{ paddingLeft: 16 }}>
+                                        <ProjectCard project={proj} />
+                                    </View>
+                                </Link>
+                            ))}
+                        </View>
+                        {role === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={styles.linkContainer}>
+                            <Text type='label' title='Show all' color='white' />
+                        </Pressable>}
+                    </ScrollView> :
+                    <View style={{ alignItems: 'center', marginTop: 16 }}>
+                        <Text type='error' title='No projects found' />
                     </View>
-                    {role === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={styles.linkContainer}>
-                        <Text type='label' title='Show all' color='white' />
-                    </Pressable>}
-                </ScrollView>
+                }
             </View>
         </View>
     )
