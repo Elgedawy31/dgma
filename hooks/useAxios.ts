@@ -10,7 +10,7 @@ type AxiosParams = {
     hasToken?: boolean;
 }
 export default function useAxios() {
-    const [SERVER_URL] = ["http://192.168.1.5:5001"];
+    const [SERVER_URL] = ["http://192.168.1.71:5001"];
     const { readStorage } = useSecureStorage();
     const get = useCallback(async ({ endPoint, hasToken = true }: AxiosParams) => {
         return await axios.get(

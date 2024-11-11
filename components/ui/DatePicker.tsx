@@ -34,10 +34,12 @@ const DatePicker = ({
             <Text color={colors.primary} type='label' title={label} />
             <Pressable onPress={() => { console.log("Press"); if (!showPicker) setShowPicker(true) }}>
                 <TextInput
+                placeholderTextColor={colors.body}
                     value={date.toDateString()}
                     editable={false}
                     style={[
                         styles.input,
+                        { color: colors.text },
 
                         { width: '100%', flex: 1, textTransform: 'capitalize', textAlign: 'left' },
                         { borderColor: colors.primary, backgroundColor: colors.card }

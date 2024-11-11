@@ -10,18 +10,18 @@ import { memo, useContext } from 'react';
 import { userContext } from '@UserContext';
 import { projectsContext } from '@ProjectsContext';
 import Button from '@ui/Button';
+import { useThemeColor } from '@hooks/useThemeColor';
 //#endregion
 
 function CurrentProjects() {
     const { user: { role } } = useContext(userContext)
     const { projects } = useContext(projectsContext);
-    // console.log(projects);
-    //#region UI
+    const colors = useThemeColor();
     return (
         <View>
             <View style={[styles.container, { paddingHorizontal: 16, }]}>
                 <Text type='title' title='Current Projects' />
-                {role === 'admin' ? <Ionicons name="add" size={32} color="black" onPress={() => router.push(Routes.projectDetails)} />
+                {role === 'admin' ? <Ionicons name="add" size={32} color={colors.text} onPress={() => router.push(Routes.projectDetails)} />
                     : projects.length ? <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} /> : null}
             </View>
             <View>
@@ -37,7 +37,7 @@ function CurrentProjects() {
                                 </Link>
                             ))}
                         </View>
-                        {role === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={styles.linkContainer}>
+                        {role === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={[styles.linkContainer , {backgroundColor:colors.body}]}>
                             <Text type='label' title='Show all' color='white' />
                         </Pressable>}
                     </ScrollView> :
@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
     },
     linkContainer: {
         marginHorizontal: 16,
-        backgroundColor: 'gray',
         paddingVertical: 8,
         paddingHorizontal: 16,
         justifyContent: 'center',
