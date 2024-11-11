@@ -15,7 +15,7 @@ function StatusBar({ hidden = false, dark, iconsColor, }: StatusBarProps) {
         <ExpoStatusBar
             hidden={hidden}
             style={(dark && 'light') || (themeContext === 'light' ? 'dark' : 'light')}
-            backgroundColor={iconsColor || (dark && colors.primary) || colors.statusBar} />
+            backgroundColor={iconsColor || (dark && colors.card) || colors.statusBar} />
     )
 }
 export default memo(StatusBar)

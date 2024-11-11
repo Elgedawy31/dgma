@@ -25,7 +25,7 @@ const AppBar = ({ center = false, leading, title, action, dark, height = 50 }: A
         <View style={[
             styles.container,
             { minHeight: height },
-            { backgroundColor: dark ?  'white' : Colors.card},
+            { backgroundColor:  Colors.card},
         ]}>
             <StatusBar dark={dark} />
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
