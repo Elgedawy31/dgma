@@ -133,6 +133,8 @@ function Messaging() {
     setSearchQuery("");
   };
 
+  console.log(channelsData)
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar

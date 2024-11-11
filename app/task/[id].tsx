@@ -80,7 +80,7 @@ const Task = () => {
 console.log(task.attachments)
 
   return (
-    <View style={{ marginBottom: 24, gap:24 , backgroundColor: color.background  , flex:1}}>
+    <View style={{ paddingBottom: 24, gap:24 , backgroundColor: color.background  , flex:1}}>
       <CalendarHeader fromCalenderTab={false} title="Task details" />
      
         <TaskDetailsCard

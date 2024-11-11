@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
+import { useThemeColor } from "@hooks/useThemeColor";
 
 interface ResourcesProps {
   resources: string[];
@@ -17,31 +18,32 @@ interface ResourcesProps {
 const ResourcesList: React.FC<ResourcesProps> = ({ resources }) => {
   // Toggle between showing all resources and only 3
   const displayedResources = resources;
+  const colors = useThemeColor()
 
   const renderItem = ({ item }: { item: string }) => {
     const fileType = item.match(/\.(\w+)$/)?.[1];
 
     return (
-      <View style={styles.resourceItem}>
-        <View style={styles.resourceInfo}>
-          <View style={styles.pdfIconContainer}>
+      <View style={styles(colors).resourceItem}>
+        <View style={styles(colors).resourceInfo}>
+          <View style={styles(colors).pdfIconContainer}>
             <FontAwesome
               name={fileType === "pdf" ? "file-pdf-o" : "file-image-o"}
               size={32}
-              color="#002D75"
+              color={colors.primary}
             />
           </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.resourceName}>
+          <View style={styles(colors).textContainer}>
+            <Text style={styles(colors).resourceName}>
               {item.match(/\.com\/(.+)\.\w+$/)?.[1] ?? item}
             </Text>
           </View>
         </View>
         <TouchableOpacity
-          style={styles.downloadButton}
+          style={styles(colors).downloadButton}
           onPress={() => Linking.openURL(item)}
         >
-          <Feather name="download" size={20} color="#002D75" />
+          <Feather name="download" size={20} color={colors.primary} />
         </TouchableOpacity>
       </View>
     );
@@ -49,26 +51,26 @@ const ResourcesList: React.FC<ResourcesProps> = ({ resources }) => {
 
   return (
     <View style={{ marginHorizontal: 16, flex: 1 }}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Resources</Text>
+      <View style={styles(colors).header}>
+        <Text style={styles(colors).title}>Resources</Text>
       </View>
 
-      <View style={styles.container}>
-        <FlatList
+      <View style={styles(colors).container}>
+      {resources?.length > 0 ?   <FlatList
           data={displayedResources}
           renderItem={renderItem}
           keyExtractor={(item) => item}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={styles(colors).separator} />}
           showsVerticalScrollIndicator={false}
-        />
+        /> : <Text style={{textAlign:'center', color:colors.text  , fontSize:18}}>No Recources</Text>}
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   container: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 20,
   },
@@ -79,13 +81,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: "#0F1010",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "500",
   },
   seeAllText: {
     fontSize: 12,
-    color: "#002D75",
+    color: colors.primary,
     fontWeight: "500",
   },
   resourceItem: {
@@ -107,13 +109,13 @@ const styles = StyleSheet.create({
   },
   resourceName: {
     fontSize: 16,
-    color: "#2B2C2C",
+    color: colors.text,
     marginBottom: 2,
     fontWeight: "500",
   },
   resourceSize: {
     fontSize: 12,
-    color: "#0F1010",
+    color:colors.text,
   },
   downloadButton: {
     padding: 8,

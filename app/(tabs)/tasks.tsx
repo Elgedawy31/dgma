@@ -166,6 +166,7 @@ function Tasks(): JSX.Element {
     <CalendarCard
     title={item.title} 
     state={item.status} 
+    link={`/task/${item.id}`}
     subTitle={item.description}
     assignedTo={item?.assignedTo}
     time={`${dayjs(item.startDate).format('DD MMM')} - ${dayjs(item.endDate).format('DD MMM')}`} 

@@ -17,39 +17,39 @@ const TaskCard: React.FC<TaskCardProps> = ({
   endDate,
 }) => {
   const [showAll, setShowAll] = React.useState<boolean>(true);
-  const color = useThemeColor();
+  const colors = useThemeColor();
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>
+    <View style={styles(colors).container}>
+      <View style={styles(colors).content}>
+        <Text style={styles(colors).title}>{title}</Text>
+        <Text style={styles(colors).description}>
           {showAll ? description : `${description?.slice(0, 60)}...`}
         {description?.length > 60 &&   <TouchableOpacity  onPress={() => setShowAll(!showAll)} >
-          <Text style={{color:color.primary ,}}>  {showAll ? "less" : "more"}</Text>
+          <Text style={{color:colors.primary ,}}>  {showAll ? "less" : "more"}</Text>
           </TouchableOpacity>}
         </Text>
 
-        <View style={styles.dateContainer}>
-          <View style={styles.dateWrapper}>
+        <View style={styles(colors).dateContainer}>
+          <View style={styles(colors).dateWrapper}>
             <Ionicons
               name="calendar-outline"
               size={16}
-              color="#666"
-              style={styles.icon}
+              color={colors.text}
+              style={styles(colors).icon}
             />
-            <Text style={styles.dateLabel}>Start Date:</Text>
-            <Text style={styles.dateTextBlue}>{startDate}</Text>
+            <Text style={styles(colors).dateLabel}>Start Date:</Text>
+            <Text style={styles(colors).dateTextBlue}>{startDate}</Text>
           </View>
 
-          <View style={styles.dateWrapper}>
+          <View style={styles(colors).dateWrapper}>
             <Ionicons
               name="calendar-outline"
               size={16}
-              color="#666"
-              style={styles.icon}
+              color={colors.text}
+              style={styles(colors).icon}
             />
-            <Text style={styles.dateLabel}>End Date:</Text>
-            <Text style={styles.dateTextRed}>{endDate}</Text>
+            <Text style={styles(colors).dateLabel}>End Date:</Text>
+            <Text style={styles(colors).dateTextRed}>{endDate}</Text>
           </View>
         </View>
       </View>
@@ -57,9 +57,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   container: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 20,
     marginHorizontal: 16,
@@ -71,12 +71,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0F1010",
+    color: colors.text,
     marginBottom: 8,
   },
   description: {
     fontSize: 16,
-    color: "#444444",
+    color: colors.text,
     lineHeight: 24,
     fontWeight: "400",
   },
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     fontSize: 14,
-    color: "#515151",
+    color: colors.text,
   },
   dateTextBlue: {
     fontSize: 14,
