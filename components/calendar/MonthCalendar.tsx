@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
+import { useThemeColor } from '@hooks/useThemeColor';
 
 interface Task {
   id: string;
@@ -19,6 +20,7 @@ interface CalendarProps {
 const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [calendarDays, setCalendarDays] = useState<(number | null)[]>([]);
+  const colors = useThemeColor();
 
   const getDaysInMonth = (): number => {
     return currentDate.daysInMonth();
@@ -84,8 +86,8 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
     
     return dayTasks.map((task, index) => {
       const barStyle = [
-        styles.taskBar,
-        styles[task.status],
+        styles(colors).taskBar,
+        styles(colors)[task.status],
         { 
           top: index * 28,
           marginLeft: task.isStart ? 4 : -8,
@@ -105,7 +107,7 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
           activeOpacity={0.7}
         >
           {shouldShowTitle && task.daysFromStart === 0 && (
-            <Text style={styles.taskText} numberOfLines={1} ellipsizeMode="tail">
+            <Text style={styles(colors).taskText} numberOfLines={1} ellipsizeMode="tail">
               {task.title}
             </Text>
           )}
@@ -129,8 +131,8 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
     const isToday = today.format('YYYY-MM-DD') === currentDate.date(day).format('YYYY-MM-DD');
 
     return (
-      <View style={styles.dayNumberContainer}>
-        <Text style={[styles.dayText, isToday && styles.todayText]}>
+      <View style={styles(colors).dayNumberContainer}>
+        <Text style={[styles(colors).dayText, isToday && styles(colors).todayText]}>
           {day}
         </Text>
       </View>
@@ -138,39 +140,39 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onPrevMonth} style={styles.headerButton}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
+    <View style={styles(colors).container}>
+      <View style={styles(colors).header}>
+        <TouchableOpacity onPress={onPrevMonth} style={styles(colors).headerButton}>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         
-        <Text style={styles.monthText}>
+        <Text style={styles(colors).monthText}>
           {currentDate.format('MMMM YYYY')}
         </Text>
         
-        <TouchableOpacity onPress={onNextMonth} style={styles.headerButton}>
-          <Ionicons name="chevron-forward" size={24} color="#333" />
+        <TouchableOpacity onPress={onNextMonth} style={styles(colors).headerButton}>
+          <Ionicons name="chevron-forward" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.calendarContainer}>
-        <View style={styles.weekDays}>
+      <View style={styles(colors).calendarContainer}>
+        <View style={styles(colors).weekDays}>
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-            <View key={index} style={styles.weekDayContainer}>
-              <Text style={styles.weekDayText}>
+            <View key={index} style={styles(colors).weekDayContainer}>
+              <Text style={styles(colors).weekDayText}>
                 {day}
               </Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.daysGrid}>
+        <View style={styles(colors).daysGrid}>
           {calendarDays.map((day, index) => (
-            <View key={index} style={styles.dayCell}>
+            <View key={index} style={styles(colors).dayCell}>
               {day !== null && (
-                <View style={styles.dayContent}>
+                <View style={styles(colors).dayContent}>
                   {renderDayNumber(day)}
-                  <View style={styles.taskContainer}>
+                  <View style={styles(colors).taskContainer}>
                     {renderTaskBars(day)}
                   </View>
                 </View>
@@ -183,11 +185,11 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -202,7 +204,7 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   calendarContainer: {
     flex: 1,
@@ -212,7 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.text,
   },
   weekDayContainer: {
     width: `${100 / 7}%`,
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   weekDayText: {
-    color: '#666',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '500',
     textAlign: 'center',
@@ -249,11 +251,11 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
   },
   todayText: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   taskContainer: {
@@ -269,7 +271,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: 28,
     justifyContent: 'center',
-    shadowColor: '#fff',
+    shadowColor: colors.background,
     shadowOffset: {
       width: 0,
       height: 1,
@@ -280,7 +282,7 @@ const styles = StyleSheet.create({
   },
   taskText: {
     fontSize: 12,
-    color: '#fff',
+    color: colors.background,
     fontWeight: '500',
     paddingLeft: 8,
     paddingRight: 8,

@@ -339,7 +339,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             <IconWrapper
               onPress={onClose}
               size={36}
-              Icon={<Ionicons name="close" size={24} color={colors.card} />}
+              Icon={<Ionicons name="close" size={24} color={colors.primary} />}
               />
           </View>
 
@@ -580,6 +580,7 @@ const styles =(colors:any) =>  StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
+    color:colors.text
   },
   label: {
     fontSize: 16,
