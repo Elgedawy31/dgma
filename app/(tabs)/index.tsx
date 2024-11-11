@@ -15,8 +15,8 @@ function HomeScreen() {
         <View style={{ flex: 1, gap: 16, paddingVertical: 8 }}>
           <CurrentProjects />
           <View style={{ paddingRight: 16, paddingLeft: 16, }}>
-            {/* <ProjectOverview />
-            <UpcomingMeetings /> */}
+            <ProjectOverview />
+            <UpcomingMeetings />
           </View>
         </View>
       </ScrollView>
