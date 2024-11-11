@@ -117,7 +117,8 @@ function Messaging() {
       try {
         const res = await get({ endPoint: "users" });
         if (res) {
-          setUsers(res.filter((user: UserModel) => { console.log(JSON.stringify(user.name)); return user.id !== id }));
+          console.log("res", res);
+          setUsers(res.filter((user: UserModel) => user.id !== id));
         }
       } catch (err) {
         console.error(`Error: ${err}`);

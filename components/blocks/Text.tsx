@@ -1,5 +1,6 @@
 import { useThemeColor } from '@hooks/useThemeColor'
-import { memo } from 'react';
+import { ThemeContext } from '@ThemeContext';
+import { memo, useContext } from 'react';
 import { ViewStyle, StyleSheet, Text as TextBase } from 'react-native'
 
 type TextProps = {

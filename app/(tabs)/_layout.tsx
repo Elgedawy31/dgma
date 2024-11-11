@@ -6,6 +6,7 @@ import { userContext } from '@UserContext';
 import { TabBarItem } from '@blocks/TabBarItem';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemeContext } from '@ThemeContext';
 
 const tabs = [
   { name: 'index', label: 'Home', icon: 'home', hasHeader: true },
@@ -15,14 +16,14 @@ const tabs = [
 ];
 function TabLayout() {
   const colors = useThemeColor();
-
+  const { theme } = useContext(ThemeContext);
   return (
-    <SafeAreaView style={{ flex: 1 , backgroundColor:colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Tabs
         initialRouteName="index"
         screenOptions={{
           headerShown: false,
-          
+
           tabBarActiveTintColor: colors.activeTab,
           tabBarInactiveTintColor: colors.inactiveTab,
           tabBarActiveBackgroundColor: colors.primaryTab,
@@ -32,7 +33,7 @@ function TabLayout() {
             borderTopLeftRadius: 18,
             borderTopRightRadius: 18,
             backgroundColor: colors.primaryTab,
-            borderTopWidth:0
+            borderTopWidth: 0
           },
         }}>
         {tabs.map((tab) => (
@@ -44,6 +45,7 @@ function TabLayout() {
               headerShown: tab.hasHeader,
               header: () =>
                 <AppBar leading='avatar'
+                  dark={theme === 'dark'}
                   action={
                     <Icon
                       icon='video' type='complex' iconColor={colors.primary}
