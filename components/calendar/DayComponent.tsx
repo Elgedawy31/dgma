@@ -175,7 +175,7 @@ const styles =(colors:any) =>  StyleSheet.create({
     fontWeight: '500',
   },
   todayText: {
-    color: '#000',
+    color: colors.text,
 
   },
   selectedText: {

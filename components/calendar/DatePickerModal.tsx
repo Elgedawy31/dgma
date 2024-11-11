@@ -66,8 +66,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const renderWeekDays = () => {
     const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
     return weekDays.map((day, index) => (
-      <View key={index} style={styles.weekDayContainer}>
-        <Text style={styles.weekDay}>{day}</Text>
+      <View key={index} style={styles(colors).weekDayContainer}>
+        <Text style={styles(colors).weekDay}>{day}</Text>
       </View>
     ));
   };
@@ -112,8 +112,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+      <View style={styles(colors).modalContainer}>
+        <View style={styles(colors).modalContent}>
           <TouchableOpacity
            onPress={onClose}
             style={{
@@ -130,12 +130,12 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
          
               <Ionicons name="chevron-back" size={20} color={colors.text} />
            
-            <Text style={styles.headerTitle}>Select date</Text>
+            <Text style={styles(colors).headerTitle}>Select date</Text>
           </TouchableOpacity>
 
-          <View style={styles.monthSelector}>
+          <View style={styles(colors).monthSelector}>
             <View>
-              <Text style={styles.monthYear}>
+              <Text style={styles(colors).monthYear}>
                 {`${months[currentMonth]} ${currentYear}`}
               </Text>
             </View>
@@ -154,25 +154,25 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             </View>
           </View>
 
-          <View style={styles.calendar}>
-            <View style={styles.weekDays}>{renderWeekDays()}</View>
-            <View style={styles.daysGrid}>
+          <View style={styles(colors).calendar}>
+            <View style={styles(colors).weekDays}>{renderWeekDays()}</View>
+            <View style={styles(colors).daysGrid}>
               {generateCalendarDays().map((row, rowIndex) => (
-                <View key={rowIndex} style={styles.row}>
+                <View key={rowIndex} style={styles(colors).row}>
                   {row.map((day, colIndex) => (
                     <TouchableOpacity
                       key={colIndex}
                       style={[
-                        styles.dayCell,
-                        day === selectedDate && styles.selectedDay,
+                        styles(colors).dayCell,
+                        day === selectedDate && styles(colors).selectedDay,
                       ]}
                       onPress={() => day && handleDateSelect(day)}
                       disabled={!day}
                     >
                       <Text
                         style={[
-                          styles.dayText,
-                          day === selectedDate && styles.selectedDayText,
+                          styles(colors).dayText,
+                          day === selectedDate && styles(colors).selectedDayText,
                         ]}
                       >
                         {day || ""}
@@ -189,14 +189,14 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: "500",
-    color: "#515151",
+    color: colors.body,
   },
   monthSelector: {
     flexDirection: "row",
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   monthYear: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#515151",
+    color: colors.body,
   },
   calendar: {
     paddingHorizontal: 10,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   weekDay: {
     fontSize: 15,
-    color: "#666",
+    color: colors.text,
     textAlign: 'center',
   },
   daysGrid: {
@@ -253,16 +253,16 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 16,
-    color: "#515151",
+    color:colors.text,
   },
   selectedDay: {
-    backgroundColor: "#007AFF10",
+    backgroundColor: `${colors.primary}10`,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#002D75",
+    borderColor: colors.primary,
   },
   selectedDayText: {
-    color: "#002D75",
+    color: colors.primary,
     fontWeight: "600",
   },
 });

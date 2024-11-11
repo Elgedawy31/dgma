@@ -16,9 +16,10 @@ import useFilePicker from "@hooks/useFile";
 import { userContext } from "@UserContext";
 import useAxios from "@hooks/useAxios";
 import attachments from "@/app/chat/[id]/attachments";
+import { useThemeColor } from "@hooks/useThemeColor";
 
 interface Project {
-  _id: string;
+  id: string;
   name: string;
 }
 
@@ -31,13 +32,6 @@ interface User {
   role: string;
 }
 
-// First add these interfaces for files
-interface FileType {
-  uri: string;
-  type: string;
-  name: string;
-  size?: number;
-}
 
 interface UploadedFile {
   name: string;
@@ -74,20 +68,20 @@ const TASK_STATUSES = [
 ];
 
 const FileItem = ({ file, onRemove }: { file: UploadedFile; onRemove: () => void }) => {
-  console.log(file)
-  return <View style={styles.fileItem}>
-    <View style={styles.fileInfo}>
+  const colors = useThemeColor();
+  return <View style={styles(colors).fileItem}>
+    <View style={styles(colors).fileInfo}>
       <Ionicons 
         name={!file?.name.includes('pdf') ? "image" : "document"} 
         size={24} 
-        color="#515151" 
+        color={colors.text} 
       />
-      <Text style={styles.fileName} numberOfLines={1}>
+      <Text style={styles(colors).fileName} numberOfLines={1}>
         {file.name}
       </Text>
     </View>
     <TouchableOpacity onPress={onRemove}>
-      <Ionicons name="close-circle" size={20} color="#515151" />
+      <Ionicons name="close-circle" size={20} color={colors.text} />
     </TouchableOpacity>
   </View>
 };
@@ -97,6 +91,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   setTaskAdded,
 }) => {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const colors = useThemeColor();
   const [datePickerType, setDatePickerType] = useState<
     "startDate" | "deadline"
   >("startDate");
@@ -253,17 +248,17 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     if (user?.role === "admin") {
       return (
         <>
-          <Text style={styles.label}>Assign To</Text>
+          <Text  style={[styles(colors).label, {color:colors.text}]}>Assign To</Text>
           <TouchableOpacity
-            style={styles.selectorButton}
+            style={styles(colors).selectorButton}
             onPress={() => setUserSelectorVisible(true)}
           >
-            <Text>
+            <Text style={{color:colors.text}}>
               {selectedUsers.length > 0
                 ? `${selectedUsers.length} users selected`
                 : "Select Users"}
             </Text>
-            <Ionicons name="chevron-down" size={20} color="#515151" />
+            <Ionicons name="chevron-down" size={20} color={colors.text} />
           </TouchableOpacity>
 
          
@@ -301,20 +296,20 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     setValue('attachments', newFiles);
   };
   const renderFileSection = () => (
-    <View style={styles.fileSection}>
-      <View style={styles.fileSectionHeader}>
-        <Text style={styles.label}>Attachments</Text>
+    <View style={styles(colors).fileSection}>
+      <View style={styles(colors).fileSectionHeader}>
+        <Text style={styles(colors).label}>Attachments</Text>
         <TouchableOpacity
-          style={styles.addFileButton}
+          style={styles(colors).addFileButton}
           onPress={handleFilePick}
         >
-          <Ionicons name="attach" size={20} color="#002B5B" />
-          <Text style={styles.addFileText}>Add File</Text>
+          <Ionicons name="attach" size={20} color={colors.primary} />
+          <Text style={styles(colors).addFileText}>Add File</Text>
         </TouchableOpacity>
       </View>
       
       {uploadedFiles.length > 0 && (
-        <View style={styles.fileList}>
+        <View style={styles(colors).fileList}>
           {uploadedFiles.map((file, index) => (
             <FileItem
               key={index}
@@ -332,30 +327,31 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       onBackdropPress={onClose}
       onSwipeComplete={onClose}
       swipeDirection={["down"]}
-      style={styles.modal}
+      style={styles(colors).modal}
       propagateSwipe
       avoidKeyboard
     >
-      <View style={styles.modalView}>
+      <View style={styles(colors).modalView}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.handleBar} />
-          <View style={styles.header}>
-            <Text style={styles.title}>New personal task</Text>
+          <View style={styles(colors).handleBar} />
+          <View style={styles(colors).header}>
+            <Text style={styles(colors).title}>New personal task</Text>
             <IconWrapper
               onPress={onClose}
               size={36}
-              Icon={<Ionicons name="close" size={24} color="#000" />}
+              Icon={<Ionicons name="close" size={24} color={colors.card} />}
               />
           </View>
 
-          <Text style={styles.label}>Task title</Text>
+          <Text style={styles(colors).label}>Task title</Text>
           <Controller
             control={control}
             rules={{ required: "Title is required" }}
             name="title"
             render={({ field: { onChange, value } }) => (
               <TextInput
-                style={styles.input}
+              placeholderTextColor={colors.text}
+                style={styles(colors).input}
                 onChangeText={onChange}
                 value={value}
                 placeholder="Enter Task Title"
@@ -363,27 +359,28 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             )}
           />
           {errors.title && (
-            <Text style={styles.errorText}>{errors.title.message}</Text>
+            <Text style={styles(colors).errorText}>{errors.title.message}</Text>
           )}
 
-          <Text style={styles.label}>Project</Text>
+          <Text style={styles(colors).label}>Project</Text>
           <TouchableOpacity
-            style={styles.selectorButton}
+            style={styles(colors).selectorButton}
             onPress={() => setProjectSelectorVisible(true)}
           >
-            <Text>{selectedProject?.name || "Select Project"}</Text>
-            <Ionicons name="chevron-down" size={20} color="#515151" />
+            <Text style={{color:colors.text}}>{selectedProject?.name || "Select Project"}</Text>
+            <Ionicons name="chevron-down" size={20} color={colors.text} />
           </TouchableOpacity>
 
           {renderAssignedToSection()}
 
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles(colors).label}>Description</Text>
           <Controller
             control={control}
             name="description"
             render={({ field: { onChange, value } }) => (
               <TextInput
-                style={[styles.input, styles.textArea]}
+              placeholderTextColor={colors.text}
+                style={[styles(colors).input, styles(colors).textArea]}
                 onChangeText={onChange}
                 value={value}
                 placeholder="Enter description"
@@ -393,24 +390,24 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             )}
           />
 
-          <View style={styles.dateContainer}>
-            <View style={styles.dateField}>
-              <Text style={styles.label}>Start Date</Text>
+          <View style={styles(colors).dateContainer}>
+            <View style={styles(colors).dateField}>
+              <Text style={styles(colors).label}>Start Date</Text>
               <TouchableOpacity
-                style={styles.dateButton}
+                style={styles(colors).dateButton}
                 onPress={() => openDatePicker("startDate")}
               >
-                <Text>{formatDate(startDate)}</Text>
+                <Text style={{color:colors.text}}>{formatDate(startDate)}</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.dateField}>
-              <Text style={styles.label}>Deadline</Text>
+            <View style={styles(colors).dateField}>
+              <Text style={styles(colors).label}>Deadline</Text>
               <TouchableOpacity
-                style={styles.dateButton}
+                style={styles(colors).dateButton}
                 onPress={() => openDatePicker("deadline")}
               >
-                <Text>{formatDate(deadline)}</Text>
+                <Text style={{color:colors.text}}>{formatDate(deadline)}</Text>
               </TouchableOpacity>
             </View>
 
@@ -418,10 +415,10 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             {renderFileSection()}
 
           <TouchableOpacity
-            style={styles.submitButton}
+            style={styles(colors).submitButton}
             onPress={ handleSubmit(onSubmitForm)}
           >
-            <Text style={styles.submitButtonText}>Add task</Text>
+            <Text style={styles(colors).submitButtonText}>Add task</Text>
           </TouchableOpacity>
         </ScrollView>
 
@@ -437,24 +434,24 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         <Modal
           isVisible={projectSelectorVisible}
           onBackdropPress={() => setProjectSelectorVisible(false)}
-          style={styles.selectorModal}
+          style={[styles(colors).selectorModal]}
         >
-          <View style={styles.selectorContent}>
-            <Text style={styles.selectorTitle}>Select Project</Text>
+          <View style={styles(colors).selectorContent}>
+            <Text style={styles(colors).selectorTitle}>Select Project</Text>
             {projects.map((project) => (
               <TouchableOpacity
                 key={project.id}
                 style={[
-                  styles.selectorOption,
-                  selectedProjectId === project.id && styles.selectedOption,
+                  styles(colors).selectorOption,
+                  selectedProjectId === project.id && styles(colors).selectedOption,
                 ]}
                 onPress={() => handleProjectSelect(project.id)}
               >
                 <Text
                   style={[
-                    styles.selectorOptionText,
+                    styles(colors).selectorOptionText,
                     selectedProjectId === project.id &&
-                      styles.selectedOptionText,
+                      styles(colors).selectedOptionText,
                   ]}
                 >
                   {project.name}
@@ -467,16 +464,16 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         <Modal
           isVisible={userSelectorVisible}
           onBackdropPress={() => setUserSelectorVisible(false)}
-          style={styles.selectorModal}
+          style={styles(colors).selectorModal}
         >
-          <View style={styles.selectorContent}>
-            <Text style={styles.selectorTitle}>Select Users</Text>
+          <View style={styles(colors).selectorContent}>
+            <Text style={styles(colors).selectorTitle}>Select Users</Text>
             {users.map((user: User) => (
               <TouchableOpacity
                 key={user.id}
                 style={[
-                  styles.selectorOption,
-                  selectedUsers.includes(user.id) && styles.selectedOption,
+                  styles(colors).selectorOption,
+                  selectedUsers.includes(user.id) && styles(colors).selectedOption,
                 ]}
                 onPress={() => handleUserSelect(user.id)}
               >
@@ -489,15 +486,15 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                 >
                   <Text
                     style={[
-                      styles.selectorOptionText,
+                      styles(colors).selectorOptionText,
                       selectedUsers.includes(user.id) &&
-                        styles.selectedOptionText,
+                        styles(colors).selectedOptionText,
                     ]}
                   >
                     {`${user.name.first} ${user.name.last}`}
                   </Text>
                   {selectedUsers.includes(user.id) && (
-                    <Ionicons name="checkmark" size={24} color="#002B5B" />
+                    <Ionicons name="checkmark" size={24} color={colors.primary} />
                   )}
                 </View>
               </TouchableOpacity>
@@ -509,7 +506,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     </Modal>
   );
 };
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   fileSection: {
     marginBottom: 15,
   },
@@ -522,12 +519,12 @@ const styles = StyleSheet.create({
   addFileButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.card,
     padding: 8,
     borderRadius: 8,
   },
   addFileText: {
-    color: '#002B5B',
+    color: colors.primary,
     marginLeft: 5,
     fontWeight: '500',
   },
@@ -538,11 +535,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
     padding: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E9ECEF',
+    borderColor: colors.text,
   },
   fileInfo: {
     flexDirection: 'row',
@@ -553,14 +550,14 @@ const styles = StyleSheet.create({
   fileName: {
     flex: 1,
     fontSize: 14,
-    color: '#515151',
+    color: colors.text,
   },
   modal: {
     justifyContent: "flex-end",
     margin: 0,
   },
   modalView: {
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -569,7 +566,7 @@ const styles = StyleSheet.create({
   handleBar: {
     width: 40,
     height: 4,
-    backgroundColor: "#DEE2E6",
+    backgroundColor: colors.background,
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: 10,
@@ -587,15 +584,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 5,
-    color: "#515151",
+    color: colors.text,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: colors.text,
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
-    backgroundColor: "white",
+    backgroundColor: colors.background,
+    color:colors.text,
   },
   textArea: {
     height: 100,
@@ -616,7 +614,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: colors.background,
   },
   selectorButton: {
     flexDirection: "row",
@@ -627,14 +625,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
-    backgroundColor: "white",
+    backgroundColor: colors.background,
   },
   selectorModal: {
     justifyContent: "center",
     margin: 20,
   },
   selectorContent: {
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     borderRadius: 10,
     padding: 20,
   },
@@ -643,6 +641,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 15,
     textAlign: "center",
+    color:colors.text
   },
   selectorOption: {
     padding: 15,
@@ -650,24 +649,25 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   selectedOption: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.card,
   },
   selectorOptionText: {
     fontSize: 16,
+    color:colors.text
   },
   selectedOptionText: {
-    color: "#002B5B",
+    color: colors.primary,
     fontWeight: "bold",
   },
   submitButton: {
-    backgroundColor: "#002B5B",
+    backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
   },
   submitButtonText: {
-    color: "white",
+    color: colors.background,
     fontSize: 16,
     fontWeight: "bold",
   },
