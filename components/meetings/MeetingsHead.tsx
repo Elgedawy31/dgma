@@ -22,7 +22,7 @@ const MeetingsHead = ({showBtn}:{showBtn:boolean}) => {
     <View style={styles.head}>
       <Text style={styles.headTxt}>Ongoing Meetings</Text>
     {showBtn &&   <TouchableOpacity>
-      <Entypo name="plus" size={24} color="black" /> 
+      <Entypo name="plus" size={24} color={color.text} /> 
       </TouchableOpacity>}
     </View>
   );

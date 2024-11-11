@@ -151,7 +151,7 @@ const styles =(color:any) =>  StyleSheet.create({
     },
     controlText: {
       fontSize: 16,
-      color: '#000000',
+      color: color.text,
     },
     joinButton: {
       width: '100%',

@@ -10,7 +10,7 @@ import { useThemeColor } from '@hooks/useThemeColor'
 const MeetingCallView = () => {
     const colors = useThemeColor();
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 , backgroundColor:colors.background }}>
             <AppBar
                 leading='back'
                 title={<View>

@@ -30,9 +30,9 @@ const color = useThemeColor();
         <View style={styles(color).textContainer}>
           <View style={styles(color).headerContainer}>
             <Text style={styles(color).title}>{title}</Text>
-            <TouchableOpacity style={styles(color).menuButton}>
-              <Feather name="more-vertical" size={20} color="#666" />
-            </TouchableOpacity>
+            {/* <TouchableOpacity style={styles(color).menuButton}>
+              <Feather name="more-vertical" size={20} color={color.text} />
+            </TouchableOpacity> */}
           </View>
           <Text style={styles(color).description}>{description}</Text>
         </View>
@@ -59,12 +59,10 @@ const color = useThemeColor();
 
 const styles =(color:any) =>  StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: color.card,
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor:'#E1E1E1'
   },
   contentContainer: {
     gap: 12,

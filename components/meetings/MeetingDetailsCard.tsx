@@ -22,7 +22,7 @@ const MeetingDetailsCard = ({
   onJoin
 }: MeetingDetailsCardProps) => {
     const color = useThemeColor()
-  const {id} = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
 
   return (
     <View style={styles(color).container}>
@@ -58,7 +58,7 @@ const MeetingDetailsCard = ({
 
         <TouchableOpacity 
           style={styles(color).joinButton}
-          onPress={() => router.push(`/meetings/${id}/ReviewMeetings`)} 
+          onPress={() => router.push(`/meetings/${id}/reviewMeetings`)} 
         >
           <Text style={styles(color).joinButtonText}>Join meeting</Text>
         </TouchableOpacity>

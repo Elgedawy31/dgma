@@ -1,3 +1,4 @@
+import { useThemeColor } from '@hooks/useThemeColor';
 import React from 'react';
 import { View, Text, Image, StyleSheet, FlatList } from 'react-native';
 
@@ -13,23 +14,26 @@ type MeetingGuestListProps = {
   title?: string;
 };
 
-const GuestItem = ({ guest }: { guest: Guest }) => (
-  <View style={styles.guestItem}>
+const GuestItem = ({ guest }: { guest: Guest }) => {
+  const color = useThemeColor();
+
+  return <View style={styles.guestItem}>
     <Image
       source={{ uri: guest.avatar }}
       style={styles.avatar}
     />
     <View style={styles.guestInfo}>
-      <Text style={styles.guestName}>{guest.name}</Text>
-      <Text style={styles.guestRole}>{guest.role}</Text>
+      <Text style={[styles.guestName , {color:color.text}]}>{guest.name}</Text>
+      <Text style={[styles.guestRole ,{color:color.body}]}>{guest.role}</Text>
     </View>
   </View>
-);
+}
 
 const MeetingGuestList = ({ guests, title = "Guests" }: MeetingGuestListProps) => {
+  const color = useThemeColor();
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title , {color:color.text}]}>{title}</Text>
       <FlatList
         data={guests}
         keyExtractor={(item) => item.id}
@@ -50,7 +54,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     marginBottom: 20,
-    color: '#000000',
   },
   listContent: {
     gap: 16,
@@ -71,12 +74,10 @@ const styles = StyleSheet.create({
   guestName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000000',
     marginBottom: 4,
   },
   guestRole: {
     fontSize: 14,
-    color: '#666666',
   },
 });
 
