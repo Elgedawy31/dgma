@@ -24,7 +24,6 @@ const CalendarHead: React.FC<HeaderProps> = ({
       <Text
         title={dayjs(date).format("MMMM YYYY")}
         bold
-        color={"black"}
         size={20}
       />
 

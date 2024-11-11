@@ -36,9 +36,9 @@ const CalendarHeader: React.FC<HeaderProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles(colors).container}>
       <TouchableOpacity
-        style={styles.backButton}
+        style={styles(colors).backButton}
         onPress={handleBackPress}
         activeOpacity={0.7}
       >
@@ -61,15 +61,15 @@ const CalendarHeader: React.FC<HeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
+    backgroundColor: colors.card,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.25,
     shadowRadius: 1,

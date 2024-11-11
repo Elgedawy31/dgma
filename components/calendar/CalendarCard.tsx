@@ -6,6 +6,7 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { TaskColors } from "@/constants/Colors";
 import ProfileStack from "@components/PoepleComponent";
 import { router } from "expo-router";
+import { useThemeColor } from "@hooks/useThemeColor";
 //#endregion
 
 type AssignedTo = {
@@ -26,22 +27,13 @@ type CalendarCardProps = {
 
 
 function CalendarCard({ time, title, state, subTitle , assignedTo  , link}: CalendarCardProps) {
+  const colors = useThemeColor()
   //#region UI
   return (
-    <TouchableOpacity onPress={() => router.push(link)} style={[styles.container, { borderColor: TaskColors[state] }]}>
-      <Text type="body" color="black" title={title} />
+    <TouchableOpacity onPress={() => router.push(link)} style={[styles.container , {backgroundColor:colors.card}, { borderColor: TaskColors[state] }]}>
+      <Text type="body"  title={title} />
       <Text type="small" title={subTitle?.length > 60 ? `${subTitle.slice(0 , 60)}...` : subTitle} />
       <Text type="small" title={time} />
-      {/* <Ionicons
-        size={18}
-        color="black"
-        name="ellipsis-vertical"
-        onPress={() => {
-          alert("hello");
-        }}
-        style={{ position: "absolute", right: 8, top: 10 }}
-      /> */}
-
       <View style={styles.people}>
         <ProfileStack profiles={assignedTo} maxDisplay={3} />
       </View>
@@ -58,7 +50,6 @@ const styles = StyleSheet.create({
     gap: 10,
     margin: 10,
     padding: 10,
-    backgroundColor: "white",
     borderLeftWidth: 14,
     borderRadius: 10,
   },

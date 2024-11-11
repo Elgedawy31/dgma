@@ -88,7 +88,7 @@ const explore = () => {
             />
           </View>
           <CalendarHead date={ selectedDate ? selectedDate :dayjs().format("YYYY-MM-DD")} setModalVisible={setModalVisible} />
-          <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 0 }}>
+          <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 0 }}>
             {filteredTasks.length > 0 ? <FlatList
               keyExtractor={(item, index) => item.title + index}
               showsVerticalScrollIndicator={false}

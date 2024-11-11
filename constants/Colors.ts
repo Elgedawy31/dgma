@@ -6,8 +6,8 @@ export const Colors = (theme: string) => ({
 
   // Color Palette
   card: theme === 'light' ? '#FCFCFC' : '#202833',
-  body: theme === 'light' ? '#B1B1B1' : '#515151',
-  text: theme === 'light' ? '#161616' : '#FCFCFC',
+  body: theme === 'light' ? '#B1B1B1' : '#fff',
+  text: theme === 'light' ? '#161616' : '#FCFCFC', 
   primary: theme === 'light' ? '#002D75' : '#0097FF', 
   secondary: theme === 'light' ? '#E8F5FF' : '#001D33',
   background: theme === 'light' ? '#F6F9FC' : '#010119',
@@ -31,13 +31,14 @@ export const Colors = (theme: string) => ({
   // Message Colors : Sender | Receiver
   sender: theme === 'light' ? '#3FA9F5' : '#002D75',
   receiver: theme === 'light' ? '#E3E3E3' : '#515151',
+  // shadow colors 
+  shadow: theme === 'light' ? '#000' : '#fff',
 });
 
-// Task status colors remain constant regardless of theme
 export const TaskColors = Object.freeze({
-  review: '#2684FF',
+  review: '#2684FF' ,
   overdue: '#E54C4C',
-  progress: '#FFC400',
+  progress: '#FFC400',  
   completed: '#57D9A3',
   pending: '#D9D9D9',     
   cancelled: '#03243C',

@@ -1,3 +1,4 @@
+import { useThemeColor } from '@hooks/useThemeColor';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -22,34 +23,35 @@ const DayComponent: React.FC<DayProps> = ({
   isSelected,
   isToday,
   onSelect,
-}) => (
-  <TouchableOpacity
+}) => {
+  const colors = useThemeColor()
+return  <TouchableOpacity
     style={[
-      styles.dayContainer,
-      isSelected && styles.selectedDay,
+      styles(colors).dayContainer,
+      isSelected && styles(colors).selectedDay,
     ]}
     onPress={onSelect}
   >
     <Text
       style={[
-        styles.dateText,
-        isToday && styles.todayText,
-        isSelected && styles.selectedText,
+        styles(colors).dateText,
+        isToday && styles(colors).todayText,
+        isSelected && styles(colors).selectedText,
       ]}
     >
       {date}
     </Text>
     <Text
       style={[
-        styles.dayText,
-        isToday && styles.todayText,
-        isSelected && styles.selectedText,
+        styles(colors).dayText,
+        isToday && styles(colors).todayText,
+        isSelected && styles(colors).selectedText,
       ]}
     >
       {day}
     </Text>
   </TouchableOpacity>
-);
+}
 
 interface HorizontalCalendarProps {
   onDateSelect?: (date: Date) => void;
@@ -64,6 +66,7 @@ const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date>(parsedDate);
   const scrollViewRef = useRef<ScrollView>(null);
   const today = new Date();
+  const colors = useThemeColor()
 
   const getDates = () => {
     const dates = [];
@@ -122,7 +125,7 @@ const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({
       ref={scrollViewRef}
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={styles(colors).scrollContent}
       snapToInterval={48}
       decelerationRate="fast"
     >
@@ -143,7 +146,7 @@ const HorizontalCalendar: React.FC<HorizontalCalendarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -158,17 +161,17 @@ const styles = StyleSheet.create({
   },
   selectedDay: {
     borderWidth: 1,
-    borderColor: '#002B7F',
+    borderColor: colors.primary,
   },
   dateText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
+    color: colors.body,
     marginBottom: 4,
   },
   dayText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.text,
     fontWeight: '500',
   },
   todayText: {
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
 
   },
   selectedText: {
-    color: '#002B7F',
+    color: colors.primary,
   },
 });
 

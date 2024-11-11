@@ -1,3 +1,4 @@
+import { useThemeColor } from '@hooks/useThemeColor';
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
@@ -9,27 +10,27 @@ interface ToggleViewProps {
 
 const ToggleView: React.FC<ToggleViewProps> = ({ onViewChange }) => {
   const [activeView, setActiveView] = useState<ViewType>('list');
-
+const colors = useThemeColor()
   const handlePress = (view: ViewType) => {
     setActiveView(view);
     onViewChange?.(view);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.toggleContainer}>
+    <View style={styles(colors).container}>
+      <View style={styles(colors).toggleContainer}>
         <TouchableOpacity
           style={[
-            styles.button,
-            activeView === 'list' && styles.activeButton,
-            styles.leftButton,
+            styles(colors).button,
+            activeView === 'list' && styles(colors).activeButton,
+            styles(colors).leftButton,
           ]}
           onPress={() => handlePress('list')}
         >
           <Text
             style={[
-              styles.buttonText,
-              activeView === 'list' && styles.activeText,
+              styles(colors).buttonText,
+              activeView === 'list' && styles(colors).activeText,
             ]}
           >
             List
@@ -38,16 +39,16 @@ const ToggleView: React.FC<ToggleViewProps> = ({ onViewChange }) => {
 
         <TouchableOpacity
           style={[
-            styles.button,
-            activeView === 'month' && styles.activeButton,
-            styles.rightButton,
+            styles(colors).button,
+            activeView === 'month' && styles(colors).activeButton,
+            styles(colors).rightButton,
           ]}
           onPress={() => handlePress('month')}
         >
           <Text
             style={[
-              styles.buttonText,
-              activeView === 'month' && styles.activeText,
+              styles(colors).buttonText,
+              activeView === 'month' && styles(colors).activeText,
             ]}
           >
             Month
@@ -58,13 +59,13 @@ const ToggleView: React.FC<ToggleViewProps> = ({ onViewChange }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   container: {
     padding: 16,
   },
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F1F1F1',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 4,
   },
@@ -75,12 +76,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeButton: {
-    backgroundColor: '#002B7F', // Dark blue color from image
+    backgroundColor: colors.primary, // Dark blue color from image
   },
   buttonText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#666',
+    color: colors.body,
     fontWeight: '500',
   },
   activeText: {
