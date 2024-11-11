@@ -32,7 +32,7 @@ const ChatAttachments = () => {
                     {
                         attachmentsHeader.map((attachment, index) => (
                             <Pressable key={attachment.label} onPress={() => setSelectedHeader(index)} style={[styles.attachmentsHeader,
-                            { backgroundColor: index === selectedHeader ? colors.primary : colors.white }]}>
+                            { backgroundColor: index === selectedHeader ? colors.primary : colors.card }]}>
                                 <Icon disabledPress icon={attachment.icon as IconModel} iconColor={index === selectedHeader ? 'white' : colors.primary}  />
                                 <Text type='subtitle' color={index === selectedHeader && 'white'} title={attachment.label} />
                             </Pressable>

@@ -27,7 +27,7 @@ const MessageCard = ({ msg, receiver, avatar, isSameNextUser }: MessageCardProps
                     <Text type='details' title={msg} />
                 </View>
                 <View style={styles.bottom}>
-                    <Icon icon='seen' />
+                    <Icon icon='seen' iconColor={colors.text} />
                     <Text type='label' title='6.02 PM' />
                 </View>
             </View>

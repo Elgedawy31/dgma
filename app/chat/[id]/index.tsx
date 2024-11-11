@@ -92,8 +92,8 @@ function Chat() {
                 }
                 action={
                     <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
-                        <Icon icon='call' onPress={() => alert('Voice Call')} />
-                        <Icon icon='video' size={28} onPress={() => alert('Video Call')} />
+                        <Icon iconColor={colors.text} icon='call' onPress={() => alert('Voice Call')} />
+                        <Icon iconColor={colors.text} icon='video' size={28} onPress={() => alert('Video Call')} />
                     </View>
                 }
             />
@@ -113,18 +113,18 @@ function Chat() {
                     )}
                 />
 
-                <View style={{ paddingHorizontal: 16, paddingVertical: 8, gap: 30, backgroundColor: 'white' }}>
+                <View style={{ paddingHorizontal: 16, paddingVertical: 8, gap: 30, backgroundColor: colors.card }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', }}>
-                        {!watch('msg') && <Icon icon='add' onPress={() => setExpand(true)} />}
-                        <View style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 12, justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.background, borderRadius: 18, marginHorizontal: 12 }}>
+                        {!watch('msg') && <Icon icon='add' iconColor={colors.text} onPress={() => setExpand(true)} />}
+                        <View style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 12, justifyContent: 'space-between', alignItems: 'center',borderColor:colors.text , borderWidth:1 ,  borderRadius: 18, marginHorizontal: 12 }}>
                             <View style={{ flex: 1 }}>
                                 <TextInputField noLabel noBorder name='msg' control={control} />
                             </View>
-                            {!watch('msg') && <Icon icon='camera' onPress={() => alert('Camera')} />}
+                            {!watch('msg') && <Icon iconColor={colors.text} icon='camera' onPress={() => alert('Camera')} />}
                         </View>
                         <Icon icon='send'
                             onPress={() => sendMessage()}
-                            iconColor={watch('msg') && colors.white}
+                            iconColor={watch('msg') ? colors.white : colors.text}
                             bgColor={watch('msg') && colors.primary}
                             type={watch('msg') ? 'complex' : 'simple'}
                         />
