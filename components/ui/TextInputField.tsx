@@ -101,9 +101,11 @@ const InputField: React.FC<InputFieldProps> = ({
             {!noLabel && <Text color={labelColor} type='label' title={label} />}
             <View style={{ flexDirection: "row", position: "relative", alignItems: "center" }}>
                 <TextInput
+                placeholderTextColor={colors.body}
                 editable={editable}
                     style={[
                         styles.input,
+                        {color:colors.text} ,
 
                         noBorder && { borderWidth: 0 },
                         { width: '100%', flex: 1, verticalAlign: multiline ? 'top' : 'middle' },

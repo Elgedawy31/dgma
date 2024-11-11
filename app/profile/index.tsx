@@ -13,6 +13,7 @@ import useSecureStorage from "@hooks/useSecureStorage";
 import useStorage from "@hooks/useStorage";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { Colors } from "@colors";
 
 function profile() {
   const { post } = useAxios();
@@ -77,7 +78,7 @@ function profile() {
           <Ionicons
             name="chevron-back"
             size={24}
-            color="black"
+            color={color.text}
             onPress={() => {
               router.back();
             }}
@@ -87,7 +88,7 @@ function profile() {
           <Ionicons
             name="settings"
             size={24}
-            color="black"
+            color={color.text}
             onPress={() => {
               router.push("/profile/settings");
             }}

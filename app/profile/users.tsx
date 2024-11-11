@@ -39,25 +39,25 @@ const Users = () => {
   };
 
   const renderUserItem = ({ item }: any) => (
-    <View style={styles.userCard}>
+    <View style={styles(color).userCard}>
       {item?.avatar ? (
-        <Image source={{ uri: item.avatar }} style={styles.avatar} />
+        <Image source={{ uri: item.avatar }} style={styles(color).avatar} />
       ) : (
-        <View style={[styles.avatar, { backgroundColor: color.primary }]}>
-          <Text style={styles.avatarTxt}>{item?.name?.first?.slice(0, 1)}</Text>
+        <View style={[styles(color).avatar, { backgroundColor: color.primary }]}>
+          <Text style={styles(color).avatarTxt}>{item?.name?.first?.slice(0, 1)}</Text>
         </View>
       )}
-      <View style={styles.userInfo}>
+      <View style={styles(color).userInfo}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Text style={styles.username}>
+          <Text style={styles(color).username}>
             {item.name.first} {item.name.last}{" "}
           </Text>
-          {/* <Text style={[styles.username , {color:item.role ==='admin' ? TaskColors.completed : TaskColors.review}]}> {item.role}</Text> */}
+          {/* <Text style={[styles(color).username , {color:item.role ==='admin' ? TaskColors.completed : TaskColors.review}]}> {item.role}</Text> */}
         </View>
-        <Text style={styles.email}>{item.email}</Text>
+        <Text style={styles(color).email}>{item.email}</Text>
       </View>
       <TouchableOpacity onPress={() => handleTerminate(item.id)}>
-        <Text style={styles.terminateButtonText}>Terminate</Text>
+        <Text style={styles(color).terminateButtonText}>Terminate</Text>
       </TouchableOpacity>
     </View>
   );
@@ -92,7 +92,7 @@ const Users = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: color.background }]}>
+    <View style={[styles(color).container, { backgroundColor: color.background }]}>
       <AppBar
         center
         title={<BlocksTxt type="subtitle" title="Users List" />}
@@ -107,7 +107,7 @@ const Users = () => {
           <Ionicons
             name="chevron-back"
             size={24}
-            color="black"
+            color={color.text}
             onPress={() => {
               router.back();
             }}
@@ -118,7 +118,7 @@ const Users = () => {
         data={users}
         renderItem={renderUserItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={styles(color).listContainer}
       />
 
       <NewUser
@@ -137,7 +137,7 @@ const Users = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   userCard: {
     flexDirection: "row",
-    backgroundColor: "white",
+    backgroundColor: colors.card,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -187,11 +187,11 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: colors.text,
   },
   email: {
     fontSize: 14,
-    color: "#666",
+    color: colors.body,
     marginTop: 4,
   },
   terminateButtonText: {

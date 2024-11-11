@@ -1,3 +1,4 @@
+import { useThemeColor } from '@hooks/useThemeColor';
 import React from 'react';
 import {
   Modal,
@@ -22,6 +23,7 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
   onConfirm,
   title = 'Confirm Delete',
 }) => {
+  const colors = useThemeColor()
   return (
     <Modal
       visible={visible}
@@ -29,25 +31,25 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
+      <View style={styles(colors).modalOverlay}>
+        <View style={styles(colors).modalContainer}>
+          <View style={styles(colors).modalHeader}>
+            <Text style={styles(colors).modalTitle}>{title}</Text>
           </View>
 
-          <View style={styles.modalFooter}>
+          <View style={styles(colors).modalFooter}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[styles(colors).button, styles(colors).cancelButton]}
               onPress={onClose}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles(colors).cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.button, styles.deleteButton]}
+              style={[styles(colors).button, styles(colors).deleteButton]}
               onPress={onConfirm}
             >
-              <Text style={styles.deleteButtonText}>Delete</Text>
+              <Text style={styles(colors).deleteButtonText}>Delete</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -58,7 +60,7 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
 
 const { width } = Dimensions.get('window');
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: width * 0.85,
-    backgroundColor: 'white',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 24,
     
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
     textAlign:'center'
 
   },
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     fontSize: 16,
-    color: '#666',
+    color: colors.body,
     lineHeight: 22,
   },
   modalFooter: {

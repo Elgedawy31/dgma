@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import IconWrapper from "@components/IconWrapper";
 import useAxios from "@hooks/useAxios";
 import useFilePicker from "@hooks/useFile";
+import { useThemeColor } from "@hooks/useThemeColor";
 
 interface NewUserProps {
   isVisible: boolean;
@@ -58,6 +59,7 @@ const NewUser: React.FC<NewUserProps> = ({
   const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
   const [loading , setLoading] = useState(false);
 
+  const colors = useThemeColor()
   const pickLogoImage = useCallback(async () => {
     const res = await imagePicker({ multiple: false });
     if (res) {
@@ -108,48 +110,49 @@ const NewUser: React.FC<NewUserProps> = ({
       onBackdropPress={onClose}
       onSwipeComplete={onClose}
       swipeDirection={["down"]}
-      style={styles.modal}
+      style={styles(colors).modal}
       propagateSwipe
       avoidKeyboard
     >
-      <ScrollView style={styles.modalView}>
-        <View style={styles.handleBar} />
+      <ScrollView style={styles(colors).modalView}>
+        <View style={styles(colors).handleBar} />
 
-        <View style={styles.header}>
-          <Text style={styles.title}>User Information</Text>
+        <View style={styles(colors).header}>
+          <Text style={styles(colors).title}>User Information</Text>
           <IconWrapper
             onPress={onClose}
             size={36}
-            Icon={<Ionicons name="close" size={24} color="#000" />}
+            Icon={<Ionicons name="close" size={24} color={colors.text} />}
           />
         </View>
 
         {/* Image Upload Section */}
-        <View style={styles.imageUploadContainer}>
-          <TouchableOpacity style={styles.uploadButton} onPress={pickLogoImage}>
+        <View style={styles(colors).imageUploadContainer}>
+          <TouchableOpacity style={styles(colors).uploadButton} onPress={pickLogoImage}>
             {groupLogo ? (
-              <Image source={{ uri: groupLogo.uri }} style={styles.previewImage} />
+              <Image source={{ uri: groupLogo.uri }} style={styles(colors).previewImage} />
             ) : (
               <>
-                <Ionicons name="cloud-upload-outline" size={24} color="#002B5B" />
-                <Text style={styles.uploadText}>Upload Logo</Text>
+                <Ionicons name="cloud-upload-outline" size={24} color ={colors.primary} />
+                <Text style={styles(colors).uploadText}>Upload Logo</Text>
               </>
             )}
           </TouchableOpacity>
           {groupUploadedImg && (
-            <Text style={styles.fileName}>File: {groupUploadedImg}</Text>
+            <Text style={styles(colors).fileName}>File: {groupUploadedImg}</Text>
           )}
         </View>
 
         {/* Email */}
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles(colors).label}>Email</Text>
         <Controller
           control={control}
           name="email"
           rules={{ required: "Email is required" }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={styles.input}
+              style={[styles(colors).input , {color:colors.text}]}
+              placeholderTextColor={colors.body}
               onChangeText={onChange}
               value={value}
               placeholder="Enter Email"
@@ -158,18 +161,19 @@ const NewUser: React.FC<NewUserProps> = ({
           )}
         />
         {errors.email && (
-          <Text style={styles.errorText}>{errors.email.message}</Text>
+          <Text style={styles(colors).errorText}>{errors.email.message}</Text>
         )}
 
         {/* Password */}
-        <Text style={styles.label}>Password</Text>
+        <Text style={styles(colors).label}>Password</Text>
         <Controller
           control={control}
           name="password"
           rules={{ required: "Password is required" }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={styles.input}
+              style={[styles(colors).input , {color:colors.text}]}
+              placeholderTextColor={colors.body}
               onChangeText={onChange}
               value={value}
               placeholder="Enter Password"
@@ -178,18 +182,19 @@ const NewUser: React.FC<NewUserProps> = ({
           )}
         />
         {errors.password && (
-          <Text style={styles.errorText}>{errors.password.message}</Text>
+          <Text style={styles(colors).errorText}>{errors.password.message}</Text>
         )}
 
         {/* Name Fields */}
-        <Text style={styles.label}>First Name</Text>
+        <Text style={styles(colors).label}>First Name</Text>
         <Controller
           control={control}
           name="name.first"
           rules={{ required: "First name is required" }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={styles.input}
+              style={[styles(colors).input , {color:colors.text}]}
+              placeholderTextColor={colors.body}
               onChangeText={onChange}
               value={value}
               placeholder="Enter First Name"
@@ -197,16 +202,17 @@ const NewUser: React.FC<NewUserProps> = ({
           )}
         />
         {errors.name?.first && (
-          <Text style={styles.errorText}>{errors.name.first.message}</Text>
+          <Text style={styles(colors).errorText}>{errors.name.first.message}</Text>
         )}
 
-        <Text style={styles.label}>Second Name (Optional)</Text>
+        <Text style={styles(colors).label}>Second Name (Optional)</Text>
         <Controller
           control={control}
           name="name.second"
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={styles.input}
+              style={[styles(colors).input , {color:colors.text}]}
+              placeholderTextColor={colors.body}
               onChangeText={onChange}
               value={value}
               placeholder="Enter Second Name"
@@ -214,14 +220,15 @@ const NewUser: React.FC<NewUserProps> = ({
           )}
         />
 
-        <Text style={styles.label}>Last Name</Text>
+        <Text style={styles(colors).label}>Last Name</Text>
         <Controller
           control={control}
           name="name.last"
           rules={{ required: "Last name is required" }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={styles.input}
+              style={[styles(colors).input , {color:colors.text}]}
+              placeholderTextColor={colors.body}
               onChangeText={onChange}
               value={value}
               placeholder="Enter Last Name"
@@ -229,24 +236,24 @@ const NewUser: React.FC<NewUserProps> = ({
           )}
         />
         {errors.name?.last && (
-          <Text style={styles.errorText}>{errors.name.last.message}</Text>
+          <Text style={styles(colors).errorText}>{errors.name.last.message}</Text>
         )}
 
-        <TouchableOpacity style={styles.submitButton} onPress={onSubmitForm}>
-         {loading ?<ActivityIndicator size='small' color='white' /> :  <Text style={styles.submitButtonText}>Submit</Text>}
+        <TouchableOpacity style={styles(colors).submitButton} onPress={onSubmitForm}>
+         {loading ?<ActivityIndicator size='small' color='white' /> :  <Text style={styles(colors).submitButtonText}>Submit</Text>}
         </TouchableOpacity>
       </ScrollView>
     </Modal>
   );
 };
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   modal: {
     justifyContent: "flex-end",
     margin: 0,
   },
   modalView: {
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -255,7 +262,7 @@ const styles = StyleSheet.create({
   handleBar: {
     width: 40,
     height: 4,
-    backgroundColor: "#DEE2E6",
+    backgroundColor: colors.body,
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: 10,
@@ -269,6 +276,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
+    color:colors.text
   },
   imageUploadContainer: {
     marginBottom: 20,
@@ -280,11 +288,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding:8 ,
     borderWidth: 2,
-    borderColor: "#002B5B",
+    borderColor: colors.primary,
     borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: colors.card,
     overflow: "hidden",
   },
   previewImage: {
@@ -295,30 +303,30 @@ const styles = StyleSheet.create({
   uploadText: {
     marginTop: 6,
     fontSize: 12,
-    color: "#002B5B",
+    color: colors.primary,
     fontWeight: "500",
   },
 
   fileName: {
     marginTop: 8,
     fontSize: 12,
-    color: "#666",
+    color: colors.text,
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
-    color: "#515151",
+    color: colors.text,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
-    backgroundColor: "white",
+    backgroundColor: colors.card,
   },
   submitButton: {
-    backgroundColor: "#002B5B",
+    backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
