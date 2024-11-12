@@ -27,7 +27,7 @@ function Chat() {
     // const [users] = useState({ sender: '6703bdd588dff50af4b25e18', receiver: '66e2afe3a76d0d78d527f6eb' })
     const socket = useSocket();
     const colors = useThemeColor();
-    const flatListRef = useRef(null);
+    const flatListRef = useRef(null); 
     const { user: { id: signedUserID, avatar: userAvatar } } = useContext(userContext);
     const [expand, setExpand] = useState(false);
     const { id: conversationId, logo: conversationLogo, name: conversationName, type: conversationType }
