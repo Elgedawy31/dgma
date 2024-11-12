@@ -37,21 +37,7 @@ function Settings() {
       />
       
       <View style={{ marginTop: 24 }}>
-        <CustomListItem
-          isActive={false}
-          setIsActive={() => {}}
-          text="Users List"
-          icon={
-            <Ionicons
-              name="people-outline"
-              size={24}
-              color={color.primary}
-            />
-          }
-          onPress={() => router.push("/profile/users")}
-          type="navigate"
-        />
-        <CustomListItem
+      <CustomListItem
           isActive={theme === 'dark'}
           setIsActive={() => handleThemeToggle()}
           text="Dark Mode"
@@ -64,6 +50,35 @@ function Settings() {
           }
           onPress={handleThemeToggle}
           type="switch"
+        />
+        <CustomListItem
+          isActive={false}
+          setIsActive={() => {}}
+          text="Users List"
+          icon={
+            <Ionicons
+              name="people-outline"
+              size={24}
+              color={color.primary}
+            /> 
+          }
+          onPress={() => router.push("/profile/users")}
+          type="navigate"
+        />
+      
+         <CustomListItem
+          isActive={false}
+          setIsActive={() => {}}
+          text="Change Password"
+          icon={
+            <Ionicons
+              name='lock-closed-outline'
+              size={24}
+              color={color.primary}
+            />
+          }
+          onPress={() => router.push("/profile/changePassword")}
+          type="navigate"
         />
       </View>
     </View>

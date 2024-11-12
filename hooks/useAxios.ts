@@ -20,6 +20,20 @@ export default function useAxios() {
             .catch(err => console.log(`Error: ${err}`))
     }, []);
 
+    const patch = useCallback(async ({ endPoint, body, isMedia = false, hasToken = true }: AxiosParams) => { 
+        const token = await readStorage('token');
+        console.log("Token", token);
+        const headers = {
+            'Accept': 'application/json',
+            Authorization: hasToken ? `Bearer ${token}` : '',
+            'Content-Type': isMedia ? 'multipart/form-data' : 'application/json'
+        };
+        return await axios
+            .patch(`${SERVER_URL}/api/${endPoint}`, body, { headers })
+            .then(res => res.data)
+            .catch(err => console.log(`Error: ${err} `));
+
+    }, []);
     const post = useCallback(async ({ endPoint, body, isMedia = false, hasToken = true }: AxiosParams) => { 
         const token = await readStorage('token');
         console.log("Token", token);
@@ -47,5 +61,5 @@ export default function useAxios() {
 
     }, []);
 
-    return { get, post , deleteFunc };
+    return { get, post , deleteFunc , patch };
 }
