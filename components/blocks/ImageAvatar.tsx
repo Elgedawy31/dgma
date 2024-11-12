@@ -5,11 +5,10 @@ import { router } from 'expo-router'
 type ImageAvatarProps = {
     onPress?: () => void
     url: string | null
-    type: 'avatar' | 'member' | 'project' | 'profile'
+    type: 'avatar' | 'member' | 'project' | 'profile'| 'channel'
     size?: 50 | 60 | 70 | 80 | 90 | 100
 }
 function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
-    console.log(url)
     return onPress ? <Pressable onPress={onPress}>
         <Image style={[styles[type], size && { width: size, height: size, borderRadius: size / 2 }]}
             source={url && { uri: url } ||
@@ -42,6 +41,12 @@ const styles = StyleSheet.create({
         height: 20,
         aspectRatio: 1,
         borderRadius: 10,
+    },
+    channel: {
+        width: 60,
+        height: 60,
+        aspectRatio: 1,
+        borderRadius: 30,
     },
     profile: { height: 150, borderRadius: 12, },
     project: { width: '100%', height: 200, }

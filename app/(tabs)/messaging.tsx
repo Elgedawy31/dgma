@@ -1,88 +1,95 @@
-import AppBar from "@blocks/AppBar";
-import ImageAvatar from "@blocks/ImageAvatar";
 import Text from "@blocks/Text";
-import ChatCard from "@cards/ChatCard";
-import { useThemeColor } from "@hooks/useThemeColor";
-import Button from "@ui/Button";
-import { Link, router } from "expo-router";
-import { memo, useEffect, useState, useMemo, useContext } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Text as TextR,
-  Image,
-} from "react-native";
-import StackUI from "@blocks/StackUI";
-import { Ionicons } from "@expo/vector-icons";
-import useAxios from "@hooks/useAxios";
-import GroupCard from "@cards/GroupCard";
 import Icon from "@blocks/Icon";
-import { userContext } from "@UserContext";
 import UserModel from "@model/user";
+import ChatModal from "@model/chat";
+import { router } from "expo-router";
+import AppBar from "@blocks/AppBar";
+import ChatCard from "@cards/ChatCard";
+import useAxios from "@hooks/useAxios";
+import { useForm } from "react-hook-form";
+import { userContext } from "@UserContext";
+import TextInputField from "@ui/TextInputField";
+import { useThemeColor } from "@hooks/useThemeColor";
+import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
+import { memo, useEffect, useState, useMemo, useContext, useCallback } from "react";
+import ImageAvatar from "@blocks/ImageAvatar";
 
-type Channel = {
-  _id: string;
-  name: string;
-};
 
-type User = {
-  _id: string;
-  name: {
-    first: string;
-    last: string;
-  };
-  role: string;
-};
-
-type Group = {
-  _id: string;
-  name: string;
-};
-
-const ChannelItem = memo(({ item }: { item: Channel }) => (
+const ChannelItem = memo(({ item }: { item: ChatModal }) => (
   <TouchableOpacity style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}>
-    <Image
-      style={{ width: 60, height: 60, borderRadius: 30 }}
-      source={require("@/assets/images/groups-no-img.png")}
+    <ImageAvatar
+      type="channel"
+      url='1731026479790_zoeyshen_dashboard3_2x.png'
+    // style={{ width: 60, height: 60, borderRadius: 30 }}
+    // source={require("@assets/images/groups-no-img.png")}
     />
     <Text type="body" title={item.name} />
   </TouchableOpacity>
 ));
 
-function Messaging() {
-  const { user: { id } } = useContext(userContext)
-  const colors = useThemeColor();
-  const [activeTab, setActiveTab] = useState("Chats");
-  const [channelsData, setChannelsData] = useState<Channel[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [groupData, setGroupData] = useState<Group[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const { get } = useAxios();
+const tabs = [{ type: "dm", label: "Chats" }, { type: "group", label: "Groups" }];
 
-  const tabs = ["Chats", "Groups"];
+function Messaging() {
+  const { get } = useAxios();
+  const colors = useThemeColor();
+  const { user: { id: signedUserID } } = useContext(userContext)
+  // const [users, setUsers] = useState<UserModel[]>([]);
+  const [activeTab, setActiveTab] = useState<number>(0);
+  // const [groupData, setGroupData] = useState<ChatModal[]>([]);
+  const [chatData, setChatData] = useState<ChatModal[]>([]);
+  const [channelsData, setChannelsData] = useState<ChatModal[]>([]);
+  const { control, handleSubmit, watch, reset } =
+    useForm<{ query: string }>({ defaultValues: { query: "" }, });
 
   // Get filtered data based on active tab
-  const filteredData = useMemo(() => {
-    console.log("filtered data");
-    const query = searchQuery.toLowerCase().trim();
+  // const filteredData = useMemo(() => {
+  //   const query = searchQuery.toLowerCase().trim();
 
-    if (!query) {
-      return activeTab === "Chats" ? users : groupData;
-    }
+  //   groupData.filter((group) => group.name.toLowerCase().trim().includes(query));
 
-    if (activeTab === "Chats") {
-      return users
-    } else {
-      return groupData.filter((group) =>
-        group.name.toLowerCase().includes(query)
-      );
-    }
-  }, [activeTab, searchQuery, users, groupData]);
+  //   const dm = users
+  //     .filter(({ name: { first, last } }) => `${first} ${last}`.toLowerCase().trim().includes(query))
+  //     .map(({ id, name: { first, last }, avatar }) => (
+  //       {
+  //         id: `dm_${[signedUserID, id].sort().join("_")}`,
+  //         name: `${first} ${last}`, logo: avatar, type: "dm"
+  //       } as ChatModal)
+  //     )
+  //   return activeTab === tabs[0] ? dm : groupData;
+
+  // }, [activeTab, searchQuery, users, groupData]);
 
   useEffect(() => {
+    const getUsersFunction = async () => {
+      try {
+        const res = await get({ endPoint: "users" });
+        if (res) {
+          console.log("res", res);
+          setChatData(res
+            .filter((user: UserModel) => user.id !== signedUserID)
+            .map(({ id, name: { first, last }, avatar }: UserModel) => (
+              {
+                id: `dm_${[signedUserID, id].sort().join("_")}`,
+                name: `${first} ${last}`.toLowerCase().trim(), logo: avatar, type: "dm"
+              } as ChatModal)
+            ));
+        }
+      } catch (err) {
+        console.error(`Error: ${err}`);
+      }
+    };
+
+    const getGroupsFunction = async () => {
+      try {
+        const res = await get({ endPoint: "channels/all?type=group" });
+        if (res?.results) {
+          // setGroupData(res.results);
+        }
+      } catch (err) {
+        console.error(`Error: ${err}`);
+      }
+    };
+
     const getChannelsFunction = async () => {
       try {
         const res = await get({ endPoint: "channels/all?type=channel" });
@@ -94,77 +101,49 @@ function Messaging() {
       }
     };
 
+    getUsersFunction();
+    getGroupsFunction();
     getChannelsFunction();
   }, []);
 
-  useEffect(() => {
-    const getGroupsFunction = async () => {
-      try {
-        const res = await get({ endPoint: "channels/all?type=group" });
-        if (res?.results) {
-          setGroupData(res.results);
-        }
-      } catch (err) {
-        console.error(`Error: ${err}`);
-      }
-    };
 
-    getGroupsFunction();
+  const toggleActiveTab = useCallback((idx: number) => {
+    console.log("tab", idx);
+    setActiveTab(idx);
+    reset({ query: '' });
   }, []);
 
-  useEffect(() => {
-    const getUsersFunction = async () => {
-      try {
-        const res = await get({ endPoint: "users" });
-        if (res) {
-          console.log("res", res);
-          setUsers(res.filter((user: UserModel) => user.id !== id));
-        }
-      } catch (err) {
-        console.error(`Error: ${err}`);
-      }
-    };
+  const clearSearch = useCallback(() => reset({ query: '' }), []);
 
-    getUsersFunction();
-  }, []);
-
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery("");
-  };
-
-  console.log(channelsData)
+  // const handleSearch = useCallback((text: string) => setSearchQuery(text), []);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar
-        title={
-          <View>
-            <Text type="subtitle" title="Chats" />
-          </View>
-        }
-        action={
-          <TouchableOpacity
-            onPress={() => router.push("/newGroup")}
-            style={{ backgroundColor: "#F1F9FF", borderRadius: 50, padding: 8 }}
-          >
-            <Icon icon="add" type="simple" />
-          </TouchableOpacity>
-        }
+        title={<Text type="subtitle" title="Chats" />}
+        action={<Icon icon="add" type="complex" onPress={() => router.push("/newGroup")} />}
       />
-      <View style={styles.searchContainer}>
-        <Ionicons
-          name="search-outline"
-          size={20}
-          color="#666"
-          style={styles.icon}
-        />
+
+      <View style={[styles.searchContainer, watch('query') ? { paddingLeft: 0, paddingRight: 5 } : { paddingLeft: 5, paddingRight: 0 }]}>
+        {!watch('query') && <Icon icon="search" />}
+        <View style={{ flex: 1 }}>
+          <TextInputField
+            noLabel noBorder
+            name='query' control={control}
+            placeholder={`Search ${tabs[activeTab].label}...`}
+          />
+        </View>
+        {watch('query') && <Icon
+          size={18} icon='close' type="complex"
+          iconColor={colors.text} onPress={clearSearch} />
+        }
+      </View>
+
+      {/* <View style={styles.searchContainer}>
+        <Icon icon="search" />
         <TextInput
           style={styles.input}
-          placeholder={`Search ${activeTab.toLowerCase()}...`}
+          placeholder={`Search ...`}
           placeholderTextColor="#444"
           value={searchQuery}
           onChangeText={handleSearch}
@@ -174,50 +153,43 @@ function Messaging() {
             <Ionicons name="close-circle" size={20} color="#666" />
           </TouchableOpacity>
         )}
-      </View>
+      </View> */}
+
+
+
+
 
       <View style={styles.tabsContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[
-              styles.tabButton,
-              activeTab === tab && styles.activeTabButton,
-            ]}
-            onPress={() => {
-              setActiveTab(tab);
-              setSearchQuery(""); // Clear search when switching tabs
-            }}
+        {tabs.map((tab, index) => (
+          <TouchableOpacity key={tab.type}
+            onPress={() => toggleActiveTab(index)}
+            style={[styles.tabButton, index === activeTab && styles.activeTabButton,]}
           >
-            <TextR
-              style={[
-                styles.tabText,
-                activeTab === tab && styles.activeTabText,
-              ]}
-            >
-              {tab}
-            </TextR>
+            <Text
+              // style={[
+              //   styles.tabText,
+              //   activeTab === tab && styles.activeTabText,
+              // ]}
+              title={tab.label}
+            />
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.contentContainer}>
         <FlatList
-          data={filteredData}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) =>
-            activeTab === "Chats" ? (
-              <ChatCard msgID={`ChatID-${index}`} user={item} />
-            ) : (
-              <GroupCard msgID={`ChatID-${index}`} group={item} />
-            )
+          data={[...chatData]
+            .filter((chat) => activeTab === 0 ? chat.type === 'dm' : chat.type === 'group')
+            .filter((chat) => !watch('query') ? true : chat.name.toLowerCase().includes(watch('query').toLowerCase()))
           }
-          keyExtractor={(item, index) => item._id + index.toString()}
+          keyExtractor={({ id }) => id}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => <ChatCard {...item} />}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
               <Text
                 type="body"
-                title={`No ${activeTab.toLowerCase()} found${searchQuery ? ' for your search' : ''
+                title={`No ${tabs[activeTab].label.toLowerCase()} found${watch('query') ? ' for your search' : ''
                   }`}
               />
             </View>
@@ -234,7 +206,7 @@ function Messaging() {
             horizontal
             data={channelsData}
             renderItem={({ item }) => <ChannelItem item={item} />}
-            keyExtractor={(item) => item._id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             showsHorizontalScrollIndicator={false}
           />
         ) : (
@@ -243,7 +215,7 @@ function Messaging() {
           </View>
         )}
       </View>
-    </View>
+    </View >
   );
 }
 
@@ -254,7 +226,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#EEF1F3",
     borderRadius: 8,
-    paddingHorizontal: 12,
   },
   icon: {
     marginRight: 8,

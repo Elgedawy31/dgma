@@ -52,7 +52,7 @@ type IconProps = {
 function Icon({
     iconColor, bgColor, style, border,
     icon, onPress, black,
-    size = 24, type = 'simple', gap = 2,
+    size = 24, type = 'simple', gap = 1.5,
 }: IconProps) {
     const colors = useThemeColor();
     const iconConfig = iconMapping[icon];
