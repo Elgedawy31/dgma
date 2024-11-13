@@ -1,26 +1,26 @@
 import Text from '@blocks/Text'
 import ChatModal from '@model/chat'
 import { router } from 'expo-router'
-import useSocket from '@hooks/useSocket'
+// import useSocket from '@hooks/useSocket'
 import ImageAvatar from '@blocks/ImageAvatar'
 import React, { memo, useCallback } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 function ChatCard({ id, name, logo, type }: ChatModal) {
-    const socket = useSocket()
+    // const socket = useSocket()
 
     const onPress = useCallback(() => {
-        socket?.emit("joinConversation", {
-            conversationType: type,
-            conversationId: id
-        });
+        // socket?.emit("joinConversation", {
+        //     conversationType: type,
+        //     conversationId: id
+        // });
         console.log("Joining conversation", id);
         console.log("chat", JSON.stringify({ id, name, logo, type }));
         router.push({
             pathname: '/chat/[id]',
             params: { id, chat: JSON.stringify({ logo, name, type, id }) }
         })
-    }, [socket]);
+    }, []);
 
     return (
         <Pressable onPress={onPress}>
