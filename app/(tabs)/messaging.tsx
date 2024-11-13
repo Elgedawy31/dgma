@@ -64,7 +64,6 @@ function Messaging() {
       try {
         const res = await get({ endPoint: "users" });
         if (res) {
-          console.log("res", res);
           setChatData(res
             .filter((user: UserModel) => user.id !== signedUserID)
             .map(({ id, name: { first, last }, avatar }: UserModel) => (
