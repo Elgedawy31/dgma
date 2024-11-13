@@ -123,8 +123,8 @@ function Messaging() {
         action={<Icon icon="add" type="complex" onPress={() => router.push("/newGroup")} />}
       />
 
-      <View style={[styles.searchContainer, watch('query') ? { paddingLeft: 0, paddingRight: 5 } : { paddingLeft: 5, paddingRight: 0 }]}>
-        {!watch('query') && <Icon icon="search" />}
+      <View style={[styles(colors).searchContainer , {backgroundColor:colors.card}, watch('query') ? { paddingLeft: 0, paddingRight: 5 } : { paddingLeft: 5, paddingRight: 0 }]}>
+        {!watch('query') && <Icon iconColor={colors.text} icon="search" />}
         <View style={{ flex: 1 }}>
           <TextInputField
             noLabel noBorder
@@ -138,10 +138,10 @@ function Messaging() {
         }
       </View>
 
-      {/* <View style={styles.searchContainer}>
+      {/* <View style={styles(colors).searchContainer}>
         <Icon icon="search" />
         <TextInput
-          style={styles.input}
+          style={styles(colors).input}
           placeholder={`Search ...`}
           placeholderTextColor="#444"
           value={searchQuery}
@@ -158,16 +158,16 @@ function Messaging() {
 
 
 
-      <View style={styles.tabsContainer}>
+      <View style={styles(colors).tabsContainer}>
         {tabs.map((tab, index) => (
           <TouchableOpacity key={tab.type}
             onPress={() => toggleActiveTab(index)}
-            style={[styles.tabButton, index === activeTab && styles.activeTabButton,]}
+            style={[styles(colors).tabButton, index === activeTab && styles(colors).activeTabButton,]}
           >
             <Text
               // style={[
-              //   styles.tabText,
-              //   activeTab === tab && styles.activeTabText,
+              //   styles(colors).tabText,
+              //   activeTab === tab && styles(colors).activeTabText,
               // ]}
               title={tab.label}
             />
@@ -175,7 +175,7 @@ function Messaging() {
         ))}
       </View>
 
-      <View style={styles.contentContainer}>
+      <View style={styles(colors).contentContainer}>
         <FlatList
           data={[...chatData]
             .filter((chat) => activeTab === 0 ? chat.type === 'dm' : chat.type === 'group')
@@ -185,7 +185,7 @@ function Messaging() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => <ChatCard {...item} />}
           ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
+            <View style={styles(colors).emptyContainer}>
               <Text
                 type="body"
                 title={`No ${tabs[activeTab].label.toLowerCase()} found${watch('query') ? ' for your search' : ''
@@ -196,8 +196,8 @@ function Messaging() {
         />
       </View>
 
-      <View style={styles.channelsSection}>
-        <View style={styles.channelsHeader}>
+      <View style={styles(colors).channelsSection}>
+        <View style={styles(colors).channelsHeader}>
           <Text type="title" title="Channels" />
         </View>
         {channelsData.length > 0 ? (
@@ -209,7 +209,7 @@ function Messaging() {
             showsHorizontalScrollIndicator={false}
           />
         ) : (
-          <View style={styles.emptyContainer}>
+          <View style={styles(colors).emptyContainer}>
             <Text type="body" title="No channels found" />
           </View>
         )}
@@ -218,12 +218,11 @@ function Messaging() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles =(colors:any) =>  StyleSheet.create({
   searchContainer: {
     margin: 12,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EEF1F3",
     borderRadius: 8,
   },
   icon: {
@@ -246,10 +245,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: colors.card,
   },
   activeTabButton: {
-    backgroundColor: "#002B7F",
+    backgroundColor: colors.primary,
   },
   tabText: {
     color: "#666666",
