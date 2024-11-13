@@ -133,7 +133,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const [groupLogo, setGroupLogo] = useState<any>(null);
   const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
 
-  const selectedProject = projects.find((p:any) => p.id === selectedProjectId);
+  const selectedProject = projects?.length > 0? projects?.find((p:any) => p?.id === selectedProjectId) :{};
   const selectedStatusLabel = TASK_STATUSES.find(
     (s) => s.id === selectedStatus
   )?.label;
@@ -220,8 +220,8 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     const fetchProjects = async () => {
       try {
         const res = await get({ endPoint: "projects" });
-        if (res) {
-          setProjects(res);
+        if (res?.project) {
+          setProjects(res.project);
         }
       } catch (err) {
         console.error(`Error: ${err}`);

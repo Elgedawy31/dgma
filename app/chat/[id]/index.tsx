@@ -37,17 +37,19 @@ const Chat = () => {
         isLoading,
     } = useChat(conversationType, conversationId);
 
-    useEffect(() => {
-        console.log("Chat screen state:", {
-            isLoading,
-            isSocketConnected,
-            messagesCount: messages.length,
-            conversationId,
-            conversationType,
-            chatInfo,
-        });
-    }, [isLoading, isSocketConnected, messages.length, conversationId, conversationType, chatInfo]);
+    // useEffect(() => {
+    //     console.log("Chat screen state:", {
+    //         isLoading,
+    //         isSocketConnected,
+    //         messagesCount: messages.length,
+    //         conversationId,
+    //         conversationType,
+    //         chatInfo,
+    //     });
+    // }, [isLoading, isSocketConnected, messages.length, conversationId, conversationType, chatInfo]);
 
+    console.log('messagesddddddd', messages[2]);
+ 
     const renderContent = () => {
         // Show loading state while connecting or fetching initial messages
         if (isLoading) {
@@ -88,7 +90,7 @@ const Chat = () => {
         <View style={[styles.container, { backgroundColor: colors.background }]}>
             <ChatHeader conversationLogo={conversationLogo} conversationName={conversationName} />
 
-            {renderContent()} 
+            {renderContent()}
 
             <ChatInput onSendMessage={handleSendMessage} disabled={!isSocketConnected} />
         </View>

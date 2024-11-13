@@ -205,7 +205,7 @@ function Messaging() {
             horizontal
             data={channelsData}
             renderItem={({ item }) => <ChannelItem item={item} />}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item?.id?.toString()}
             showsHorizontalScrollIndicator={false}
           />
         ) : (
