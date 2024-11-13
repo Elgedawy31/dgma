@@ -99,6 +99,40 @@ export default function useFile() {
         catch (error) { console.error('Error picking image:', error); return null }
     }, []);
 
+    const cameraCapture = useCallback(async (): Promise<FileModel[] | null> => {
+        try {
+            // Request camera permissions
+            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            if (!permissionResult.granted) {
+                console.log('Camera permission denied');
+                return null;
+            }
+
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                quality: 1,
+                allowsEditing: true,
+                aspect: [4, 3],
+            });
+
+            if (result.canceled) return null;
+
+            const file = result.assets[0];
+            const { size, measure } = calcFileSize(file.fileSize || 0);
+            
+            return [{
+                size: size,
+                uri: file.uri,
+                measure: measure,
+                name: validateFileName(`camera_${Date.now()}.jpg`),
+                mimeType: file.mimeType || 'image/jpeg'
+            }] as FileModel[];
+        } catch (error) {
+            console.error('Error capturing image:', error);
+            return null;
+        }
+    }, [calcFileSize, validateFileName]);
+
 
     const documentPicker = useCallback(async ({ multiple = true }: PickerModel = {}) => {
         try {
@@ -144,8 +178,8 @@ export default function useFile() {
 
 
     const obj = useMemo(() =>
-    ({ loading, imagePicker, documentPicker, uploadFiles, decodeFile }
-    ), [loading, imagePicker, documentPicker, uploadFiles, decodeFile])
+    ({ loading, imagePicker ,cameraCapture, documentPicker, uploadFiles, decodeFile }
+    ), [loading, imagePicker ,cameraCapture, documentPicker, uploadFiles, decodeFile])
 
     return obj;
 };

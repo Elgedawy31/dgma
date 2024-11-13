@@ -101,7 +101,7 @@ export const useChat = (conversationType: string, conversationId: string) => {
 
   // Handle sending messages
   const handleSendMessage = useCallback(
-    (content: string) => {
+    (content: string, attachments: string[] = []) => {
       if (!content.trim() || !isSocketConnected) {
         console.log("Cannot send message:", {
           hasContent: !!content.trim(),
@@ -118,7 +118,7 @@ export const useChat = (conversationType: string, conversationId: string) => {
           messageData = {
             content,
             receiverId: signedUserID,
-            attachments: [],
+            attachments,
           };
         } else {
           const [, userId1, userId2] = conversationId.split("_");
@@ -126,7 +126,7 @@ export const useChat = (conversationType: string, conversationId: string) => {
           messageData = {
             content,
             receiverId,
-            attachments: [],
+            attachments,
           };
         }
       } else {
@@ -134,18 +134,19 @@ export const useChat = (conversationType: string, conversationId: string) => {
           content,
           ...(conversationType === "channel" && { channelId: conversationId }),
           ...(conversationType === "group" && { groupId: conversationId }),
-          attachments: [],
+          attachments,
         };
       }
 
       console.log("Sending message:", {
         content: content.substring(0, 20) + (content.length > 20 ? "..." : ""),
+        attachments,
         type: conversationType,
         timestamp: Date.now(),
       });
 
       // Add temporary message first for immediate UI feedback
-      addTempMessage(content);
+      addTempMessage(content, attachments);  // Make sure useMessages.ts is updated to handle attachments
       // Then send the actual message
       sendMessage(messageData);
     },

@@ -36,20 +36,6 @@ const Chat = () => {
         handleLoadMore,
         isLoading,
     } = useChat(conversationType, conversationId);
-
-    // useEffect(() => {
-    //     console.log("Chat screen state:", {
-    //         isLoading,
-    //         isSocketConnected,
-    //         messagesCount: messages.length,
-    //         conversationId,
-    //         conversationType,
-    //         chatInfo,
-    //     });
-    // }, [isLoading, isSocketConnected, messages.length, conversationId, conversationType, chatInfo]);
-
-    console.log('messagesddddddd', messages[2]);
- 
     const renderContent = () => {
         // Show loading state while connecting or fetching initial messages
         if (isLoading) {

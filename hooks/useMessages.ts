@@ -18,7 +18,7 @@ const normalizeMessage = (rawMessage: RawMessage): Message => {
     },
     timestamp: rawMessage.timestamp || rawMessage.createdAt || new Date().toISOString(),
     seen: rawMessage.seen || [],
-    attachments: rawMessage.attachments || [],
+    attachments: rawMessage.attachments || [], // Keep existing attachments from rawMessage
   };
 };
 
@@ -77,7 +77,9 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
             existingMsg.temp &&
             newMessages.some(
               (newMsg) =>
-                newMsg.content === existingMsg.content && newMsg.senderId._id === existingMsg.senderId._id
+                newMsg.content === existingMsg.content && 
+                newMsg.senderId._id === existingMsg.senderId._id &&
+                JSON.stringify(newMsg.attachments) === JSON.stringify(existingMsg.attachments)
             )
           )
       );
@@ -116,6 +118,7 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
   const handleNewMessage = useCallback((rawMessage: RawMessage) => {
     console.log("Queueing new message:", {
       id: rawMessage.id || rawMessage._id,
+      attachments: rawMessage.attachments?.length || 0,
       timestamp: Date.now()
     });
     messageQueueRef.current.push(rawMessage);
@@ -154,7 +157,7 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
     );
   }, []);
 
-  const addTempMessage = useCallback((content: string) => {
+  const addTempMessage = useCallback((content: string, attachments: string[] = []) => {
     const tempMessage: Message = {
       id: `temp_${Date.now()}`,
       content,
@@ -165,7 +168,7 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
       },
       timestamp: new Date().toISOString(),
       seen: [],
-      attachments: [],
+      attachments: attachments, // Use provided attachments instead of empty array
       temp: true
     };
 
@@ -174,6 +177,12 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
       return newMessages.sort(
         (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
+    });
+
+    console.log("Added temporary message:", {
+      content: content.substring(0, 20) + (content.length > 20 ? "..." : ""),
+      attachmentsCount: attachments.length,
+      timestamp: Date.now()
     });
   }, [signedUserID, userAvatar]);
 
