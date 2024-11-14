@@ -152,7 +152,7 @@ const confirm = () => {
     </View>
   );
 };
-
+ 
 const styles = (colors: any) =>
   StyleSheet.create({
     // ... existing styles ...
@@ -163,7 +163,7 @@ const styles = (colors: any) =>
       marginVertical: 24,
       paddingVertical: 16,
       paddingHorizontal: 24,
-      backgroundColor: "white",
+      backgroundColor: colors.card ,
     },
     iconContainer: {
       width: 48,
@@ -191,7 +191,7 @@ const styles = (colors: any) =>
       width: "33.33%",
       marginVertical: 12,
     },
-    memberImage: {
+    memberImage: { 
       width: 40,
       height: 40,
       borderRadius: 20,
@@ -200,9 +200,10 @@ const styles = (colors: any) =>
     memberName: {
       fontWeight: "400",
       fontSize: 12,
+      color:colors.text 
     },
     memberRole: {
-      color: colors.secondary,
+      color: colors.body ,   
     },
     createButton: {
       paddingVertical: 12,

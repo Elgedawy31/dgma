@@ -7,6 +7,7 @@ import Providers from '@ProviderContext';
 import useSecureStorage from '@hooks/useSecureStorage';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import NotificationSystem from '@components/NotificationSystem';
 
 function RootLayout() {
     const { readStorage: readToken, removeStorage: removeToken } = useSecureStorage();
@@ -50,6 +51,7 @@ function RootLayout() {
                         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
                         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
                     </Stack>
+                    <NotificationSystem />
                 </BottomSheetModalProvider>
             </GestureHandlerRootView>
         </Providers>
