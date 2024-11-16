@@ -1,3 +1,5 @@
+import React, { useEffect, useState, useContext } from 'react';
+import { View, ScrollView, RefreshControl } from 'react-native';
 import AppBar from "@blocks/AppBar";
 import Text from "@blocks/Text";
 import MeetingCard from "@components/meetings/MeetingCard";
@@ -6,91 +8,150 @@ import NoMeetings from "@components/meetings/NoMeetings";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { router } from "expo-router";
-import { memo, useState } from "react";
-import { View, ScrollView } from "react-native";
+import { userContext } from '../../controllers/context/UserContextProvider';
+import useAxios from '@hooks/useAxios';
 
-// Mock data for meetings
-const MOCK_MEETINGS = [
-  {
-    id: "1",
-    title: "UI/UX&Graphic Team meeting",
-    description: "Market research - User research",
-    assignedTo: [
-      {
-        id: "1",
-        email: "john@gmail.com",
-        name: "John Doe",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-      {
-        id: "2",
-        email: "sarah@gmail.com",
-        name: "Sarah Smith",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-      {
-        id: "3",
-        email: "mike@gmail.com",
-        name: "Mike Johnson",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-      {
-        id: "4",
-        email: "emma@gmail.com",
-        name: "Emma Wilson",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Product Development Sync",
-    description: "Weekly sprint planning and feature discussion",
-    assignedTo: [
-      {
-        id: "5",
-        email: "david@gmail.com",
-        name: "David Brown",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-      {
-        id: "6",
-        email: "lisa@gmail.com",
-        name: "Lisa Anderson",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Marketing Strategy Review",
-    description: "Q4 campaign planning and budget review",
-    assignedTo: [
-      {
-        id: "7",
-        email: "alex@gmail.com",
-        name: "Alex Turner",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-      {
-        id: "8",
-        email: "rachel@gmail.com",
-        name: "Rachel Green",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-      {
-        id: "9",
-        email: "chris@gmail.com",
-        name: "Chris Martin",
-        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
-      },
-    ],
-  },
-];
+interface Meeting {
+  ExternalMeetingId: string;
+  MediaPlacement: {
+    AudioFallbackUrl: string;
+    AudioHostUrl: string;
+    EventIngestionUrl: string;
+    ScreenDataUrl: string;
+    ScreenSharingUrl: string;
+    ScreenViewingUrl: string;
+    SignalingUrl: string;
+    TurnControlUrl: string;
+  };
+  MediaRegion: string;
+  MeetingArn: string;
+  MeetingId: string;
+  TenantIds: any[];
+  createdBy: {
+    _id: string;
+    avatar: string;
+    email: string;
+    name: {
+      first: string;
+      last: string;
+    };
+  };
+  isPrivate: boolean;
+}
+
+interface UserContextType {
+  user: {
+    id: string;
+    email: string;
+    role: string | null;
+    name: { first: string; last: string };
+  };
+}
 
 function Meetings() {
   const color = useThemeColor();
-  const [open, setOpen] = useState(false);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useContext(userContext) as UserContextType;
+  const { get, post } = useAxios();
+
+  const fetchMeetings = async () => {
+    try {
+      const response = await get({ endPoint: 'meet' });
+      
+      if (Array.isArray(response)) {
+        console.log('Active meetings:', response);
+        setMeetings(response);
+      } else {
+        console.log('Invalid meetings response:', response);
+        setMeetings([]);
+      }
+      setError(null);
+    } catch (err: any) {
+      console.error('Error fetching meetings:', err);
+      setError(err.message || 'Failed to load meetings');
+      setMeetings([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeetings();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchMeetings();
+  };
+
+  const createNewMeeting = async () => {
+    try {
+      // Create a new meeting
+      const createResponse = await post({ 
+        endPoint: 'meet',
+        body: {
+          isPrivate: false,
+          createdBy: user.id
+        }
+      });
+      
+      console.log('Create meeting response:', createResponse);
+
+      if (!createResponse?.meetingResponse?.Meeting?.MeetingId) {
+        throw new Error('Failed to get meeting ID');
+      }
+
+      // Add current user to the meeting
+      const joinResponse = await post({
+        endPoint: 'meet/add-user',
+        body: {
+          userId: user.id,
+          meetingId: createResponse.meetingResponse.Meeting.MeetingId
+        }
+      });
+
+      console.log('Join meeting response:', joinResponse);
+
+      if (!joinResponse?.Attendee) {
+        throw new Error('Failed to join meeting');
+      }
+
+      // Navigate to the meeting room
+      router.push(`/meetings/${createResponse.meetingResponse.Meeting.MeetingId}`);
+      
+      // Refresh the meetings list
+      fetchMeetings();
+    } catch (err: any) {
+      console.error('Error creating meeting:', err);
+      setError(err.message || 'Failed to create meeting');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: color.background }}>
+        <AppBar
+          center
+          title={<Text type="subtitle" title="Meeting Room" />}
+          leading={
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={color.text}
+              onPress={() => router.back()}
+            />
+          }
+        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text type="body" title="Loading meetings..." />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
@@ -111,24 +172,48 @@ function Meetings() {
       <ScrollView 
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[color.primary]}
+            tintColor={color.primary}
+          />
+        }
       >
-        <MeetingsHead showBtn={MOCK_MEETINGS?.length > 0} />
-        {MOCK_MEETINGS.length > 0 ? (
-          MOCK_MEETINGS.map((meeting) => (
+        <MeetingsHead 
+          showBtn={true}
+          onCreateMeeting={createNewMeeting}
+        />
+        
+        {error && (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text type="error" title={error} />
+          </View>
+        )}
+
+        {meetings.length === 0 ? (
+          <NoMeetings onCreateMeeting={createNewMeeting} />
+        ) : (
+          meetings.map((meeting) => (
             <MeetingCard
-            id={meeting.id}
-              key={meeting.id}
-              title={meeting.title}
-              description={meeting.description}
-              assignedTo={meeting.assignedTo}
+              key={meeting.MeetingId}
+              id={meeting.MeetingId}
+              title={`Meeting by ${meeting.createdBy.name.first} ${meeting.createdBy.name.last}`}
+              description={`Created by: ${meeting.createdBy.email}`}
+              assignedTo={[{
+                id: meeting.createdBy._id,
+                name: `${meeting.createdBy.name.first} ${meeting.createdBy.name.last}`,
+                email: meeting.createdBy.email,
+                avatar: meeting.createdBy.avatar
+              }]}
+              onPress={() => router.push(`/meetings/${meeting.MeetingId}`)}
             />
           ))
-        ) : (
-          <NoMeetings setOpen={setOpen} />
         )}
       </ScrollView>
     </View>
   );
 }
 
-export default memo(Meetings);
+export default React.memo(Meetings);

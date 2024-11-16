@@ -1,28 +1,32 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
-import { Feather } from "@expo/vector-icons"; // Make sure to install expo/vector-icons
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import ProfileStack from "@components/PoepleComponent";
 import { useThemeColor } from "@hooks/useThemeColor";
-import { router } from "expo-router";
 
-type AssignedTo = {
-    id: string;
-    name: string;
-    email: string;
-    avatar: string;
-  };
-const MeetingCard = ({
-  id,
-  title,
-  description,
-  assignedTo
-}: {
-  id:string ;
+export type AssignedTo = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+};
+
+interface MeetingCardProps {
+  id: string;
   title: string;
   description: string;
   assignedTo: AssignedTo[];
+  onPress?: () => void;
+}
+
+const MeetingCard: React.FC<MeetingCardProps> = ({
+  id,
+  title,
+  description,
+  assignedTo,
+  onPress
 }) => {
-const color = useThemeColor();
+  const color = useThemeColor();
 
   return (
     <View style={styles(color).card}>
@@ -30,19 +34,19 @@ const color = useThemeColor();
         <View style={styles(color).textContainer}>
           <View style={styles(color).headerContainer}>
             <Text style={styles(color).title}>{title}</Text>
-            {/* <TouchableOpacity style={styles(color).menuButton}>
-              <Feather name="more-vertical" size={20} color={color.text} />
-            </TouchableOpacity> */}
           </View>
           <Text style={styles(color).description}>{description}</Text>
         </View>
 
         <View style={styles(color).bottomContainer}>
           <View style={styles(color).participantsContainer}>
-          <ProfileStack profiles={assignedTo} maxDisplay={3} />
+            <ProfileStack profiles={assignedTo} maxDisplay={3} />
           </View>
 
-          <TouchableOpacity onPress={() => router.push(`/meetings/${id}`)} style={styles(color).joinButton}>
+          <TouchableOpacity 
+            onPress={onPress} 
+            style={styles(color).joinButton}
+          >
             <Feather
               name="video"
               size={16}
@@ -57,7 +61,7 @@ const color = useThemeColor();
   );
 };
 
-const styles =(color:any) =>  StyleSheet.create({
+const styles = (color: any) => StyleSheet.create({
   card: {
     backgroundColor: color.card,
     borderRadius: 16,
@@ -84,9 +88,6 @@ const styles =(color:any) =>  StyleSheet.create({
     fontSize: 12,
     color: color.body,
   },
-  menuButton: {
-    padding: 4,
-  },
   bottomContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -97,32 +98,8 @@ const styles =(color:any) =>  StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#E0E0E0",
-    borderWidth: 2,
-    borderColor: "#FFF",
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-  },
-  lastAvatar: {
-    marginLeft: -12,
-    backgroundColor: "#E8E8E8",
-  },
-  remainingCount: {
-    fontSize: 12,
-    color: color.body,
-    fontWeight: "500",
-  },
   joinButton: {
-    backgroundColor:color.primary,
+    backgroundColor: color.primary,
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 8,

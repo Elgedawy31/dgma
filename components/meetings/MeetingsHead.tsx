@@ -3,8 +3,14 @@ import React from "react";
 import { Entypo } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
 
-const MeetingsHead = ({showBtn}:{showBtn:boolean}) => {
-    const color = useThemeColor();
+interface MeetingsHeadProps {
+  showBtn: boolean;
+  onCreateMeeting: () => void;
+}
+
+const MeetingsHead = ({ showBtn, onCreateMeeting }: MeetingsHeadProps) => {
+  const color = useThemeColor();
+  
   const styles = StyleSheet.create({
     head: {
       flexDirection: "row",
@@ -12,18 +18,21 @@ const MeetingsHead = ({showBtn}:{showBtn:boolean}) => {
       justifyContent: "space-between",
     },
     headTxt: {
-        fontSize: 20,
-        fontWeight: "500",
-        color: color.text,
-        marginVertical: 24,
-      },
+      fontSize: 20,
+      fontWeight: "500",
+      color: color.text,
+      marginVertical: 24,
+    },
   });
+
   return (
     <View style={styles.head}>
       <Text style={styles.headTxt}>Ongoing Meetings</Text>
-    {showBtn &&   <TouchableOpacity>
-      <Entypo name="plus" size={24} color={color.text} /> 
-      </TouchableOpacity>}
+      {showBtn && (
+        <TouchableOpacity onPress={onCreateMeeting}>
+          <Entypo name="plus" size={24} color={color.text} /> 
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

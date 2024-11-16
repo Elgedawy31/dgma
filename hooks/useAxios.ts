@@ -2,6 +2,7 @@ import axios from 'axios';
 // import { SERVER_URL } from '@env';
 import { useCallback } from 'react';
 import useSecureStorage from './useSecureStorage';
+import { API_URL } from '@/constants/Index';
 
 type AxiosParams = {
     body?: object;
@@ -10,14 +11,14 @@ type AxiosParams = {
     hasToken?: boolean;
 }
 export default function useAxios() {
-    const [SERVER_URL] = ["http://192.168.1.71:5001"];
+    const [SERVER_URL] = [API_URL];
     const { readStorage } = useSecureStorage();
     const get = useCallback(async ({ endPoint, hasToken = true }: AxiosParams) => {
         return await axios.get(
             `${SERVER_URL}/api/${endPoint}`,
             { headers: { Authorization: hasToken ? `Bearer ${await readStorage('token')}` : '' } })
             .then(res => res.data)
-            .catch(err => console.log(`Error: ${err}`))
+            .catch(err => console.log(`Error: ${SERVER_URL} ${err}`))
     }, []);
 
     const patch = useCallback(async ({ endPoint, body, isMedia = false, hasToken = true }: AxiosParams) => { 

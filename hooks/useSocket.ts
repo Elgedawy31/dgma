@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import useSecureStorage from "@hooks/useSecureStorage";
 import { RawMessage } from "@model/types";
+import { API_URL } from "@/constants/Index";
 
 export const useSocket = (
     conversationType: string,
@@ -130,7 +131,7 @@ export const useSocket = (
                 }
 
                 console.log("Initializing socket connection...");
-                const socket = io("http://192.168.1.71:5001", {
+                const socket = io(API_URL, {
                     auth: { token },
                     transports: ["websocket"],
                     reconnection: true,

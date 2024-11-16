@@ -21,6 +21,9 @@ function CurrentProjects() {
         <View>
             <View style={[styles.container, { paddingHorizontal: 16, }]}>
                 <Text type='title' title='Current Projects' />
+                <Pressable onPress={() => router.push("/meetings")} style={[styles.linkContainer , {backgroundColor:colors.body}]}>
+                    <Text type='label' title='Create new project' color='white' />
+                </Pressable>
                 {role === 'admin' ? <Ionicons name="add" size={32} color={colors.text} onPress={() => router.push(Routes.projectDetails)} />
                     : projects.length ? <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} /> : null}
             </View>
