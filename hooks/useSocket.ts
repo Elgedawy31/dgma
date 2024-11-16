@@ -131,6 +131,7 @@ export const useSocket = (
                 }
 
                 console.log("Initializing socket connection...");
+                console.log({API_URL})
                 const socket = io(API_URL, {
                     auth: { token },
                     transports: ["websocket"],

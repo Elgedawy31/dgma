@@ -2,21 +2,31 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Alert, Platform } from 'react-native';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Text from '@blocks/Text';
-import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@hooks/useThemeColor';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import {
   mediaDevices,
+  MediaStream as RNMediaStream,
   RTCView,
-  MediaStream,
 } from 'react-native-webrtc';
 import {
   ConsoleLogger,
   DefaultDeviceController,
   DefaultMeetingSession,
   LogLevel,
-  MeetingSessionConfiguration
+  MeetingSessionConfiguration,
+  VideoTileState,
 } from 'amazon-chime-sdk-js';
+import ParticipantGrid from './ParticipantGrid';
+import ScreenShare from './ScreenShare';
+import MeetingControls from './MeetingControls';
+
+// Custom MediaStream type that combines web and RN properties
+type CustomMediaStream = RNMediaStream & {
+  toURL(): string;
+  release(): void;
+  _tracks: MediaStreamTrack[];
+  _reactTag: string;
+};
 
 interface VideoConferenceProps {
   meetingId: string;
@@ -63,8 +73,7 @@ interface Participant {
   attendeeId: string;
   externalUserId: string;
   name: string;
-  videoTileId?: number;
-  stream?: MediaStream;
+  streamURL?: string;
 }
 
 const VideoConference: React.FC<VideoConferenceProps> = ({
@@ -79,26 +88,14 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
   const [isConnecting, setIsConnecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [remoteParticipants, setRemoteParticipants] = useState<Participant[]>([]);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<CustomMediaStream | null>(null);
+  const [screenStream, setScreenStream] = useState<CustomMediaStream | null>(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(null);
   const color = useThemeColor();
 
   const meetingSession = useRef<DefaultMeetingSession | null>(null);
-
-  useEffect(() => {
-    console.log('VideoConference mounted with meetingId:', meetingId);
-    console.log('Meeting data:', meetingData);
-    console.log('Attendees:', attendees);
-    setupMeeting();
-    return () => {
-      console.log('VideoConference unmounting, cleaning up...');
-      if (meetingSession.current) {
-        meetingSession.current.audioVideo?.stop();
-      }
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
 
   const requestPermissions = async () => {
     if (Platform.OS === 'web') return true;
@@ -135,7 +132,7 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
           frameRate: 30,
           facingMode: 'user'
         }
-      });
+      }) as CustomMediaStream;
       setLocalStream(stream);
       return stream;
     } catch (err) {
@@ -193,16 +190,41 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
         deviceController
       );
 
-      console.log('Starting audio/video...');
-      await meetingSession.current.audioVideo?.start();
-      setIsConnecting(false);
+      // Set up video tile observer
+      meetingSession.current.audioVideo?.addObserver({
+        videoTileDidUpdate: (tileState: VideoTileState) => {
+          console.log('Video tile updated:', tileState);
+          if (!tileState.boundAttendeeId) return;
 
-      // Set up observers for participants joining/leaving
+          if (tileState.isContent) {
+            // This is a screen share
+            setActiveScreenShareId(tileState.boundAttendeeId);
+          } else {
+            // This is a regular video
+            const stream = tileState.boundVideoStream as CustomMediaStream;
+            if (stream?.toURL) {
+              setRemoteParticipants(prev => 
+                prev.map(p => 
+                  p.attendeeId === tileState.boundAttendeeId
+                    ? { ...p, streamURL: stream.toURL() }
+                    : p
+                )
+              );
+            }
+          }
+        },
+        videoTileWasRemoved: (tileId: number) => {
+          console.log('Video tile removed:', tileId);
+          setActiveScreenShareId(null);
+        }
+      });
+
+      // Set up attendee presence observer
       meetingSession.current.audioVideo?.realtimeSubscribeToAttendeeIdPresence(
         (attendeeId: string, present: boolean) => {
           console.log('Participant presence update:', { attendeeId, present });
           if (present) {
-            const attendee = attendees.find(a => a.AttendeeId === attendeeId);
+            const attendee = attendees.find(a => a.ExternalUserId === attendeeId);
             if (attendee && attendee.ExternalUserId !== userId) {
               setRemoteParticipants(prev => [
                 ...prev,
@@ -217,15 +239,57 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
             setRemoteParticipants(prev => 
               prev.filter(p => p.attendeeId !== attendeeId)
             );
+            if (activeScreenShareId === attendeeId) {
+              setActiveScreenShareId(null);
+            }
           }
         }
       );
+
+      console.log('Starting audio/video...');
+      await meetingSession.current.audioVideo?.start();
+      setIsConnecting(false);
 
       console.log('Meeting setup complete');
     } catch (error: any) {
       console.error('Error in setupMeeting:', error);
       setError(error.message || 'Failed to join meeting');
       setIsConnecting(false);
+    }
+  };
+
+  const startScreenShare = async () => {
+    try {
+      // @ts-ignore: getDisplayMedia is available in react-native-webrtc
+      const stream = await mediaDevices.getDisplayMedia() as CustomMediaStream;
+      setScreenStream(stream);
+      setIsScreenSharing(true);
+
+      // Share screen with meeting
+      if (meetingSession.current && stream) {
+        await meetingSession.current.audioVideo?.startContentShare(stream);
+      }
+    } catch (error) {
+      console.error('Error starting screen share:', error);
+      Alert.alert('Error', 'Failed to start screen sharing');
+    }
+  };
+
+  const stopScreenShare = async () => {
+    try {
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        setScreenStream(null);
+      }
+      setIsScreenSharing(false);
+
+      // Stop sharing screen with meeting
+      if (meetingSession.current) {
+        await meetingSession.current.audioVideo?.stopContentShare();
+      }
+    } catch (error) {
+      console.error('Error stopping screen share:', error);
+      Alert.alert('Error', 'Failed to stop screen sharing');
     }
   };
 
@@ -261,14 +325,39 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
     }
   };
 
-  const leaveMeeting = async () => {
-    try {
-      console.log('Leaving meeting...');
+  useEffect(() => {
+    console.log('VideoConference mounted with meetingId:', meetingId);
+    console.log('Meeting data:', meetingData);
+    console.log('Attendees:', attendees);
+    setupMeeting();
+    return () => {
+      console.log('VideoConference unmounting, cleaning up...');
       if (meetingSession.current) {
         meetingSession.current.audioVideo?.stop();
       }
       if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
+      }
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const leaveMeeting = async () => {
+    try {
+      console.log('Leaving meeting...');
+      if (meetingSession.current) {
+        if (isScreenSharing) {
+          await meetingSession.current.audioVideo?.stopContentShare();
+        }
+        meetingSession.current.audioVideo?.stop();
+      }
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
       }
       onLeave();
     } catch (error) {
@@ -294,67 +383,37 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: color.background }]}>
-      {/* Local video preview */}
-      <View style={styles.localVideo}>
-        {isVideoEnabled && localStream && (
-          <RTCView
-            streamURL={localStream.toURL()}
-            style={styles.videoStream}
-            objectFit="cover"
-          />
-        )}
-      </View>
+    <View 
+      style={[styles.container, { backgroundColor: color.background }]}
+      onTouchStart={() => setShowControls(true)}
+    >
+      {activeScreenShareId || isScreenSharing ? (
+        <ScreenShare
+          screenStreamURL={screenStream?.toURL()}
+          isSharing={isScreenSharing}
+          onStartShare={startScreenShare}
+          onStopShare={stopScreenShare}
+        />
+      ) : (
+        <ParticipantGrid
+          participants={remoteParticipants}
+          localStreamURL={localStream?.toURL()}
+          localParticipantName="You"
+          isLocalVideoEnabled={isVideoEnabled}
+        />
+      )}
 
-      {/* Remote participants grid */}
-      <View style={styles.remoteGrid}>
-        {remoteParticipants.map((participant) => (
-          <View key={participant.attendeeId} style={styles.remoteVideo}>
-            {participant.stream ? (
-              <RTCView
-                streamURL={participant.stream.toURL()}
-                style={styles.videoStream}
-                objectFit="cover"
-              />
-            ) : (
-              <View style={styles.videoStream} />
-            )}
-            <Text type="small" title={participant.name} />
-          </View>
-        ))}
-      </View>
-
-      {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={[styles.controlButton, { backgroundColor: color.primary }]}
-          onPress={toggleAudio}
-        >
-          <Ionicons
-            name={isAudioEnabled ? 'mic' : 'mic-off'}
-            size={24}
-            color="white"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.controlButton, { backgroundColor: color.primary }]}
-          onPress={toggleVideo}
-        >
-          <Ionicons
-            name={isVideoEnabled ? 'videocam' : 'videocam-off'}
-            size={24}
-            color="white"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.controlButton, { backgroundColor: 'red' }]}
-          onPress={leaveMeeting}
-        >
-          <Ionicons name="call" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+      {showControls && (
+        <MeetingControls
+          isAudioEnabled={isAudioEnabled}
+          isVideoEnabled={isVideoEnabled}
+          isScreenSharing={isScreenSharing}
+          onToggleAudio={toggleAudio}
+          onToggleVideo={toggleVideo}
+          onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
+          onLeave={leaveMeeting}
+        />
+      )}
     </View>
   );
 };
@@ -362,53 +421,6 @@ const VideoConference: React.FC<VideoConferenceProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  localVideo: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 100,
-    height: 150,
-    backgroundColor: '#333',
-    borderRadius: 8,
-    zIndex: 1,
-    overflow: 'hidden',
-  },
-  remoteGrid: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  remoteVideo: {
-    width: '45%',
-    aspectRatio: 3/4,
-    margin: 5,
-    backgroundColor: '#333',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  videoStream: {
-    flex: 1,
-    borderRadius: 8,
-    backgroundColor: '#333',
-  },
-  controls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  controlButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 10,
   },
 });
 

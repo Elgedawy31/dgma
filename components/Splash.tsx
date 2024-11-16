@@ -3,6 +3,7 @@ import { ThemeContext } from '@ThemeContext';
 import StatusBar from '@blocks/StatusBar';
 import { useRef, useEffect, useContext, useState, memo } from 'react';
 import { Image, StyleSheet, Text, View, Animated } from 'react-native';
+import { API_URL } from '@/constants/Index';
 
 function Splash() {
     const [fontsLoaded] = useFonts({
@@ -67,6 +68,8 @@ function Splash() {
     if (!fontsLoaded) {
         return null; // Or a loading indicator
     }
+
+    console.log("Splash rendered",API_URL);
 
     return (
         <View style={styles.container}>
