@@ -13,11 +13,12 @@ const attachments: string[] = [
 ]
 
 const team: string[] = [
-    '66e2afe3a76d0d78d527f6eb',
-    '672ccb98967c579a82d4f7e1',
-    '672ccd2a967c579a82d4f7e8',
-    '672ccd60967c579a82d4f7e9',
-    '672ccd7f967c579a82d4f7ea',
+    '6731333aa0c2d19c5a63a4f6', //John User
+    '6731336160eae970e7274e01',//Mary User
+    '6731331842c798a8438d88b4',//Jimmy User
+    '67313380a92e9bc1801d1819',//Patrick User
+    '673133994008aec6fe604324',//Cory User
+    '673370719910eac38ce5d7c3',//Omar User
 ]
 
 export const projectsData: ProjectModel[] = [

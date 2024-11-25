@@ -5,7 +5,7 @@ import { router } from 'expo-router'
 type ImageAvatarProps = {
     onPress?: () => void
     url: string | null
-    type: 'avatar' | 'member' | 'project' | 'profile'| 'channel'
+    type: 'avatar' | 'member' | 'project' | 'profile' | 'channel'
     size?: 50 | 60 | 70 | 80 | 90 | 100
 }
 function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
@@ -23,7 +23,7 @@ function ImageAvatar({ onPress, url, type, size, }: ImageAvatarProps) {
             source={url && { uri: url } ||
                 (type === 'project' ?
                     require('@images/select.png')
-                    : require('@images/user.png')
+                    : type === 'channel' ? require('@images/groups-no-img.png') : require('@images/user.png')
                 )}
         />
 }

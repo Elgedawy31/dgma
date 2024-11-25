@@ -14,25 +14,22 @@ import { useThemeColor } from '@hooks/useThemeColor';
 //#endregion
 
 function CurrentProjects() {
-    const { user: { role } } = useContext(userContext)
+    const { user } = useContext(userContext)
     const { projects } = useContext(projectsContext);
     const colors = useThemeColor();
     return (
         <View>
             <View style={[styles.container, { paddingHorizontal: 16, }]}>
                 <Text type='title' title='Current Projects' />
-                <Pressable onPress={() => router.push("/meetings")} style={[styles.linkContainer , {backgroundColor:colors.body}]}>
-                    <Text type='label' title='Create new project' color='white' />
-                </Pressable>
-                {role === 'admin' ? <Ionicons name="add" size={32} color={colors.text} onPress={() => router.push(Routes.projectDetails)} />
-                    : projects.length ? <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} /> : null}
+                {user?.role  === 'admin' ? <Ionicons name="add" size={32} color={colors.text} onPress={() => router.push(Routes.projectDetails)} />
+                    : projects?.length ? <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} /> : null}
             </View>
             <View>
-                {projects.length > 0 ?
+                {projects?.length > 0 ?
                     <ScrollView horizontal style={styles.scrolled}
                         showsHorizontalScrollIndicator={false}>
                         <View style={styles.cards}>
-                            {projects.slice(0, projects.length > 3 ? 3 : projects.length).map((proj) => (
+                            {projects.slice(0, projects.length > 3 ? 3 : projects?.length).map((proj) => (
                                 <Link key={proj._id} href={{ pathname: '/project/[id]', params: { id: proj._id!, project: JSON.stringify(proj) } }}>
                                     <View style={{ paddingLeft: 16 }}>
                                         <ProjectCard project={proj} />
@@ -40,7 +37,7 @@ function CurrentProjects() {
                                 </Link>
                             ))}
                         </View>
-                        {role === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={[styles.linkContainer , {backgroundColor:colors.body}]}>
+                        {projects?.length > 3 && user?.role  === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={[styles.linkContainer, { backgroundColor: colors.body }]}>
                             <Text type='label' title='Show all' color='white' />
                         </Pressable>}
                     </ScrollView> :

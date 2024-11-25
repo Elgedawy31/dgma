@@ -3,7 +3,6 @@ import { memo, useMemo } from 'react'
 import ImageAvatar from '@blocks/ImageAvatar'
 import Text from '@blocks/Text'
 import Icon from '@blocks/Icon'
-import { styles } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetScrollable/BottomSheetFlashList'
 import { useThemeColor } from '@hooks/useThemeColor'
 type MessageCardProps = {
     msg: string

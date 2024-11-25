@@ -1,9 +1,12 @@
 import useSecureStorage from "@hooks/useSecureStorage";
 import useStorage from "@hooks/useStorage";
-import { createContext, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { projectsContext } from "@ProjectsContext";
+import { set } from "date-fns";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 type UserContextType = {
     user: UserType,
-    resetUser: () => void
+    logout: () => void
+    userToken: string | null,
     setUserData: (token: string, user: UserType) => void
 }
 type UserType = {
@@ -19,59 +22,50 @@ type UserType = {
 export const userContext = createContext<UserContextType>({} as UserContextType)
 
 function UserContextProvider({ children }: { children: ReactNode }) {
-    const { readStorage, writeStorage } = useStorage();
-    const { writeStorage: storeToken } = useSecureStorage();
+    const [userToken, setUserToken] = useState<string | null>(null);
+    const { readStorage, writeStorage, removeStorage } = useStorage();
+    const { writeStorage: storeToken, readStorage: readToken, removeStorage: removeToken } = useSecureStorage();
     const [user, setUser] = useState<UserType>({
         id: "",
         email: "",
-        role: null,
         createdAt: "",
         updatedAt: "",
         notifications: [],
-        avatar: null,
+        role: null, avatar: null,
         name: { first: "", last: "" },
     })
 
-    useEffect(() => {
-        loadUserData();
-    }, [])
+    useEffect(() => { loadUserData(); }, [])
 
     const loadUserData = useCallback(async () => {
-        await readStorage('user')
-            .then(
-                (user) =>
-                    user && setUser(
-                        (prev) => ({ ...prev, ...JSON.parse(user) })))
+        await readStorage('user').then((user) => user && setUser((prev) => ({ ...prev, ...JSON.parse(user) })))
+        await readToken<string>('token').then((token: string | null) => token && setUserToken(token));
     }, []);
 
-    const resetUser = useCallback(() => {
-        setUser({
-            id: "",
-            email: "",
-            role: null,
-            createdAt: "",
-            updatedAt: "",
-            notifications: [],
-            avatar: null,
-            name: { first: "", last: "" },
-        })
+    const logout = useCallback(async () => {
+      
+        await removeToken('token');
+        await removeStorage('user');
     }, [])
-    
-    const setUserData = useCallback(async (token: string, user: UserType) => {
+
+    const setUserData = useCallback((token: string, user: UserType) => {
+        setUserToken(token);
         setUser({ ...user });
-        await storeToken('token', token);
-        await writeStorage('user', JSON.stringify({
-            name: { ...user.name },
-            role: user.role,
-            email: user.email,
-            avatar: user.avatar,
-            id: user.id
-        }));
+        Promise.all([
+            storeToken('token', token),
+            writeStorage('user', JSON.stringify({
+                name: { ...user.name },
+                role: user?.role,
+                email: user.email,
+                avatar: user.avatar,
+                id: user.id
+            }))
+        ]);
     }, [])
 
     const obj = useMemo(() => ({
-        user, setUserData, resetUser
-    }), [user, setUserData, resetUser])
+        userToken, user, setUserData, logout
+    }), [userToken, user, setUserData, logout])
 
     return (
         <userContext.Provider value={obj}>

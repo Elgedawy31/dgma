@@ -1,31 +1,78 @@
-import Dot from '@ui/dot'
-import { memo } from 'react'
+import { View, ActivityIndicator } from 'react-native'
 import Text from '@blocks/Text'
+import Dot from '@ui/dot'
 import { useThemeColor } from '@hooks/useThemeColor'
-import { ActivityIndicator, View } from 'react-native'
+import { memo } from 'react'
 
-type ProjectUploadDataProps = {
-    step: 0 | 1 | 2
+type UploadStep = {
+    index: 0 | 1 | 2;
+    msg: string;
 }
-const uploadProcess = [
-    { id: "logo", label: 'Upload Logo ', success: 'Logo is Uploaded Successfully' },
-    { id: "attachments", label: 'Uploading Attachments', success: 'Attachments is Uploaded Successfully' },
-    { id: "project", label: 'Creating Project', success: 'Project is Created Successfully' }]
 
-const ProjectUploadData = ({ step }: ProjectUploadDataProps) => {
+type ProcessStep = {
+    id: 0 | 1 | 2;
+    label: string;
+}
+
+interface ProjectUploadDataProps {
+    step: UploadStep | null;
+    mode: 'create' | 'update';
+}
+
+const CREATE_PROCESS: ProcessStep[] = [
+    { id: 0, label: 'Uploading Logo and Attachments' },
+    { id: 1, label: 'Creating Project' },
+    { id: 2, label: 'Validating Project' }
+];
+
+const UPDATE_PROCESS: ProcessStep[] = [
+    { id: 0, label: 'Checking for Files Updates' },
+    { id: 1, label: 'Updating Project' },
+    { id: 2, label: 'Validating Project' }
+];
+
+const ProjectUploadData = ({ step, mode }: ProjectUploadDataProps) => {
     const colors = useThemeColor();
+    const steps = mode === 'create' ? CREATE_PROCESS : UPDATE_PROCESS;
+
     return (
-        <View style={{ width: '100%', flex: .25, justifyContent: 'center', alignItems: 'flex-start', gap: 16, paddingHorizontal: 20 }}>
-            <Text title={`Current Step is: ${step}`} />
-            {uploadProcess.map(({ id, label, }, index) => (
-                <View key={id} style={{ flexDirection: 'row', gap: 16, justifyContent: 'flex-start', alignItems: 'center' }}>
-                    <Dot selected={true} />
-                    <Text bold type='subtitle' title={label} />
-                    {step === index && <ActivityIndicator color={colors.primary} />}
+        <View style={{
+            width: '100%',
+            flex: .25,
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            gap: 16,
+            paddingHorizontal: 20
+        }}>
+            {step && (
+                <Text
+                    type='subtitle'
+                    color={colors.primary}
+                    title={`Current Step: ${step.msg}`}
+                />
+            )}
+
+            {steps.map(({ id, label }) => (
+                <View key={id} style={{
+                    flexDirection: 'row',
+                    gap: 16,
+                    justifyContent: 'flex-start',
+                    alignItems: 'center'
+                }}>
+                    <Dot selected={step ? step.index >= id : false} />
+                    <Text
+                        bold
+                        type='subtitle'
+                        title={step?.index === id ? step.msg : label}
+                        color={step?.index === id ? colors.primary : colors.text}
+                    />
+                    {step?.index === id && (
+                        <ActivityIndicator color={colors.primary} />
+                    )}
                 </View>
             ))}
         </View>
-    )
-}
+    );
+};
 
-export default memo(ProjectUploadData)
+export default memo(ProjectUploadData);

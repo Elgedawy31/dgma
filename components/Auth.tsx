@@ -8,10 +8,10 @@ function Auth({ children }: any) {
     const colors = useThemeColor();
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.primary }]}>
-            <StatusBar dark />
+        <View style={[styles.container, { backgroundColor: colors.authTop }]}>
+            <StatusBar hidden />
             <View style={[styles.head, { backgroundColor: colors.background }]}>
-                <View style={[styles.headContent, { backgroundColor: colors.primary }]}>
+                <View style={[styles.headContent, { backgroundColor: colors.authTop }]}>
                     <Logo />
                 </View>
             </View>

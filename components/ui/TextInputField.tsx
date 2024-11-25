@@ -7,10 +7,10 @@ import { Control, Controller, RegisterOptions } from 'react-hook-form';
 import Icon from '@blocks/Icon';
 import IconModel from '@model/icon';
 
-type InputType = 'text' | 'email' | 'password' | 'date';
+type InputType = 'text' | 'email' | 'password';
 
 interface InputFieldProps extends Omit<TextInputProps, 'onChangeText'> {
-    editable?:boolean
+    editable?: boolean
     label?: string;
     labelColor?: any;
     type?: InputType;
@@ -44,11 +44,22 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 1,
     },
+    inputContainer: {
+        flexDirection: "row",
+        position: "relative",
+        alignItems: "center"
+    },
+    icon: {
+        position: "absolute",
+        right: 10,
+        padding: 8, // Add padding for better touch target
+    }
 });
 
 const InputField: React.FC<InputFieldProps> = ({
-    editable=true ,
-    label, labelColor,
+    editable = true,
+    label,
+    labelColor,
     hasIcon,
     type = 'text',
     errorMessage,
@@ -77,36 +88,25 @@ const InputField: React.FC<InputFieldProps> = ({
                     autoCapitalize: 'none' as const,
                     autoCorrect: false,
                 };
-
             default:
                 return {};
         }
-    }, []);
+    }, [type, isPasswordVisible]); // Add isPasswordVisible to dependencies
 
-
-    const handleIcon = useCallback(() => {
-        switch (type) {
-            case 'password':
-                return isPasswordVisible ? "eye-off" as IconModel : "eye" as IconModel;
-            case 'date':
-                return "calendar-number" as IconModel;
-
-            default:
-                return "add" as IconModel;
-        }
+    const togglePasswordVisibility = useCallback(() => {
+        setPasswordVisibility(prev => !prev);
     }, []);
 
     return (
         <View style={styles.container}>
             {!noLabel && <Text color={labelColor} type='label' title={label} />}
-            <View style={{ flexDirection: "row", position: "relative", alignItems: "center" }}>
+            <View style={styles.inputContainer}>
                 <TextInput
-                placeholderTextColor={colors.body}
-                editable={editable}
+                    placeholderTextColor={colors.body}
+                    editable={editable}
                     style={[
                         styles.input,
-                        {color:colors.text} ,
-
+                        { color: colors.text },
                         noBorder && { borderWidth: 0 },
                         { width: '100%', flex: 1, verticalAlign: multiline ? 'top' : 'middle' },
                         { textTransform: capitalize ? 'capitalize' : 'none' },
@@ -116,20 +116,17 @@ const InputField: React.FC<InputFieldProps> = ({
                     placeholder={`Enter ${label}`}
                     onChangeText={onChangeText}
                     multiline={multiline}
-
                     {...getInputProps()}
                     {...props}
                 />
-                {hasIcon && (
-                    <Icon icon={handleIcon()}
-                        style={{ position: "absolute", right: 10 }}
-                        onPress={() => setPasswordVisibility(!isPasswordVisible)}
+                {type === 'password' && hasIcon && (
+                    <Icon
+                        icon={isPasswordVisible ? "hide-password" : "show-password"}
+                        iconColor={colors.icons}
+                        size={24}
+                        style={styles.icon}
+                        onPress={togglePasswordVisibility}
                     />
-                    // <Ionicons
-                    //     name={isPasswordVisible ? "eye-off" : "eye"}
-                    //     size={24}
-                    //     
-                    // />
                 )}
             </View>
             {errorMessage && <Text type='error' title={errorMessage} />}
@@ -159,10 +156,10 @@ const TextInputField: React.FC<ControlledInputFieldProps> = ({
                 onBlur={onBlur}
                 value={value}
                 errorMessage={error?.message}
-
                 {...rest}
             />
         )}
     />
 );
+
 export default memo(TextInputField);

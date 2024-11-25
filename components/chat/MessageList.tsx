@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import { View, FlatList, StyleSheet, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
+import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
 import Text from "@blocks/Text";
-import { Message, ChatInfo } from '../types';
+import { Message, ChatInfo, ForwardDestination } from '@model/types';
 import { MessageItem } from './MessageItem';
 import { useThemeColor } from "@hooks/useThemeColor";
+import Icon from '@blocks/Icon';
 
 interface MessageListProps {
   messages: Message[];
@@ -12,6 +13,8 @@ interface MessageListProps {
   signedUserID: string;
   formatMessageTime: (timestamp: string) => string;
   onLoadMore: () => void;
+  onReply?: (message: Message) => void;
+  onForward?: (message: Message, destination: ForwardDestination) => void;
 }
 
 export const MessageList = React.memo(({
@@ -19,36 +22,16 @@ export const MessageList = React.memo(({
   chatInfo,
   signedUserID,
   formatMessageTime,
-  onLoadMore
+  onLoadMore,
+  onReply,
+  onForward
 }: MessageListProps) => {
   const colors = useThemeColor();
   const flatListRef = useRef<FlatList | null>(null);
-  const isFirstLoadRef = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Scroll to bottom on initial load and new messages
-  useEffect(() => {
-    if (messages.length > 0) {
-      console.log("Messages updated, scrolling to bottom", {
-        messageCount: messages.length,
-        isFirstLoad: isFirstLoadRef.current
-      });
-
-      const scrollTimeout = setTimeout(() => {
-        if (flatListRef.current) {
-          flatListRef.current.scrollToEnd({
-            animated: !isFirstLoadRef.current
-          });
-        }
-        isFirstLoadRef.current = false;
-      }, 100);
-
-      return () => clearTimeout(scrollTimeout);
-    }
-  }, [messages.length]);
-
-  // Fade animation for scroll button
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: showScrollButton ? 1 : 0,
@@ -59,18 +42,13 @@ export const MessageList = React.memo(({
 
   const handleScroll = useCallback((event: any) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    const contentHeight = event.nativeEvent.contentSize.height;
-    const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
-    
-    // Show button if user has scrolled up more than 100 pixels from bottom
-    const distanceFromBottom = contentHeight - scrollViewHeight - offsetY;
-    setShowScrollButton(distanceFromBottom > 100);
+    // Since the list is inverted, we show the button when offsetY is greater than 0
+    setShowScrollButton(offsetY > 0);
   }, []);
 
   const scrollToBottom = useCallback(() => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true });
-      setShowScrollButton(false);
+      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
     }
   }, []);
 
@@ -79,71 +57,54 @@ export const MessageList = React.memo(({
       message={item}
       isCurrentUser={item.senderId._id === signedUserID}
       formatMessageTime={formatMessageTime}
+      onReply={onReply}
+      onForward={onForward}
     />
-  ), [signedUserID, formatMessageTime]);
+  ), [signedUserID, formatMessageTime, onReply, onForward]);
 
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
   const handleEndReached = useCallback(() => {
-    console.log("Reached end of list, loading more", {
-      currentPage: chatInfo.lastLoadedPage,
-      fullyLoaded: chatInfo.fullyLoaded
-    });
     if (!chatInfo.fullyLoaded) {
-      onLoadMore();
+      const nextPage = currentPage + 1;
+      console.log("reached to top", { currentPage, nextPage });
+      setCurrentPage(nextPage);
+      onLoadMore(); 
     }
-  }, [chatInfo, onLoadMore]);
+  }, [chatInfo.fullyLoaded, currentPage, onLoadMore]);
 
-  const ListHeaderComponent = useCallback(() => {
-    if (!chatInfo.fullyLoaded) {
+  const ListFooterComponent = useCallback(() => {
+    if (!chatInfo.fullyLoaded && messages.length > 0) {
       return (
-        <View style={styles.headerContainer}>
-          <Text type="body" title="Loading more messages..." />
-        </View>
-      );
-    }
-    if (messages.length > 0) {
-      return (
-        <View style={styles.headerContainer}>
-          <Text type="body" title="Beginning of conversation" />
+        <View style={styles.footerContainer}>
+          {/* <ActivityIndicator size="small" color={colors.primary} /> */}
         </View>
       );
     }
     return null;
-  }, [chatInfo.fullyLoaded, messages.length]);
+  }, [chatInfo.fullyLoaded, messages.length, colors.primary]);
 
   const ListEmptyComponent = useCallback(() => (
     <View style={styles.emptyContainer}>
-      <Text type="body" title="No messages yet" />
+      <MaterialCommunityIcons name="emoticon-happy-outline" size={100} color={colors.text} />
     </View>
   ), []);
-
-  console.log("Rendering MessageList", {
-    messageCount: messages.length,
-    fullyLoaded: chatInfo.fullyLoaded,
-    lastPage: chatInfo.lastLoadedPage
-  });
-
   return (
     <View style={styles.container}>
       <FlatList
         ref={flatListRef}
-        data={messages}
+        data={[...messages].reverse()}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        inverted={false}
+        inverted={true}
         showsVerticalScrollIndicator={false}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         onScroll={handleScroll}
         style={[styles.flatList, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.contentContainer}
-        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={ListFooterComponent}
         ListEmptyComponent={ListEmptyComponent}
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-          autoscrollToTopThreshold: 10,
-        }}
       />
       
       <Animated.View 
@@ -184,10 +145,9 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
     paddingVertical: 16,
   },
-  headerContainer: {
+  footerContainer: {
     padding: 10,
     alignItems: 'center',
   },

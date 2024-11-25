@@ -12,7 +12,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { userContext } from "@UserContext";
 
 function ResetPassword() {
-  const { patch } = useAxios();
+  const { patchRequest } = useAxios();
   const { user } = useContext(userContext);
   const [loading , setLoading] = useState(false)
 
@@ -33,7 +33,7 @@ function ResetPassword() {
   const onSubmit = handleSubmit(async (data) => {
     setLoading(true)
     try {
-      await patch({ 
+      await patchRequest({ 
         endPoint: `/users/${user?.id}`, 
         body: { password: data.newPassword },
         hasToken: true 

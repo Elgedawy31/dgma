@@ -1,13 +1,14 @@
 import React, { memo } from 'react';
-import { Pressable, Text, View, StyleSheet, ViewStyle } from 'react-native';
+import { Pressable, Text, View, StyleSheet, ViewStyle, ColorValue } from 'react-native';
 import Icon from '@blocks/Icon';
 import { useThemeColor } from '@hooks/useThemeColor';
 import IconModel from '@model/icon';
 
 type ButtonProps = {
     label?: string;
-    bgColor?: string;
     icon?: IconModel;
+    txtColor?: ColorValue
+    bgColor?: ColorValue;
     conStyle?: ViewStyle;
     txtStyle?: ViewStyle;
     onPress?: () => void;
@@ -19,6 +20,7 @@ type ButtonProps = {
 
 const Button = ({
     width,
+    txtColor,
     conStyle,
     txtStyle,
     icon,
@@ -53,8 +55,7 @@ const Button = ({
                     <Text style={[
                         styles.title,
                         {
-                            color: type === 'text' ? colors.primary :
-                                colors.white
+                            color: txtColor || (type === 'text' ? colors.primary : colors.white)
                         },
                         type === 'text' && { fontSize: 16 },
                         txtStyle

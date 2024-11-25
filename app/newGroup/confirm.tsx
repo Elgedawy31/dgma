@@ -16,6 +16,7 @@ import { useThemeColor } from "@hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import useFilePicker from "@hooks/useFile";
 import useAxios from "@hooks/useAxios";
+import { useChatContext } from "@context/ChatContext";
 
 type MemberProps = {
   id: string;
@@ -26,30 +27,44 @@ type MemberProps = {
   role: string;
   avatar: string;
 }; 
+
 const confirm = () => {
   const { members, totalNum } = useLocalSearchParams();
   const selectedMembers: MemberProps[] = JSON.parse(members as string);
-  const { post } = useAxios();
+  const { postRequest } = useAxios();
   const colors = useThemeColor();
-  const  [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [groupName, setGroupName] = useState("");
   const { imagePicker, uploadFiles } = useFilePicker();
   const [groupLogo, setGroupLogo] = useState<any>(null);
   const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
+  const { addChat } = useChatContext();
 
   const handleCreateGroup = async () => {
     setLoading(true);
-    await post({
+    await postRequest({
       endPoint: "channels", 
       body: {
         name: groupName,  
         photo: groupUploadedImg,
-        members:selectedMembers,
+        members: selectedMembers,
         type: "group",
       }, 
     })
       .then((res) => { 
         if (res) {
+          // Add the new group to the chat context
+          addChat({
+            _id: res.id || `group-${Date.now()}`,
+            name: groupName,
+            logo: groupUploadedImg,
+            type: "group",
+            receivers: selectedMembers.map(member => ({
+              id: member.id,
+              name: `${member.name.first} ${member.name.last}`,
+              avatar: member.avatar
+            }))
+          });
           router.replace("/(tabs)/messaging"); 
         }
         setLoading(false);
@@ -63,13 +78,13 @@ const confirm = () => {
   const pickLogoImage = useCallback(async () => { 
     const res = await imagePicker({ multiple: false });
     if (res) {
-        const file =await uploadFiles(res);
+        const file = await uploadFiles(res);
        if(file?.length > 0){
         setGroupUploadedImg(file[0]?.name); 
         setGroupLogo(res[0]); 
        }
     }
-}, []);
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -90,7 +105,7 @@ const confirm = () => {
           {groupLogo ? (
             <Image
               source={{ uri: groupLogo.uri }}
-              style={{ width: 48, height: 48, borderRadius: 24 }}
+              style={{ width: 40, height: 40, borderRadius: 24 }}
             />
           ) : (
             <Ionicons name="camera" size={24} color={colors.primary} />
@@ -118,18 +133,18 @@ const confirm = () => {
       <FlatList
         data={selectedMembers}
         keyExtractor={(item) => item.id}
-        numColumns={3}
+        numColumns={3} 
         contentContainerStyle={styles(colors).memberList}
         renderItem={({ item }) => (
           <View style={styles(colors).memberItem}>
             <Image
-              source={{ uri: item.avatar }}
+              source={item?.avatar ? { uri: item?.avatar } : require('../../assets/images/user.png')}
               style={styles(colors).memberImage}
             />
             <TextR style={styles(colors).memberName}>
               {item.name.first} {item.name.last}
             </TextR>
-            <TextR style={styles(colors).memberRole}>{item.role}</TextR>
+            <TextR style={styles(colors).memberRole}>{item?.role}</TextR>
           </View>
         )}
       />
@@ -155,21 +170,21 @@ const confirm = () => {
  
 const styles = (colors: any) =>
   StyleSheet.create({
-    // ... existing styles ...
     inputContainer: {
       flexDirection: "row",
       alignItems: "center",
       marginHorizontal: 16,
       marginVertical: 24,
-      paddingVertical: 16,
+      paddingVertical: 16, 
       paddingHorizontal: 24,
-      backgroundColor: colors.card ,
+      backgroundColor: colors.card,
     },
     iconContainer: {
       width: 48,
-      height: 48,
+      height: 48, 
       borderRadius: 24,
       borderWidth: 1,
+      borderColor: colors.primary,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 16,
@@ -200,10 +215,10 @@ const styles = (colors: any) =>
     memberName: {
       fontWeight: "400",
       fontSize: 12,
-      color:colors.text 
+      color: colors.text 
     },
     memberRole: {
-      color: colors.body ,   
+      color: colors.body,   
     },
     createButton: {
       paddingVertical: 12,

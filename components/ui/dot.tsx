@@ -9,7 +9,7 @@ const Dot = ({ selected }: { selected: boolean }) => {
             style={[
                 styles.dot,
                 selected && styles.selected,
-                { backgroundColor: selected ? colors.primary : colors.gray },
+                { backgroundColor: colors.dots },
             ]}
         />
     );
@@ -19,9 +19,8 @@ const styles = StyleSheet.create({
     dot: {
         width: 10,
         height: 10,
-        borderRadius: 5,
+        borderRadius: 8,
         marginHorizontal: 1,
-        backgroundColor: 'gray',
     },
     selected: {
         width: 25,

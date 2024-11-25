@@ -8,6 +8,14 @@ export default function useDate() {
         return `${month}${day}`;
     }, [])
 
+    
+    const calcDeadline = useCallback((date: string) => {
+        const dateObj = new Date(date);
+        const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(dateObj);
+        const day = dateObj.getDate() + 1;
+        return `${month}${day}`;
+    }, [])
+
     const obj = useMemo(() => ({
         shortDate
     }), [shortDate])

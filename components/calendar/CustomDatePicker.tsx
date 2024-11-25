@@ -11,7 +11,7 @@ interface TaskData {
   deadline: string | null;
   projectId: string | null;
   assignedTo: string[];
-  status: 'To Do';
+  status: 'pending';
 }
 
 interface CustomDatePickerProps {

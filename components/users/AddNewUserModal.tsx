@@ -53,7 +53,7 @@ const NewUser: React.FC<NewUserProps> = ({
     },
   });
 
-  const { post } = useAxios();
+  const { postRequest } = useAxios();
   const { imagePicker, uploadFiles } = useFilePicker();
   const [groupLogo, setGroupLogo] = useState<any>(null);
   const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
@@ -79,7 +79,7 @@ const NewUser: React.FC<NewUserProps> = ({
       avatar: groupUploadedImg,
     };
 
-    await post({ endPoint: "users/", body: submissionData, hasToken: true })
+    await postRequest({ endPoint: "users/", body: submissionData, hasToken: true })
       .then((res) => {
         if (res) {
           setLoading(false)
@@ -134,7 +134,7 @@ const NewUser: React.FC<NewUserProps> = ({
             ) : (
               <>
                 <Ionicons name="cloud-upload-outline" size={24} color ={colors.primary} />
-                <Text style={styles(colors).uploadText}>Upload Logo</Text>
+                <Text style={styles(colors).uploadText}>Avatar</Text>
               </>
             )}
           </TouchableOpacity>

@@ -25,7 +25,7 @@ const ChatAttachments = () => {
                         <ImageAvatar type='avatar' url={avatar} />
                         <Text type='subtitle' title={`${first} ${last}`} />
                     </View>
-                }
+                } 
             />
             <View style={{ flex: 1, backgroundColor: colors.background }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>

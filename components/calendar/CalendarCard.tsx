@@ -3,7 +3,7 @@ import { memo } from "react";
 import Text from "@blocks/Text";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { TaskColors } from "@/constants/Colors";
+import { TaskColors, TaskColors2 } from "@/constants/Colors";
 import ProfileStack from "@components/PoepleComponent";
 import { router } from "expo-router";
 import { useThemeColor } from "@hooks/useThemeColor";
@@ -29,8 +29,9 @@ type CalendarCardProps = {
 function CalendarCard({ time, title, state, subTitle , assignedTo  , link}: CalendarCardProps) {
   const colors = useThemeColor()
   //#region UI
+  console.log(link)
   return (
-    <TouchableOpacity onPress={() => router.push(link)} style={[styles.container , {backgroundColor:colors.card}, { borderColor: TaskColors[state] }]}>
+    <TouchableOpacity onPress={() => router.push(link)} style={[styles.container , {backgroundColor:colors.card}, { borderColor: TaskColors2[state] }]}>
       <Text type="body"  title={title} />
       <Text type="small" title={subTitle?.length > 60 ? `${subTitle.slice(0 , 60)}...` : subTitle} />
       <Text type="small" title={time} />

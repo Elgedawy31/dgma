@@ -7,11 +7,12 @@ import { TabBarItem } from '@blocks/TabBarItem';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeContext } from '@ThemeContext';
+import StatusBar from '@blocks/StatusBar';
 
 const tabs = [
   { name: 'index', label: 'Home', icon: 'home', hasHeader: true },
   { name: 'messaging', label: 'Messaging', icon: 'notifications', hasHeader: false },
-  { name: 'tasks', label: 'Tasks', icon: 'layers', hasHeader: true },
+  { name: 'tasks', label: 'Tasks', icon: 'layers', hasHeader: false },
   { name: 'calendar', label: 'Calendar', icon: 'calendar', hasHeader: false },
 ];
 function TabLayout() {
@@ -19,6 +20,7 @@ function TabLayout() {
   const { theme } = useContext(ThemeContext);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar dark={theme === 'dark'} />
       <Tabs
         initialRouteName="index"
         screenOptions={{

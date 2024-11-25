@@ -12,7 +12,7 @@ type ProjectModel = {
     description: string,
     attachments: string[];
     team: string[];
-    status: "Ideas" | "Pending" | "In Progress" | "In Review" | "Completed";
+    status: "Pending" | "In Progress" | "In Review" | "Completed";
     createdBy?: { _id: string, email: string, name: { first: string, last: string } };
 }
 

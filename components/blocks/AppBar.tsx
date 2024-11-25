@@ -18,32 +18,34 @@ type AppBarProps = {
     leading?: 'avatar' | 'back' | ReactElement,
 }
 const AppBar = ({ center = false, leading, title, action, dark, height = 50 }: AppBarProps) => {
-    const { user: { avatar, role, name: { first } } } = useContext(userContext);
-    const Colors = useThemeColor();
+    const { user } = useContext(userContext);
+    const colors = useThemeColor();
 
     return (
         <View style={[
             styles.container,
-            { minHeight: height , alignItems:'center' },
-            { backgroundColor:  Colors.card},
+            { minHeight: height, alignItems: 'center' },
+            { backgroundColor: colors.card },
         ]}>
             <StatusBar dark={dark} />
-            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
-                {/* /**Leading Icon | Profile-Image */}
-                <View>
-                    {typeof leading === 'object' && leading}
-                    {leading === 'back' && <Icon icon='back' iconColor={Colors.text} size={24} onPress={() => router.back()} />}
-                    {leading === 'avatar' && <ImageAvatar type="avatar" url={avatar} onPress={() => router.push('/profile')} />}
+            <View style={{ width: '100%', flex: 1, flexDirection: 'row', alignItems: center ? 'center' : 'flex-start', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', }}>
+                    {/* /**Leading Icon | Profile-Image */}
+                    <View style={{ backgroundColor: colors.card }}>
+                        {typeof leading === 'object' && leading}
+                        {leading === 'back' && <Icon icon='back' iconColor={colors.text} size={24} onPress={() => router.back()} />}
+                        {leading === 'avatar' && <ImageAvatar type="avatar" url={user?.avatar} onPress={() => router.push('/profile')} />}
+                    </View>
+                    {/* /** Trailing Icon | Notification | Title */}
+                    <View>
+                        {leading === 'avatar' && <Text type='subtitle' color={dark ? 'white' : 'black'} title={title as string || `Welcome ${user?.name?.first}!`} />}
+                        {typeof title === 'string' ? <Text type='subtitle' color={dark ? 'white' : 'black'} title={title} /> : title}
+                    </View>
                 </View>
-                {/* /** Trailing Icon | Notification | Title */}
+                {/* /** Action Buttons */}
                 <View>
-                    {leading === 'avatar' && <Text type='subtitle' color={dark ? 'white' : 'black'} title={title as string || `Welcome ${first}!`} />}
-                    {typeof title === 'string' ? <Text type='subtitle' color={dark ? 'white' : 'black'} title={title} /> : title}
+                    {action}
                 </View>
-            </View>
-            {/* /** Action Buttons */}
-            <View>
-                {action}
             </View>
         </View>
     )
@@ -52,6 +54,7 @@ export default memo(AppBar)
 
 const styles = StyleSheet.create({
     container: {
+        width: '100%',
         paddingHorizontal: 16, paddingVertical: 8,
         flexDirection: 'row', alignItems: 'flex-end',
         justifyContent: 'space-between',

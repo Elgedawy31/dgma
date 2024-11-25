@@ -5,7 +5,7 @@ import { ViewStyle, StyleSheet, Text as TextBase } from 'react-native'
 
 type TextProps = {
     color?: any,
-    title?: string,
+    title?: string |any,
     bold?: boolean,
     italic?: boolean,
     style?: ViewStyle,
@@ -13,17 +13,22 @@ type TextProps = {
     capitalized?: true | false,
     size?: 20 | 16 | 14 | 12 | 10,
     align?: 'start' | 'end' | 'center' | 'justify',
-    type?: 'title' | 'subtitle' | 'body' | 'label' | 'details' | 'small' | 'x-small' | 'error'
+    type?: 'title' | 'subtitle' | 'body' | 'label' | 'details' | 'small' | 'x-small' | 'error' ,
+    numberOfLines?:number | undefined
+    
 }
 
 function Text({
     color, bold, size, italic = false,
     underline = false, capitalized = true,
-    type = 'body', title = 'Text', align
+    type = 'body', title = 'Text', align ,
+    numberOfLines= undefined
 }: TextProps) {
     const colors = useThemeColor();
     return (
         <TextBase
+        
+        numberOfLines={numberOfLines ? numberOfLines: undefined}
             style={[
                 {
                     fontFamily: 'Inter',

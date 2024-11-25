@@ -1,9 +1,10 @@
-type UserModel = {
-  id: string;
-  email: string;
-  avatar: string | null;
-  role: "admin" | "user";
-  name: { first: string; last: string; second?: string };
+import { UserBase } from './types';
+
+// UserModel extends UserBase with additional fields
+type UserModel = UserBase & {
+    email: string;
+    role: "admin" | "user";
+    // Add any other user-specific fields here
 };
 
 export default UserModel;

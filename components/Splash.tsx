@@ -1,11 +1,12 @@
+// components/Splash.tsx
 import { useFonts } from 'expo-font';
 import { ThemeContext } from '@ThemeContext';
-import StatusBar from '@blocks/StatusBar';
 import { useRef, useEffect, useContext, useState, memo } from 'react';
 import { Image, StyleSheet, Text, View, Animated } from 'react-native';
-import { API_URL } from '@/constants/Index';
+import { useThemeColor } from '@hooks/useThemeColor';
 
 function Splash() {
+    const colors = useThemeColor();
     const [fontsLoaded] = useFonts({
         'Inter': require('@/assets/fonts/Inter-Regular.ttf'),
     });
@@ -14,37 +15,25 @@ function Splash() {
     const [statusBarVisible, setStatusBarVisible] = useState(true);
 
     const animations = {
-        topAnimX: useRef(new Animated.Value(0)).current,
-        topAnimY: useRef(new Animated.Value(0)).current,
-        bottomAnimX: useRef(new Animated.Value(0)).current,
-        bottomAnimY: useRef(new Animated.Value(0)).current,
+        topAnim: useRef(new Animated.Value(0)).current,
+        bottomAnim: useRef(new Animated.Value(0)).current,
         fadeAnim: useRef(new Animated.Value(0)).current,
     };
 
     useEffect(() => {
         if (!fontsLoaded) return;
 
-        const { topAnimX, topAnimY, bottomAnimX, bottomAnimY, fadeAnim } = animations;
+        const { topAnim, bottomAnim, fadeAnim } = animations;
 
         const translateAnimation = Animated.parallel([
-            Animated.timing(topAnimX, {
-                toValue: -400,
-                duration: 2000,
+            Animated.timing(topAnim, {
+                toValue: 1,
+                duration: 1500,
                 useNativeDriver: true,
             }),
-            Animated.timing(topAnimY, {
-                toValue: -400,
-                duration: 2000,
-                useNativeDriver: true,
-            }),
-            Animated.timing(bottomAnimX, {
-                toValue: 400,
-                duration: 2000,
-                useNativeDriver: true,
-            }),
-            Animated.timing(bottomAnimY, {
-                toValue: 400,
-                duration: 2000,
+            Animated.timing(bottomAnim, {
+                toValue: 1,
+                duration: 1500,
                 useNativeDriver: true,
             }),
         ]);
@@ -57,7 +46,7 @@ function Splash() {
 
         Animated.sequence([
             translateAnimation,
-            Animated.delay(100), // Short delay before fading in
+            Animated.delay(50),
             fadeAnimation,
         ]).start(() => {
             setStatusBarVisible(false);
@@ -66,45 +55,90 @@ function Splash() {
     }, [fontsLoaded]);
 
     if (!fontsLoaded) {
-        return null; // Or a loading indicator
+        return null;
     }
 
-    console.log("Splash rendered",API_URL);
+    const topTransform = {
+        transform: [
+            {
+                translateX: animations.topAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -400]
+                })
+            },
+            {
+                translateY: animations.topAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -400]
+                })
+            }
+        ]
+    };
+
+    const bottomTransform = {
+        transform: [
+            {
+                translateX: animations.bottomAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 400]
+                })
+            },
+            {
+                translateY: animations.bottomAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 400]
+                })
+            }
+        ]
+    };
 
     return (
-        <View style={styles.container}>
-            {statusBarVisible && <StatusBar />}
+        <View style={[styles.container, { backgroundColor: colors.welcomeLogo }]}>
+            <Animated.View
+                style={[
+                    styles.top,
+                    {
+                        backgroundColor: colors.splash,
+                    },
+                    topTransform
+                ]}
+            />
 
-            <Animated.View style={[
-                styles.top,
-                {
-                    transform: [
-                        { translateX: animations.topAnimX },
-                        { translateY: animations.topAnimY }
-                    ]
-                }
-            ]} />
+            <Animated.View
+                style={[
+                    styles.bottom,
+                    {
+                        backgroundColor: colors.splash,
+                    },
+                    bottomTransform
+                ]}
+            />
 
-            <Animated.View style={[
-                styles.bottom,
-                {
-                    transform: [
-                        { translateX: animations.bottomAnimX },
-                        { translateY: animations.bottomAnimY }
-                    ]
-                }
-            ]} />
-
-            <Animated.View style={[styles.centerContent, { opacity: animations.fadeAnim }]}>
-                <Image source={require('@images/logo-dark.png')} />
-                <Text style={styles.title}>
-                    DEV<Text style={styles.titleHighlight}>GLOBAL</Text>
+            <Animated.View
+                style={[
+                    styles.centerContent,
+                    { opacity: animations.fadeAnim }
+                ]}
+            >
+                <Image
+                    source={require('@images/logo-dark.png')}
+                    style={styles.logo}
+                />
+                <Text style={[
+                    styles.title,
+                    { color: theme === 'dark' ? "#2460dd" : "#002d75" }
+                ]}>
+                    DEV
+                    <Text style={{
+                        color: theme === 'dark' ? "#b7e6ff" : "#3fa9f5"
+                    }}>
+                        GLOBAL
+                    </Text>
                 </Text>
             </Animated.View>
         </View>
     );
 }
-export default memo(Splash);
 
 const styles = StyleSheet.create({
     container: {
@@ -120,8 +154,8 @@ const styles = StyleSheet.create({
         left: 0,
         width: '100%',
         height: '50%',
-        backgroundColor: '#002D75',
         borderBottomRightRadius: 120,
+        backfaceVisibility: 'hidden',
     },
     bottom: {
         position: 'absolute',
@@ -129,20 +163,24 @@ const styles = StyleSheet.create({
         right: 0,
         width: '100%',
         height: '50%',
-        backgroundColor: '#002D75',
         borderTopLeftRadius: 120,
+        backfaceVisibility: 'hidden',
     },
     centerContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
+    logo: {
+        width: 100,
+        height: 100,
+        resizeMode: 'contain',
+    },
     title: {
-        color: '#002d75',
         fontSize: 32,
         fontWeight: '400',
-    },
-    titleHighlight: {
-        color: '#3FA9F5',
+        fontFamily: 'Inter',
     },
 });
+
+export default memo(Splash);

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import Modal from "react-native-modal";
@@ -15,11 +16,10 @@ import CustomDatePicker from "./CustomDatePicker";
 import useFilePicker from "@hooks/useFile";
 import { userContext } from "@UserContext";
 import useAxios from "@hooks/useAxios";
-import attachments from "@/app/chat/[id]/attachments";
 import { useThemeColor } from "@hooks/useThemeColor";
 
 interface Project {
-  id: string;
+  _id: string;
   name: string;
 }
 
@@ -32,24 +32,22 @@ interface User {
   role: string;
 }
 
-
 interface UploadedFile {
   name: string;
   type: string;
   url: string;
 }
 
-// Update TaskData interface
 interface TaskData {
   title: string;
   description: string;
-  type: "personal";
+  type: "personal" | "team";
   startDate: string | null;
   deadline: string | null;
   projectId: string | null;
   assignedTo: string[];
   status: string;
-  attachments: UploadedFile[]; // Add this line
+  attachments: UploadedFile[];
 }
 
 interface TaskFormModalProps {
@@ -59,32 +57,36 @@ interface TaskFormModalProps {
 }
 
 const TASK_STATUSES = [
-  { id: "review", label: "Review" },
-  { id: "overdue", label: "Overdue" },
-  { id: "progress", label: "In Progress" },
-  { id: "completed", label: "Completed" },
-  { id: "pending", label: "Pending" },
-  { id: "cancelled", label: "Cancelled" },
+    { id: "Pending", label: "Pending" },
+    { id: "In Progress", label: "In Progress" },
+    { id: "Overdue", label: "Overdue" },
+    { id: "In Review", label: "In Review" },
 ];
 
-const FileItem = ({ file, onRemove }: { file: UploadedFile; onRemove: () => void }) => {
+const FileItem: React.FC<{
+  file: UploadedFile;
+  onRemove: () => void;
+}> = ({ file, onRemove }) => {
   const colors = useThemeColor();
-  return <View style={styles(colors).fileItem}>
-    <View style={styles(colors).fileInfo}>
-      <Ionicons 
-        name={!file?.name.includes('pdf') ? "image" : "document"} 
-        size={24} 
-        color={colors.text} 
-      />
-      <Text style={styles(colors).fileName} numberOfLines={1}>
-        {file.name}
-      </Text>
+  return (
+    <View style={styles(colors).fileItem}>
+      <View style={styles(colors).fileInfo}>
+        <Ionicons
+          name={!file?.name.includes("pdf") ? "image" : "document"}
+          size={24}
+          color={colors.text}
+        />
+        <Text style={styles(colors).fileName} numberOfLines={1}>
+          {file.name}
+        </Text>
+      </View>
+      <TouchableOpacity onPress={onRemove}>
+        <Ionicons name="close-circle" size={20} color={colors.text} />
+      </TouchableOpacity>
     </View>
-    <TouchableOpacity onPress={onRemove}>
-      <Ionicons name="close-circle" size={20} color={colors.text} />
-    </TouchableOpacity>
-  </View>
+  );
 };
+
 const TaskFormModal: React.FC<TaskFormModalProps> = ({
   isVisible,
   onClose,
@@ -97,10 +99,11 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   >("startDate");
   const [projectSelectorVisible, setProjectSelectorVisible] = useState(false);
   const [statusSelectorVisible, setStatusSelectorVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [userSelectorVisible, setUserSelectorVisible] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const { post, get } = useAxios();
+  const { postRequest, getRequest } = useAxios();
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const { user } = useContext(userContext);
@@ -116,12 +119,13 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     defaultValues: {
       title: "",
       description: "",
-      type: "personal",
+      type: user?.role === "admin" ? "team" : "personal",
       startDate: null,
       deadline: null,
       projectId: null,
       assignedTo: user?.role === "admin" ? [] : [user?.id],
-      status: "pending",
+      status: "Pending",
+      attachments: [],
     },
   });
 
@@ -129,11 +133,10 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const deadline = watch("deadline");
   const selectedProjectId = watch("projectId");
   const selectedStatus = watch("status");
+  const taskType = watch("type");
   const { documentPicker, uploadFiles } = useFilePicker();
-  const [groupLogo, setGroupLogo] = useState<any>(null);
-  const [groupUploadedImg, setGroupUploadedImg] = useState<any>(null);
 
-  const selectedProject = projects?.length > 0? projects?.find((p:any) => p?.id === selectedProjectId) :{};
+  const selectedProject = projects?.find((p) => p?._id === selectedProjectId) || null;
   const selectedStatusLabel = TASK_STATUSES.find(
     (s) => s.id === selectedStatus
   )?.label;
@@ -142,7 +145,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     if (user?.role === "user") {
       setValue("assignedTo", [user?.id]);
     }
-  }, [user]);
+  }, [user, setValue]);
 
   const handleDateSelect = (
     date: string,
@@ -150,6 +153,53 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   ) => {
     setValue(fieldType, date);
     setDatePickerVisible(false);
+  };
+
+  const renderTypeSelector = () => {
+    if (user?.role === "admin") {
+      return (
+        <>
+          <Text style={styles(colors).label}>Task Type</Text>
+          <View style={styles(colors).typeContainer}>
+            <TouchableOpacity
+              style={[
+                styles(colors).typeButton,
+                watch("type") === "personal" &&
+                  styles(colors).selectedTypeButton,
+              ]}
+              onPress={() => setValue("type", "personal")}
+            >
+              <Text
+                style={[
+                  styles(colors).typeButtonText,
+                  watch("type") === "personal" &&
+                    styles(colors).selectedTypeText,
+                ]}
+              >
+                Personal
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles(colors).typeButton,
+                watch("type") === "team" && styles(colors).selectedTypeButton,
+              ]}
+              onPress={() => setValue("type", "team")}
+            >
+              <Text
+                style={[
+                  styles(colors).typeButtonText,
+                  watch("type") === "team" && styles(colors).selectedTypeText,
+                ]}
+              >
+                Team
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      );
+    }
+    return null;
   };
 
   const openDatePicker = (type: "startDate" | "deadline") => {
@@ -180,60 +230,63 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     setValue("assignedTo", newAssigned);
     setSelectedUsers(newAssigned);
   };
-
+ 
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return "Select date";
     return new Date(dateString).toLocaleDateString();
   };
 
-  const onSubmitForm = handleSubmit(async (data: TaskData) => {
+  const onSubmit = async (data: TaskData) => {
     const finalData = {
       ...data,
       assignedTo: user?.role === "admin" ? selectedUsers : [user?.id],
-      attachments:data?.attachments.map(attachments => attachments.name)
+      attachments: data?.attachments?.map((attachment) => attachment.name),
     };
 
-    await post({ endPoint: "tasks/", body: finalData, hasToken: true })
-      .then((res) => {
-        if (res) {
-          onClose();
-          reset({
-            title: "",
-            description: "",
-            type: "personal",
-            startDate: null,
-            deadline: null,
-            projectId: null,
-            assignedTo: user?.role === "admin" ? [] : [user?.id],
-            status: "pending",
-          });
-          setSelectedUsers([]);
-          setTaskAdded((prev) => !prev);
-        }
-      })
-      .catch((err) => {
-        console.error(`Error: ${err}`);
-      });
-  });
+    setLoading(true);
+    try {
+      const res = await postRequest({ endPoint: "tasks/", body: finalData, hasToken: true });
+      if (res) {
+        onClose();
+        reset({
+          title: "",
+          description: "",
+          type: "personal",
+          startDate: null,
+          deadline: null,
+          projectId: null,
+          assignedTo: user?.role === "admin" ? [] : [user?.id],
+          status: "Pending",
+          attachments: [],
+        });
+        setSelectedUsers([]);
+        setTaskAdded((prev) => !prev);
+      }
+    } catch (err) {
+      console.error(`Error: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await get({ endPoint: "projects" });
-        if (res?.project) {
-          setProjects(res.project);
+        const res = await getRequest({ endPoint: "projects" });
+        if (res?.length > 0) {
+          setProjects(res);
         }
       } catch (err) {
         console.error(`Error: ${err}`);
       }
     };
-    fetchProjects(); 
-  }, []);
+    fetchProjects();
+  }, [getRequest]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await get({ endPoint: "users" });
+        const res = await getRequest({ endPoint: "users" });
         if (res) {
           setUsers(res);
         }
@@ -242,26 +295,46 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       }
     };
     fetchUsers();
-  }, []);
+  }, [getRequest]);
 
   const renderAssignedToSection = () => {
-    if (user?.role === "admin") {
+    if (user?.role === "admin" && taskType !== "personal") {
       return (
         <>
-          <Text  style={[styles(colors).label, {color:colors.text}]}>Assign To</Text>
+          <Text style={[styles(colors).label, { color: colors.text }]}>
+            Assign To
+          </Text>
           <TouchableOpacity
             style={styles(colors).selectorButton}
             onPress={() => setUserSelectorVisible(true)}
           >
-            <Text style={{color:colors.text}}>
+            <Text style={{ color: colors.text }}>
               {selectedUsers.length > 0
                 ? `${selectedUsers.length} users selected`
                 : "Select Users"}
             </Text>
             <Ionicons name="chevron-down" size={20} color={colors.text} />
           </TouchableOpacity>
+        </>
+      );
+    }
+    return null;
+  };
 
-         
+  const renderProjectSection = () => {
+    if (taskType !== "personal") {
+      return (
+        <>
+          <Text style={styles(colors).label}>Project</Text>
+          <TouchableOpacity
+            style={styles(colors).selectorButton}
+            onPress={() => setProjectSelectorVisible(true)}
+          >
+            <Text style={{ color: colors.text }}>
+              {selectedProject?.name || "Select Project"}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color={colors.text} />
+          </TouchableOpacity>
         </>
       );
     }
@@ -270,31 +343,33 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
   const handleFilePick = useCallback(async () => {
     try {
-      const result = await documentPicker({ 
+      const result = await documentPicker({
         multiple: true,
       });
 
       if (result) {
         const files = await uploadFiles(result);
         if (files?.length > 0) {
-          const newFiles = files.map((file: any) => ({
+          const newFiles = files?.map((file: any) => ({
             name: file.name,
             type: file.type,
-            url: file.url
+            url: file.url,
           }));
-          setUploadedFiles(prev => [...prev, ...newFiles]);
-          setValue('attachments', [...uploadedFiles, ...newFiles]);
+          setUploadedFiles((prev) => [...prev, ...newFiles]);
+          setValue("attachments", [...uploadedFiles, ...newFiles]);
         }
       }
     } catch (error) {
-      console.error('Error picking file:', error);
+      console.error("Error picking file:", error);
     }
-  }, [uploadedFiles]);
+  }, [uploadedFiles, setValue, documentPicker, uploadFiles]);
+
   const handleRemoveFile = (index: number) => {
     const newFiles = uploadedFiles.filter((_, i) => i !== index);
     setUploadedFiles(newFiles);
-    setValue('attachments', newFiles);
+    setValue("attachments", newFiles);
   };
+
   const renderFileSection = () => (
     <View style={styles(colors).fileSection}>
       <View style={styles(colors).fileSectionHeader}>
@@ -307,7 +382,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
           <Text style={styles(colors).addFileText}>Add File</Text>
         </TouchableOpacity>
       </View>
-      
+
       {uploadedFiles.length > 0 && (
         <View style={styles(colors).fileList}>
           {uploadedFiles.map((file, index) => (
@@ -321,6 +396,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       )}
     </View>
   );
+
   return (
     <Modal
       isVisible={isVisible}
@@ -340,7 +416,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
               onPress={onClose}
               size={36}
               Icon={<Ionicons name="close" size={24} color={colors.primary} />}
-              />
+            />
           </View>
 
           <Text style={styles(colors).label}>Task title</Text>
@@ -350,7 +426,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             name="title"
             render={({ field: { onChange, value } }) => (
               <TextInput
-              placeholderTextColor={colors.text}
+                placeholderTextColor={colors.text}
                 style={styles(colors).input}
                 onChangeText={onChange}
                 value={value}
@@ -362,14 +438,9 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             <Text style={styles(colors).errorText}>{errors.title.message}</Text>
           )}
 
-          <Text style={styles(colors).label}>Project</Text>
-          <TouchableOpacity
-            style={styles(colors).selectorButton}
-            onPress={() => setProjectSelectorVisible(true)}
-          >
-            <Text style={{color:colors.text}}>{selectedProject?.name || "Select Project"}</Text>
-            <Ionicons name="chevron-down" size={20} color={colors.text} />
-          </TouchableOpacity>
+          {renderTypeSelector()}
+
+          {renderProjectSection()}
 
           {renderAssignedToSection()}
 
@@ -379,7 +450,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
             name="description"
             render={({ field: { onChange, value } }) => (
               <TextInput
-              placeholderTextColor={colors.text}
+                placeholderTextColor={colors.text}
                 style={[styles(colors).input, styles(colors).textArea]}
                 onChangeText={onChange}
                 value={value}
@@ -397,7 +468,9 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                 style={styles(colors).dateButton}
                 onPress={() => openDatePicker("startDate")}
               >
-                <Text style={{color:colors.text}}>{formatDate(startDate)}</Text>
+                <Text style={{ color: colors.text }}>
+                  {formatDate(startDate)}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -407,18 +480,23 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                 style={styles(colors).dateButton}
                 onPress={() => openDatePicker("deadline")}
               >
-                <Text style={{color:colors.text}}>{formatDate(deadline)}</Text>
+                <Text style={{ color: colors.text }}>
+                  {formatDate(deadline)}
+                </Text>
               </TouchableOpacity>
             </View>
-
           </View>
-            {renderFileSection()}
+          {renderFileSection()}
 
           <TouchableOpacity
             style={styles(colors).submitButton}
-            onPress={ handleSubmit(onSubmitForm)}
+            onPress={handleSubmit(onSubmit)}
           >
-            <Text style={styles(colors).submitButtonText}>Add task</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles(colors).submitButtonText}>Add task</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
 
@@ -438,19 +516,20 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         >
           <View style={styles(colors).selectorContent}>
             <Text style={styles(colors).selectorTitle}>Select Project</Text>
-            {projects.map((project) => (
+            {projects?.map((project) => (
               <TouchableOpacity
-                key={project.id}
+                key={project?._id}
                 style={[
                   styles(colors).selectorOption,
-                  selectedProjectId === project.id && styles(colors).selectedOption,
+                  selectedProjectId === project?._id &&
+                    styles(colors).selectedOption,
                 ]}
-                onPress={() => handleProjectSelect(project.id)}
+                onPress={() => handleProjectSelect(project?._id)}
               >
                 <Text
                   style={[
                     styles(colors).selectorOptionText,
-                    selectedProjectId === project.id &&
+                    selectedProjectId === project?._id &&
                       styles(colors).selectedOptionText,
                   ]}
                 >
@@ -468,12 +547,13 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         >
           <View style={styles(colors).selectorContent}>
             <Text style={styles(colors).selectorTitle}>Select Users</Text>
-            {users.map((user: User) => (
+            {users?.map((user: User) => (
               <TouchableOpacity
                 key={user.id}
                 style={[
                   styles(colors).selectorOption,
-                  selectedUsers.includes(user.id) && styles(colors).selectedOption,
+                  selectedUsers.includes(user.id) &&
+                    styles(colors).selectedOption,
                 ]}
                 onPress={() => handleUserSelect(user.id)}
               >
@@ -494,188 +574,218 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
                     {`${user.name.first} ${user.name.last}`}
                   </Text>
                   {selectedUsers.includes(user.id) && (
-                    <Ionicons name="checkmark" size={24} color={colors.primary} />
+                    <Ionicons
+                      name="checkmark"
+                      size={24}
+                      color={colors.primary}
+                    />
                   )}
                 </View>
               </TouchableOpacity>
             ))}
           </View>
         </Modal>
-        
       </View>
     </Modal>
   );
 };
-const styles =(colors:any) =>  StyleSheet.create({
-  fileSection: {
-    marginBottom: 15,
-  },
-  fileSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  addFileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    padding: 8,
-    borderRadius: 8,
-  },
-  addFileText: {
-    color: colors.primary,
-    marginLeft: 5,
-    fontWeight: '500',
-  },
-  fileList: {
-    gap: 8,
-  },
-  fileItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.background,
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.text,
-  },
-  fileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 8,
-  },
-  fileName: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
-  },
-  modal: {
-    justifyContent: "flex-end",
-    margin: 0,
-  },
-  modalView: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: "90%",
-  },
-  handleBar: {
-    width: 40,
-    height: 4,
-    backgroundColor: colors.background,
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color:colors.text
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: colors.text,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.text,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    backgroundColor: colors.background,
-    color:colors.text,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  dateContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  dateField: {
-    flex: 1,
-    marginRight: 10,
-  },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 10,
-    alignItems: "center",
-    backgroundColor: colors.background,
-  },
-  selectorButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    backgroundColor: colors.background,
-  },
-  selectorModal: {
-    justifyContent: "center",
-    margin: 20,
-  },
-  selectorContent: {
-    backgroundColor: colors.background,
-    borderRadius: 10,
-    padding: 20,
-  },
-  selectorTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-    textAlign: "center",
-    color:colors.text
-  },
-  selectorOption: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  selectedOption: {
-    backgroundColor: colors.card,
-  },
-  selectorOptionText: {
-    fontSize: 16,
-    color:colors.text
-  },
-  selectedOptionText: {
-    color: colors.primary,
-    fontWeight: "bold",
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  submitButtonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  errorText: {
-    color: "red",
-    marginBottom: 10,
-  },
-});
+
+const styles = (colors: any) =>
+  StyleSheet.create({
+    fileSection: {
+      marginBottom: 15,
+    },
+    fileSectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    addFileButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.card,
+      padding: 8,
+      borderRadius: 8,
+    },
+    addFileText: {
+      color: colors.primary,
+      marginLeft: 5,
+      fontWeight: "500",
+    },
+    fileList: {
+      gap: 8,
+    },
+    fileItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: colors.background,
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.text,
+    },
+    fileInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      gap: 8,
+    },
+    fileName: {
+      flex: 1,
+      fontSize: 14,
+      color: colors.text,
+    },
+    modal: {
+      justifyContent: "flex-end",
+      margin: 0,
+    },
+    modalView: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 20,
+      maxHeight: "90%",
+    },
+    handleBar: {
+      width: 40,
+      height: 4,
+      backgroundColor: colors.background,
+      borderRadius: 2,
+      alignSelf: "center",
+      marginBottom: 10,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    label: {
+      fontSize: 16,
+      marginBottom: 5,
+      color: colors.text,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.text,
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 15,
+      backgroundColor: colors.background,
+      color: colors.text,
+    },
+    textArea: {
+      height: 100,
+      textAlignVertical: "top",
+    },
+    dateContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 15,
+    },
+    dateField: {
+      flex: 1,
+      marginRight: 10,
+    },
+    dateButton: {
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 8,
+      padding: 10,
+      alignItems: "center",
+      backgroundColor: colors.background,
+    },
+    selectorButton: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 15,
+      backgroundColor: colors.background,
+    },
+    selectorModal: {
+      justifyContent: "center",
+      margin: 20,
+    },
+    selectorContent: {
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      padding: 20,
+    },
+    selectorTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 15,
+      textAlign: "center",
+      color: colors.text,
+    },
+    selectorOption: {
+      padding: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: "#eee",
+    },
+    selectedOption: {
+      backgroundColor: colors.card,
+    },
+    selectorOptionText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    selectedOptionText: {
+      color: colors.primary,
+      fontWeight: "bold",
+    },
+    submitButton: {
+      backgroundColor: colors.primary,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: "center",
+      marginTop: 10,
+    },
+    submitButtonText: {
+      color: colors.background,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    errorText: {
+      color: "red",
+      marginBottom: 10,
+    },
+    typeContainer: {
+      flexDirection: "row",
+      gap: 10,
+      marginBottom: 15,
+    },
+    typeButton: {
+      flex: 1,
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.text,
+      alignItems: "center",
+    },
+    selectedTypeButton: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    typeButtonText: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    selectedTypeText: {
+      color: colors.background,
+      fontWeight: "bold",
+    },
+  });
 
 export default TaskFormModal;

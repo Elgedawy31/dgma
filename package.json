@@ -44,6 +44,7 @@
     "react-dom": "18.2.0",
     "react-hook-form": "^7.53.0",
     "react-native": "0.74.5",
+    "react-native-emoji-selector": "^0.2.0",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-image-zoom-viewer": "^3.0.1",
     "react-native-modal": "^13.0.1",

@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import { useThemeColor } from '@hooks/useThemeColor';
 
 type BottomSheetProps = {
     index?: number;
@@ -9,6 +10,7 @@ type BottomSheetProps = {
 };
 
 const BottomSheet: React.FC<BottomSheetProps> = ({ children, open, index }) => {
+    const colors = useThemeColor();
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
     const snapPoints = useMemo(() => ['25%', '50%', '75%', '100%'], []);
@@ -42,8 +44,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ children, open, index }) => {
             snapPoints={snapPoints}
             // onChange={handleSheetChanges}
             backdropComponent={renderBackdrop}
+            backgroundStyle={{ backgroundColor: colors.card }}
         >
-            <BottomSheetView style={styles.contentContainer}>
+            <BottomSheetView style={[styles.contentContainer, { backgroundColor: colors.card }]}>
                 {children}
             </BottomSheetView>
         </BottomSheetModal>

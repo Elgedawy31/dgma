@@ -30,7 +30,7 @@ const index = () => {
   const colors = useThemeColor();
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const { get } = useAxios();
+  const { getRequest } = useAxios();
   const [members, setMembers] = useState<MemberProps[]>([]);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
 
@@ -38,8 +38,8 @@ const index = () => {
     (member) =>
       `${member.name.first} ${member.name.last}`
         .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      member.role.toLowerCase().includes(search.toLowerCase())
+        ?.includes(search.toLowerCase()) ||
+      member?.role.toLowerCase()?.includes(search.toLowerCase())
   );
 
   const toggleMember = (id: string) => {
@@ -53,7 +53,7 @@ const index = () => {
   };
 
   useEffect(() => {
-    get({ endPoint: "users" })
+    getRequest({ endPoint: "users" })
       .then((res) => {
         if (res) {
           setMembers(res);
@@ -84,7 +84,7 @@ const index = () => {
             <TextR style={styles(colors).name}>
               {item.name.first} {item.name.last}
             </TextR>
-            <TextR style={styles(colors).role}>{item.role}</TextR>
+            <TextR style={styles(colors)?.role}>{item?.role}</TextR>
           </View>
         </View>
         <View

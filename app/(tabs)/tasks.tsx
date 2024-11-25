@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import TaskCard from "@cards/TaskCard";
-import { TaskColors } from "@/constants/Colors";
+import { TaskColors2 } from "../../constants/Colors";
 import { useThemeColor } from "@hooks/useThemeColor";
 import {
   FlatList,
@@ -9,11 +9,16 @@ import {
   StyleSheet,
   Text,
   View,
+  Dimensions 
 } from "react-native";
 import useAxios from "@hooks/useAxios";
 import CalendarCard from "@components/calendar/CalendarCard";
 import dayjs from "dayjs";
 import NoTasks from "@components/calendar/NoTasks";
+import CalendarHeader from "@components/calendar/CalendarHeader";
+import TaskFormModal from "@components/calendar/AddPersonalTask";
+import { usePathname } from "expo-router";
+import LoadingSpinner from "@blocks/LoadingSpinner";
 
 interface AssignedProps {
   id: string;
@@ -28,16 +33,15 @@ interface Task {
   subTitle: string;
   time: string;
   type: 'project' | 'team' | 'personal';
-  status: 'overdue' | 'progress' | 'review' | 'completed';
+  status: 'Overdue' | 'In Progress' | 'In Review' | 'Completed' | 'Pending' | 'Cancelled' | 'To Do';
   description: string;
   assignedTo: AssignedProps[];
   startDate: string;
   endDate: string;
-
 }
 
 interface State {
-  id: 'overdue' | 'progress' | 'review' | 'completed' | 'pending' | 'cancelled';
+  id: 'All' | 'Overdue' | 'In Progress' | 'In Review' | 'Completed' | 'Pending' | 'Cancelled' | 'To Do';
   label: string;
 }
 
@@ -47,24 +51,29 @@ interface ThemeColors {
   white: string;
 }
 
-const headers: string[] = ["all", "projects", "assigned", "personal"];
+const headers: string[] = ["all", "team", "personal"];
 
 const states: State[] = [
-  { id: "overdue", label: "Overdue" },
-  { id: "progress", label: "In Progress" },
-  { id: "review", label: "In Review" },
-  { id: "completed", label: "Completed" },
-  { id: "pending", label: "Pending" },
-  { id: "cancelled", label: "Cancelled" },
+  { id: "All", label: "All" },
+  { id: "Pending", label: "Pending" },
+  { id: "In Progress", label: "In Progress" },
+  { id: "Overdue", label: "Overdue" },
+  { id: "In Review", label: "In Review" },
+  { id: "Cancelled", label: "Cancelled" },
+  { id: "Completed", label: "Completed" },
+  { id: "To Do", label: "To Do" },
 ];
 
 function Tasks(): JSX.Element {
   const colors = useThemeColor() as ThemeColors;
   const [stateIndex, setStateIndex] = useState<number>(-1);
   const [headerIndex, setHeaderIndex] = useState<number>(0);
+  const [taskAdded, setTaskAdded] = useState<boolean>(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [modalVisible , setModalVisible] = useState<boolean>(false);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const { get } = useAxios();
+  const { getRequest , loading } = useAxios();
+  const pathName = usePathname()
 
   const onStateChange = (index: number): void => setStateIndex(index);
 
@@ -74,7 +83,7 @@ function Tasks(): JSX.Element {
   useEffect(() => {
     const handleSubmit = async (): Promise<void> => {
       try {
-        const response = await get({ endPoint: "tasks/" });
+        const response = await getRequest({ endPoint: "tasks/" });
         if (response) {
           setTasks(response);
         }
@@ -83,7 +92,7 @@ function Tasks(): JSX.Element {
       }
     };
     handleSubmit();
-  }, []);
+  }, [taskAdded , pathName]);
 
   // Filter tasks based on header selection and status
   useEffect(() => {
@@ -94,21 +103,18 @@ function Tasks(): JSX.Element {
       case 0: // all
         filtered = tasks;
         break;
-      case 1: // projects
-        filtered = tasks.filter((task) => task.type === 'project');
-        break;
-      case 2: // assigned
+      case 1: // assigned
         filtered = tasks.filter((task) => task.type === 'team');
         break;
-      case 3: // personal
+      case 2: // personal
         filtered = tasks.filter((task) => task.type === 'personal');
         break;
       default: 
         filtered = tasks;
     }
 
-    // Then filter by status if a status is selected
-    if (stateIndex >= 0) {
+    // Then filter by status if a status is selected and it's not "All"
+    if (stateIndex > 0) {
       filtered = filtered.filter((task) => task.status === states[stateIndex].id);
     }
 
@@ -138,14 +144,22 @@ function Tasks(): JSX.Element {
     </Pressable>
   );
 
+  const getStateColor = (stateId: State['id']): string => {
+    if (stateId === 'All') {
+      return colors.primary;
+    }
+    return TaskColors2[stateId] || colors.primary;
+  };
+
   const renderState = (state: State, index: number): JSX.Element => (
+    console.log('state', state.id),
     <Pressable
       key={index}
       onPress={() => onStateChange(index)}
       style={[
         styles.headerState,
         index === stateIndex && {
-          borderColor: TaskColors[state.id],
+          borderColor: getStateColor(state.id),
           borderBottomWidth: 1,
         },
       ]}
@@ -154,7 +168,7 @@ function Tasks(): JSX.Element {
         style={{
           textAlign: "center",
           textTransform: "capitalize",
-          color: TaskColors[state.id],
+          color: getStateColor(state.id),
         }}
       >
         {state.label}
@@ -173,18 +187,23 @@ function Tasks(): JSX.Element {
     />
   );
 
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+       <CalendarHeader
+        fromCalenderTab
+        title="Tasks"
+        view={'month'}
+        setModalVisible={setModalVisible}
+        setDatePickerVisible={() => {}}
+      />
       <View style={styles.headerContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
+        <View
         >
-          <View style={styles.headerRow}>
+          <View style={[styles.headerRow , {justifyContent:'center'} ]}>
             {headers.map((header, index) => renderHeader(header, index))}
           </View>
-        </ScrollView>
+        </View>
 
         <ScrollView
           horizontal
@@ -197,14 +216,21 @@ function Tasks(): JSX.Element {
         </ScrollView>
       </View>
 
-      <View style={styles.listContainer}>
+      {loading ? <LoadingSpinner/> :<View style={styles.listContainer}>
       {filteredTasks.length > 0 ?    <FlatList
           keyExtractor={(item, index) => item.title + index.toString()}
           showsVerticalScrollIndicator={false}
           data={filteredTasks}
           renderItem={renderTask}
         /> : <NoTasks />}
-      </View>
+      </View>}
+
+      <TaskFormModal
+        isVisible={modalVisible} 
+        onClose={() => setModalVisible(false)}
+        setTaskAdded={setTaskAdded}
+       
+      />
     </View>
   );
 }

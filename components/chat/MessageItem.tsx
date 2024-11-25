@@ -1,28 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Image, Linking } from "react-native";
 import Text from "@blocks/Text";
 import ImageAvatar from "@blocks/ImageAvatar";
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeColor } from "@hooks/useThemeColor";
 import ImageViewerFunc from "@components/ImageViewer";
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  senderId: {
-    avatar?: string;
-    name?: {
-      first: string;
-    };
-  };
-  attachments?: string[]; // Array of URLs
-}
+import { ForwardMessageModal } from "./ForwardMessageModal";
+import { Message, ForwardDestination } from "@model/types";
 
 interface MessageItemProps {
   message: Message;
   isCurrentUser: boolean;
   formatMessageTime: (timestamp: string) => string;
+  onReply?: (message: Message) => void;
+  onForward?: (message: Message, destination: ForwardDestination) => void;
 }
 
 interface AttachmentProps {
@@ -31,6 +22,8 @@ interface AttachmentProps {
 }
 
 const MessageAttachment = ({ url, isCurrentUser }: AttachmentProps) => {
+  const colors = useThemeColor();
+  
   const handleDownload = async () => {
     try {
       await Linking.openURL(url);
@@ -39,21 +32,19 @@ const MessageAttachment = ({ url, isCurrentUser }: AttachmentProps) => {
     }
   };
 
-  // Function to check if URL is an image
   const isImage = (url: string) => {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
   };
 
-  // Function to check if URL is a PDF
   const isPDF = (url: string) => {
     return /\.pdf$/i.test(url);
   };
 
-  // Function to get filename from URL
   const getFileName = (url: string) => {
-    return url.split('/').pop() || 'File';
+    return url?.split('/').pop()?.slice(0 , 25) || 'File';
   };
-  const [showImageViewer , setShowImageViewer] = React.useState(false);
+  
+  const [showImageViewer, setShowImageViewer] = React.useState(false);
 
   if (isImage(url)) {
     return (
@@ -66,13 +57,13 @@ const MessageAttachment = ({ url, isCurrentUser }: AttachmentProps) => {
           style={styles.image}
           resizeMode="cover"
         />
-         <ImageViewerFunc
-        images={[{ url }]}
-        setShowImageViewer={setShowImageViewer}
-        showImageViewer={showImageViewer}
-        selectedImageIndex={0}
-        setSelectedImageIndex={() => {}}
-      />
+        <ImageViewerFunc
+          images={[{ url }]}
+          setShowImageViewer={setShowImageViewer}
+          showImageViewer={showImageViewer}
+          selectedImageIndex={0}
+          setSelectedImageIndex={() => {}}
+        />
       </TouchableOpacity>
     );
   } 
@@ -83,7 +74,6 @@ const MessageAttachment = ({ url, isCurrentUser }: AttachmentProps) => {
         onPress={() => handleDownload()}
         style={[
           styles.pdfContainer,
-          { backgroundColor: isCurrentUser ? 'rgba(255,255,255,0.1)' : '#f0f0f0' }
         ]}
       >
         <AntDesign 
@@ -94,15 +84,13 @@ const MessageAttachment = ({ url, isCurrentUser }: AttachmentProps) => {
         <Text 
           type="small" 
           title={getFileName(url)} 
-          color={isCurrentUser ? 'white' : undefined}
+          color={isCurrentUser ? '#fff' : colors.text}
           style={styles.filename}
         />
-         
       </TouchableOpacity>
     );
   }
 
-  // Generic file attachment for other types
   return (
     <TouchableOpacity 
       onPress={() => handleDownload()}
@@ -119,48 +107,112 @@ const MessageAttachment = ({ url, isCurrentUser }: AttachmentProps) => {
       <Text 
         type="small" 
         title={getFileName(url)} 
-        color={isCurrentUser ? 'white' : undefined}
+        color={isCurrentUser ? '#fff' : colors.text}
         style={styles.filename}
       />
     </TouchableOpacity>
   );
 };
 
-export const MessageItem = React.memo(({ message, isCurrentUser, formatMessageTime }: MessageItemProps) => {
+export const MessageItem = React.memo(({ message, isCurrentUser, formatMessageTime, onReply, onForward }: MessageItemProps) => {
   const colors = useThemeColor();
+  const [showForwardModal, setShowForwardModal] = useState(false);
 
-  console.log("Rendering message:", {
-    id: message.id,
-    isCurrentUser,
-    content: message.content.substring(0, 20) + (message.content.length > 20 ? "..." : ""),
-    timestamp: message.timestamp,
-  });
+  const handleReply = () => {
+    if (onReply) {
+      onReply(message);
+    }
+  };
+
+  const handleForward = (destination: ForwardDestination) => {
+    if (onForward) {
+      onForward(message, destination);
+    }
+  };
+
+  const renderReplyContent = () => {
+    if (!message.replyTo) return null;
+    console.log('message.replyTo:', message.replyTo);
+    return (
+      <View style={[
+        styles.replyContainer,
+        { backgroundColor: isCurrentUser ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+      ]}>
+        <View style={styles.replyLine} />
+        <View style={styles.replyContent}>
+          <Text
+            type="small"
+            title={`Replying to ${message.replyTo.senderId.name?.first}`}
+            color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+            style={styles.replyName}
+          />
+          <Text
+            type="small"
+            title={message.replyTo.content}
+            color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+            style={styles.replyText}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  const renderForwardedFrom = () => {
+    console.log('forwarded from:', message);
+    if (!message.forwardedFrom ) return null;
+
+    const name = `${message.forwardedFrom?.name?.first} ${message.forwardedFrom?.name?.last}` || null
+
+    if (!name) return null;
+
+    return (
+      <View style={styles.forwardedContainer}>
+        <MaterialCommunityIcons
+          name="share"
+          size={16}
+          color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+        />
+        <Text
+          type="small"
+          title={`Forwarded from ${name}`}
+          color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+          style={styles.forwardedText}
+        />
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={[styles.messageRow, isCurrentUser ? styles.currentUserRow : styles.otherUserRow]}>
-        <View style={[styles.avatarContainer, isCurrentUser ? styles.currentUserAvatar : styles.otherUserAvatar]}>
-          <ImageAvatar type="avatar" url={message.senderId.avatar || ""} />
-        </View>
+        {!isCurrentUser && (
+          <View style={[styles.avatarContainer, styles.otherUserAvatar]}>
+            <ImageAvatar type="avatar" url={message.senderId.avatar || ""} />
+          </View>
+        )}
         <View
           style={[
             styles.messageContent,
             {
-              backgroundColor: isCurrentUser ? colors.primary : colors.card,
+              backgroundColor: message.special ? '#ffd900e8' : (isCurrentUser ? colors.primary : colors.card),
               borderBottomRightRadius: isCurrentUser ? 0 : 16,
               borderBottomLeftRadius: isCurrentUser ? 16 : 0,
+              transform: [{ scale: message.special ? 1.05 : 1 }],
             },
           ]}>
+            {renderForwardedFrom()}
+            {renderReplyContent()}
           <Text
             type="subtitle"
-            title={message.senderId?.name?.first}
-            color={isCurrentUser ? "white" : undefined}
+            title={`${message.senderId?.name?.first} ${message.senderId?.name?.last}`}
+            color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
             style={styles.nameText}
           />
+
           <Text 
             type="body" 
             title={message.content} 
-            color={isCurrentUser ? "white" : undefined} 
+            color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
           />
           
           {(message.attachments?.length ?? 0) > 0 && (
@@ -175,14 +227,39 @@ export const MessageItem = React.memo(({ message, isCurrentUser, formatMessageTi
             </View>
           )}
           
-          <Text
-            type="small"
-            title={formatMessageTime(message.timestamp)}
-            color={isCurrentUser ? "white" : "gray"}
-            style={styles.timeText}
-          />
+          <View style={styles.messageFooter}>
+            <Text
+              type="small"
+              title={formatMessageTime(message.timestamp)}
+              color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+              style={styles.timeText}
+            />
+            <View style={styles.messageActions}>
+              <TouchableOpacity onPress={handleReply} style={styles.actionButton}>
+                <MaterialCommunityIcons
+                  name="reply"
+                  size={20}
+                  color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowForwardModal(true)} style={styles.actionButton}>
+                <MaterialCommunityIcons
+                  name="share"
+                  size={20}
+                  color={message.special ? '#161616' : (isCurrentUser ? '#fff' : colors.text)}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </View>
+
+      <ForwardMessageModal
+        visible={showForwardModal}
+        onClose={() => setShowForwardModal(false)}
+        onForward={handleForward}
+        message={message}
+      />
     </View>
   );
 });
@@ -204,10 +281,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     marginHorizontal: 8,
   },
-  currentUserAvatar: {
-    marginLeft: 8,
-    marginRight: 0,
-  },
   otherUserAvatar: {
     marginLeft: 0,
     marginRight: 8,
@@ -221,12 +294,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   timeText: {
-    alignSelf: "flex-end",
-    marginTop: 4,
     opacity: 0.7,
   },
   attachmentsContainer: {
-    marginTop: 0,
+    marginTop: 8,
     gap: 8,
   },
   imageContainer: {
@@ -255,6 +326,46 @@ const styles = StyleSheet.create({
   filename: {
     flex: 1,
   },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  messageActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    padding: 4,
+  },
+  replyContainer: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
+  },
+  replyLine: {
+    width: 2,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginRight: 8,
+  },
+  replyContent: {
+    flex: 1,
+  },
+  replyName: {
+    marginBottom: 2,
+  },
+  replyText: {
+    opacity: 0.7,
+  },
+  forwardedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  forwardedText: {
+    opacity: 0.7,
+  },
 });
-
-MessageItem.displayName = "MessageItem";

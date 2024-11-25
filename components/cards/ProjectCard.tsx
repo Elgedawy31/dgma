@@ -5,6 +5,7 @@ import Text from '@blocks/Text';
 import useDate from '@hooks/useDate';
 import ProjectModel from '@model/project';
 import { Image, StyleSheet, View } from 'react-native'
+import { useThemeColor } from '@hooks/useThemeColor';
 //#endregion
 
 type ProjectCardProps = {
@@ -15,19 +16,18 @@ type ProjectCardProps = {
 function ProjectCard({
     project: { logo, name, startDate, deadline, },
     DateIcon = true, }: ProjectCardProps) {
+    const colors = useThemeColor();
     const { shortDate } = useDate();
-    console.log("logo", logo);
     //#region UI
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.card }]}>
             <Image source={{ uri: logo }}
                 style={styles.image} resizeMode='stretch' />
             <View style={styles.conDetails}>
-                <Text type='label' title={name} />
+                <Text type='label' title={name?.length > 20 ? `${name.slice(0, 20)}...` : name} />
                 <View style={styles.conBottom}>
                     <Date icon={DateIcon} type="start" date={shortDate(startDate)} size={16} />
                     <Date icon={DateIcon} type="end" date={shortDate(deadline)} size={16} />
-                    <Text type='small' title='Members' />
                 </View>
             </View>
         </View>
@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
         gap: 10,
         borderWidth: 1,
         borderRadius: 10,
-        borderColor: '#E1E1E1'
     },
     conDetails: {
         gap: 8,
@@ -53,11 +52,11 @@ const styles = StyleSheet.create({
     conBottom: {
         gap: 15,
         flexDirection: 'row',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
     },
     image: {
+        minWidth: 200,
         height: 150,
-        width: '100%',
         borderWidth: 0,
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,

@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native'
 import React, { memo } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import Text from '@blocks/Text'
+import { useThemeColor } from '@hooks/useThemeColor'
 
 type DateProps = {
     icon?: boolean
@@ -10,10 +11,11 @@ type DateProps = {
     date?: string | undefined,
 }
 function Date({ date, type, size = 16, icon = true }: DateProps) {
+    const colors = useThemeColor();
     return (
         <View style={styles.conDate}>
-            {icon && <Ionicons name="calendar-clear-outline" size={size} color={type === 'start' ? '#1263E5' : '#F22A2A'} />}
-            <Text type='small' size={size > 24 ? 16 : size > 20 ? 16 : 12} color={type === 'start' ? '#1263E5' : '#F22A2A'} title={date || ''} />
+            {icon && <Ionicons name="calendar-clear-outline" size={size} color={type === 'start' ? colors.primary : colors.cancel} />}
+            <Text type='small' size={size > 24 ? 16 : size > 20 ? 16 : 12} color={type === 'start' ? colors.primary : colors.cancel} title={date || ''} />
         </View>
     )
 }

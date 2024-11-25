@@ -5,7 +5,7 @@ import { ScrollView, View } from 'react-native'
 
 function ProjectLinks({ data }: { data: string[] }) {
     const handleLinkSource = useCallback((url: string) => {
-        return (url.includes('figma.com') ? 'figma' : url.includes('github.com') ? 'github' : 'website')
+        return (url?.includes('figma.com') ? 'figma' : url?.includes('github.com') ? 'github' : 'website')
     }, [])
     return (
         <View style={{ gap: 16 }}>

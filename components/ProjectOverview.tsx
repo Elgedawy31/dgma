@@ -1,12 +1,16 @@
 //#region Imports
 import Text from '@blocks/Text';
-import PieChart from 'react-native-pie-chart';
-import { TaskColors } from '@/constants/Colors';
+import { TaskColors } from '../constants/Colors';
 import { projectsContext } from '@ProjectsContext';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { memo, useContext, useEffect, useMemo, useState } from 'react';
+import DonutChart from './DonutChart';
+import { ChartDataItem } from '../models/donutChart';
 //#endregion
+
+type TextType = 'title' | 'body' | 'label' | 'error';
+
 type ProjectStatusModel = {
     id: string;
     label: string;
@@ -14,105 +18,120 @@ type ProjectStatusModel = {
     color: string;
 }
 
-
 function ProjectOverview() {
     const colors = useThemeColor();
-    const { projects } = useContext(projectsContext);
+    const { projects, loading } = useContext(projectsContext);
     const [statusPercent, setStatusPercent] = useState<number>(0);
     const [projectsStatus, setProjectsStatus] = useState<ProjectStatusModel[]>([]);
-    const [defData] = useState<{ label: string, value: number, color: string }[]>(() => ([
-        { label: 'In Review', value: 1, color: TaskColors.review },
-        { label: 'Pending', value: 1, color: TaskColors.pending },
-        { label: 'In Progress', value: 1, color: TaskColors.progress },
-        { label: 'Completed', value: 1, color: TaskColors.completed },
-    ]));
 
-    const adjustProjectsStatus = useCallback(() => {
-        const res = [
-            // { id: 'overdue', label: 'Overdue', value: 0, color: TaskColors.overdue },
-            { id: 'review', label: 'In Review', value: 0, color: TaskColors.review },
-            { id: 'pending', label: 'Pending', value: 0, color: TaskColors.pending },
-            { id: 'progress', label: 'In Progress', value: 0, color: TaskColors.progress },
-            { id: 'completed', label: 'Completed', value: 0, color: TaskColors.completed },
-            // { id: 'cancelled ', label: 'Cancelled ', value: 0, color: TaskColors.cancelled },
-        ]
-        projects?.forEach((project) => {
-            switch (project.status) {
-                case 'In Review': res[0].value += 1; break;
-                // case 'overdue': res[0].value += 1; break;
-                case 'Pending': res[1].value += 1; break;
-                case 'In Progress': res[2].value += 1; break;
-                case 'Completed': res[3].value += 1; break;
-                // case 'cancelled': res[5].value += 1; break;
+    const adjustProjectsStatus = useMemo(() => {
+        const statusMap: Record<string, number> = { 'In Review': 0, 'Pending': 1, 'In Progress': 2, 'Completed': 3, 'Overdue': 4 };
+        const initialStatus = [
+            { id: 'In Review', label: 'In Review', value: 0, color: TaskColors.review },
+            { id: 'Pending', label: 'Pending', value: 0, color: TaskColors.pending },
+            { id: 'In Progress', label: 'In Progress', value: 0, color: TaskColors.progress },
+            { id: 'Completed', label: 'Completed', value: 0, color: TaskColors.completed },
+            { id: 'Overdue', label: 'Overdue', value: 0, color: TaskColors.overdue },
+        ];
+
+        if (!projects || !Array.isArray(projects)) {
+            return initialStatus;
+        }
+
+        return projects.reduce((acc, project) => {
+            if (project && project.status && statusMap[project.status] !== undefined) {
+                acc[statusMap[project.status]].value += 1;
             }
-        })
-        setProjectsStatus([...res]);
-    }, [])
+            return acc;
+        }, initialStatus).sort((a, b) => b.value - a.value);
+    }, [projects]);
 
-    useEffect(() => adjustProjectsStatus(), [])
-    //#region UI
+    const chartData: ChartDataItem[] = useMemo(() => {
+        return projectsStatus.map(status => ({
+            status: status.label as any,
+            value: status.value
+        }));
+    }, [projectsStatus]);
+
+    const calcTotalStatus = useMemo(() => {
+        if (!Array.isArray(projectsStatus) || projectsStatus.length === 0) return 0;
+        return projectsStatus.reduce((a, b) => a + b.value, 0);
+    }, [projectsStatus]);
+
+    const calcCurrentStatus = useMemo(() => {
+        if (!Array.isArray(projectsStatus) || 
+            projectsStatus.length === 0 || 
+            statusPercent >= projectsStatus.length || 
+            statusPercent < 0) {
+            return 0;
+        }
+        const temp = projectsStatus[statusPercent].value / calcTotalStatus;
+        return temp ? (temp * 100).toFixed(2) : 0;
+    }, [projectsStatus, statusPercent, calcTotalStatus]);
+
+    useEffect(() => {
+        setProjectsStatus(adjustProjectsStatus);
+    }, [adjustProjectsStatus]);
+
     return (
-        <View style={{ backgroundColor: colors.card, padding: 8, borderRadius: 10 }}>
-            <View style={{ gap: 3 }}>
+        <View style={[styles.cardContainer, { backgroundColor: colors.card }]}>
+            <View style={styles.headerContainer}>
                 <Text type='title' title='Projects Overview' />
-                <Text type='body' title='View your projects overall progress bades on the statuses in your workflow' />
+                <Text type='body' title='View your projects overall progress based on the statuses in your workflow' />
             </View>
-            {projectsStatus.length > 0 &&
-                <View style={styles.container}>
-                    <View style={{ position: 'relative' }}>
-                        <PieChart
-                            coverRadius={0.6}
-                            widthAndHeight={175}
-                            series={projects.length > 0 ? projectsStatus.map((item) => item.value) : defData.map((item) => item.value)}
-                            sliceColor={projects.length > 0 ? projectsStatus.map((item) => item.color) : defData.map((item) => item.color)}
-                        />
-                        <View style={styles.conChartContent}>
-                            <Text type='label' size={20} color={projects.length > 0 ? projectsStatus[statusPercent].color : defData[statusPercent].color}
-                                title={
-                                    projects.length == 0 ?
-                                        '0%' :
-                                        (((projectsStatus[statusPercent].value / projectsStatus.reduce((a, b) => a + b.value, 0)) * 100).toFixed(2) + '%')
-                                }
-                            />
 
-                            <Text type='label' title={projects.length > 0 ? projectsStatus[statusPercent].label : defData[statusPercent].label} />
-                        </View>
+            {loading ? (
+                <View style={styles.emptyContainer}>
+                    <Text type='body' title='Loading projects...' />
+                </View>
+            ) : !Array.isArray(projects) || projects.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <Text type='body' title='No projects available' />
+                    <Text type='label' title='Create a project to see the overview' />
+                </View>
+            ) : projectsStatus.length > 0 && (
+                <View style={styles.container}>
+                    <View style={styles.chartContainer}>
+                        <DonutChart 
+                            data={chartData}
+                            size={175}
+                            strokeWidth={35}
+                            centerLabelSize={24}
+                            centerSubLabelSize={14}
+                        />
                     </View>
-                    <View style={[styles.conChartText]}>
-                        {
-                            projects.length > 0 ?
-                                projectsStatus.filter(item => item.value > 0).map((item, index) => (
-                                    <Pressable key={item.label} onPress={() => setStatusPercent(index)}
-                                        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
-                                            <View style={{ width: 16, aspectRatio: 1, backgroundColor: 'red', borderRadius: 4 }} />
-                                            <Text type='label' title={item.label} />
-                                        </View>
-                                        <Text type='label' key={item.label} title={item.value + ""} />
-                                    </Pressable>
-                                )) :
-                                defData.map(({ color, label }, index) => (
-                                    <Pressable key={label} onPress={() => setStatusPercent(index)}
-                                        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
-                                            <View style={{ width: 16, aspectRatio: 1, backgroundColor: color, borderRadius: 4 }} />
-                                            <Text type='label' title={label} />
-                                        </View>
-                                        <Text type='label' key={label} title={"0"} />
-                                    </Pressable>
-                                ))
-                        }
+
+                    <View style={styles.conChartText}>
+                        {projectsStatus.map((item, index) => (
+                            <Pressable 
+                                key={item.id} 
+                                style={styles.statusItem} 
+                                onPress={() => setStatusPercent(index)}
+                            >
+                                <View style={styles.statusLabel}>
+                                    <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
+                                    <Text type='label' title={item.label} />
+                                </View>
+                                <Text type='label' title={item.value.toString()} />
+                            </Pressable>
+                        ))}
                     </View>
                 </View>
-            }
-        </View >
-    )
+            )}
+        </View>
+    );
     //#endregion
 }
-export default memo(ProjectOverview);
 
 //#region Styles
 const styles = StyleSheet.create({
+    cardContainer: {
+        padding: 8,
+        borderRadius: 10
+    },
+    headerContainer: {
+        gap: 3
+    },
     container: {
         gap: 16,
         marginTop: 16,
@@ -121,9 +140,14 @@ const styles = StyleSheet.create({
         alignItems: 'stretch',
         justifyContent: 'space-between',
     },
+    chartContainer: {
+        position: 'relative'
+    },
     conChartContent: {
-        top: 0, bottom: 0,
-        left: 0, right: 0,
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
         position: 'absolute',
         alignItems: 'center',
         justifyContent: 'center',
@@ -132,6 +156,29 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
+    },
+    statusItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    statusLabel: {
+        flexDirection: 'row',
+        gap: 5,
+        alignItems: 'center'
+    },
+    colorIndicator: {
+        width: 16,
+        aspectRatio: 1,
+        borderRadius: 4
+    },
+    emptyContainer: {
+        marginTop: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16
     }
-})
+});
 //#endregion
+
+export default memo(ProjectOverview);

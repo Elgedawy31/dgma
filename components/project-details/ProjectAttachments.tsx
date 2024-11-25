@@ -7,7 +7,8 @@ import useFile from '@hooks/useFile';
 import { useThemeColor } from '@hooks/useThemeColor';
 import { DocumentPickerAsset } from 'expo-document-picker';
 import { projectDetailsContext } from '@ProjectDetailsContext';
-import { FC, memo, useCallback, useContext, useEffect, useState } from 'react';
+import { FC, memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import Button from '@ui/Button';
 
 type FlatListComponentProps = {
     onScrollBegin: () => void;
@@ -15,22 +16,30 @@ type FlatListComponentProps = {
 };
 const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
     const colors = useThemeColor();
-    const { documentPicker, uploadFiles } = useFile();
     const [files, setFiles] = useState<FileModel[]>([])
-    const { setProjectAttachments, project: { attachments }, } = useContext(projectDetailsContext)
+    const [expand, setExpand] = useState<boolean>(false);
+    const { documentPicker, uploadFiles, decodeFile } = useFile();
+    const { setProjectAttachments, removeAttachment, project: { attachments }, } = useContext(projectDetailsContext)
 
     useEffect(() => {
         setProjectAttachments(files);
+        console.log(files);
     }, [files])
 
     const pickFiles = useCallback(async () => {
         const res = await documentPicker();
-        res && setFiles(files);
+        console.log("Picked Files", res);
+        res && setFiles(res);
     }, []);
-    const removeFile = useCallback((file: FileModel) => {
-        setFiles(files.filter((f) => f.uri !== file.uri));
-    }, [files]);
 
+    const removeFile = useCallback((file: FileModel) => {
+        removeAttachment(file);
+        setFiles(files.filter((f) => f.uri !== file.uri));
+    }, []);
+
+    const castAttachments = useMemo(() => attachments.map((file) => decodeFile(file)), [attachments]);
+
+    const catchAllAttachments = useMemo(() => [...files, ...castAttachments], [castAttachments, files]);
 
     return (
         <View style={{ gap: attachments.length ? 8 : 4 }}>
@@ -47,24 +56,21 @@ const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                         justifyContent: attachments.length ? 'flex-start' : 'center',
                     }
                 ]}>
-                    {!files.length ? <Text italic type='label' color={'red'} title='No Resources Uploaded' /> :
-                        <View style={{ maxHeight: 195, width: '100%' }}>
-                            <FlatList
-                                nestedScrollEnabled
-                                style={{ paddingHorizontal: 8 }}
-                                data={[...attachments, ...files]}
-                                contentContainerStyle={{ gap: 10 }}
-                                showsVerticalScrollIndicator={false}
-                                onScrollEndDrag={onScrollEnd}
-                                onScrollBeginDrag={onScrollBegin}
-                                onMomentumScrollEnd={onScrollEnd}
-                                renderItem={({ item: file }) => (
-                                    <View />
-                                    // <File src={file}
-                                    //     key={file.name} type='attachment'
-                                    //     onPress={() => removeFile(file)} />
-                                )}
-                            />
+                    {(!files.length && !castAttachments.length) ? <Text italic type='label' color={'red'} title='No Resources Uploaded' /> :
+                        <View style={{ width: '100%', gap: 12 }}>
+                            <View style={{ gap: 8 }}>
+                                {catchAllAttachments.slice(0, expand ? catchAllAttachments.length : 3).map((file) => (
+                                    <File src={file}
+                                        key={file.uri} type='attachment'
+                                        onPress={() => removeFile(file)}
+                                    />
+                                ))}
+                            </View>
+                            {catchAllAttachments.length > 3 && (
+                                <Button type='text' conStyle={{ width: '100%', justifyContent: 'flex-end' }} onPress={() => setExpand(!expand)} align='flex-start'
+                                    label={expand ? 'Show Less' : `Show More (+${catchAllAttachments.length - 3})`}
+                                />
+                            )}
                         </View>
                     }
                 </View>

@@ -1,24 +1,56 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Message, RawMessage, ChatInfo } from '../types';
+import { Message, RawMessage, ChatInfo } from '../models/types';
 
 const normalizeMessage = (rawMessage: RawMessage): Message => {
-  const senderId = rawMessage.senderId || rawMessage.sender_id || {
-    _id: '',
-    name: { first: '', last: '' },
-    avatar: ''
-  };
+  // Handle different sender ID structures
+  const senderId = typeof rawMessage.senderId === 'object' ? rawMessage.senderId :
+                  typeof rawMessage.sender_id === 'object' ? rawMessage.sender_id :
+                  {
+                    _id: rawMessage.senderId || rawMessage.sender_id || '',
+                    name: { first: '', last: '' },
+                    avatar: ''
+                  };
+
+  // Ensure we have a valid ID
+  const messageId = rawMessage.id || rawMessage._id || `msg_${Date.now()}_${Math.random()}`;
+
+  // Handle reply data if present
+  const replyTo = rawMessage.replyTo ? {
+    id: rawMessage.replyTo.id || rawMessage.replyTo._id || '',
+    content: rawMessage.replyTo.content || '',
+    senderId: typeof rawMessage.replyTo.senderId === 'object' ? {
+      _id: rawMessage.replyTo.senderId._id || '',
+      name: rawMessage.replyTo.senderId.name || { first: '', last: '' },
+      avatar: rawMessage.replyTo.senderId.avatar || ''
+    } : {
+      _id: rawMessage.replyTo.senderId || '',
+      name: { first: '', last: '' },
+      avatar: ''
+    }
+  } : undefined;
+
+  // Handle forwarded message data if present
+  const forwardedFrom = rawMessage.forwardedFrom ? {
+    id: rawMessage.forwardedFrom.id || rawMessage.forwardedFrom._id || '',
+    name: rawMessage.forwardedFrom.name || { first: '', last: '' },
+    avatar: rawMessage.forwardedFrom.avatar || ''
+  } : undefined;
 
   return {
-    id: rawMessage.id || rawMessage._id || '',
-    content: rawMessage.content,
+    id: messageId,
+    content: rawMessage.content || '',
     senderId: {
-      _id: senderId._id,
-      name: senderId.name,
-      avatar: senderId.avatar
+      _id: senderId._id || senderId?.id || '',
+      name: senderId.name || { first: '', last: '' },
+      avatar: senderId.avatar || ''
     },
     timestamp: rawMessage.timestamp || rawMessage.createdAt || new Date().toISOString(),
     seen: rawMessage.seen || [],
-    attachments: rawMessage.attachments || [], // Keep existing attachments from rawMessage
+    attachments: rawMessage.attachments || [],
+    special: rawMessage.special || false,
+    replyTo,
+    forwardedFrom,
+    type: rawMessage.type
   };
 };
 
@@ -55,41 +87,51 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
 
     setMessages(prev => {
       const newMessages = messageQueueRef.current
-        .filter(msg => {
+        .map(msg => {
           const messageId = msg.id || msg._id || '';
-          if (!messageId || processedMessagesRef.current.has(messageId)) {
-            console.log("Skipping already processed message:", messageId);
-            return false;
+          const isProcessed = processedMessagesRef.current.has(messageId);
+          console.log("Processing message:", { id: messageId, isProcessed });
+          if (messageId) {
+            processedMessagesRef.current.add(messageId);
           }
-          processedMessagesRef.current.add(messageId);
-          return true;
-        })
-        .map(normalizeMessage);
+          return normalizeMessage(msg);
+        });
 
       if (newMessages.length === 0) {
         return prev;
       }
 
-      // Filter out any temporary messages that have been confirmed
+      // Remove temporary messages that have been confirmed
       const withoutConfirmed = prev.filter(
-        (existingMsg) =>
-          !(
-            existingMsg.temp &&
-            newMessages.some(
-              (newMsg) =>
-                newMsg.content === existingMsg.content && 
-                newMsg.senderId._id === existingMsg.senderId._id &&
-                JSON.stringify(newMsg.attachments) === JSON.stringify(existingMsg.attachments)
-            )
-          )
+        existingMsg => {
+          if (!existingMsg.temp) return true;
+          
+          return !newMessages.some(
+            newMsg =>
+              newMsg.content === existingMsg.content && 
+              newMsg.senderId._id === existingMsg.senderId._id &&
+              JSON.stringify(newMsg.attachments) === JSON.stringify(existingMsg.attachments) &&
+              newMsg.special === existingMsg.special &&
+              JSON.stringify(newMsg.replyTo) === JSON.stringify(existingMsg.replyTo)
+          );
+        }
       );
 
-      // Combine and sort messages
+      // Combine messages and ensure uniqueness by ID
       const allMessages = [...withoutConfirmed, ...newMessages];
-      const uniqueMessages = Array.from(
-        new Map(allMessages.map((m) => [m.id, m])).values()
-      );
+      const messageMap = new Map<string, Message>();
       
+      // Keep the most recent version of each message
+      allMessages.forEach(msg => {
+        const existing = messageMap.get(msg.id);
+        if (!existing || new Date(msg.timestamp) > new Date(existing.timestamp)) {
+          messageMap.set(msg.id, msg);
+        }
+      });
+      
+      const uniqueMessages = Array.from(messageMap.values());
+      
+      // Sort messages by timestamp
       const sortedMessages = uniqueMessages.sort(
         (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
@@ -109,16 +151,17 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
     lastUpdateRef.current = Date.now();
   }, []);
 
-  // Process queue when new messages are added
+  // Process queue more frequently (every 50ms instead of 100ms)
   useEffect(() => {
-    const timer = setInterval(processMessageQueue, 100);
+    const timer = setInterval(processMessageQueue, 50);
     return () => clearInterval(timer);
   }, [processMessageQueue]);
 
   const handleNewMessage = useCallback((rawMessage: RawMessage) => {
     console.log("Queueing new message:", {
       id: rawMessage.id || rawMessage._id,
-      attachments: rawMessage.attachments?.length || 0,
+      content: rawMessage.content?.substring(0, 20),
+      senderId: rawMessage.senderId?._id || rawMessage.sender_id?._id,
       timestamp: Date.now()
     });
     messageQueueRef.current.push(rawMessage);
@@ -127,7 +170,7 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
   const handleMessagesReceived = useCallback((receivedMessages: RawMessage[], pagination: any) => {
     console.log("Received messages batch:", {
       count: receivedMessages?.length,
-      currentPage: pagination.currentPage,
+      currentPage: pagination?.currentPage,
       timestamp: Date.now()
     });
     
@@ -136,30 +179,43 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
       return;
     }
 
+    // Clear processed messages set when receiving historical messages
+    if (pagination?.currentPage > 1) {
+      processedMessagesRef.current.clear();
+    }
+
     messageQueueRef.current.push(...receivedMessages);
-    setChatInfo({
-      lastLoadedPage: pagination.currentPage,
-      fullyLoaded: pagination.currentPage >= pagination.totalPages,
-      totalPages: pagination.totalPages,
-    });
+    
+    if (pagination) {
+      setChatInfo({
+        lastLoadedPage: pagination.currentPage,
+        fullyLoaded: pagination.currentPage >= pagination.totalPages,
+        totalPages: pagination.totalPages,
+      });
+    }
   }, []);
 
   const handleMessagesSeen = useCallback(({ messageIds, userId }: { messageIds: string[], userId: string }) => {
     setMessages((prev) =>
       prev.map((msg) =>
-        messageIds.includes(msg.id)
+        messageIds?.includes(msg.id)
           ? {
               ...msg,
-              seen: [...(msg.seen || []), { userId, seenAt: new Date().toISOString() }],
+              seen: [...new Set([...(msg.seen || []), { userId, seenAt: new Date().toISOString() }])],
             }
           : msg
       )
     );
   }, []);
 
-  const addTempMessage = useCallback((content: string, attachments: string[] = []) => {
+  const addTempMessage = useCallback((
+    content: string, 
+    attachments: string[] = [], 
+    special: boolean = false,
+    replyToId?: string
+  ) => {
     const tempMessage: Message = {
-      id: `temp_${Date.now()}`,
+      id: `temp_${Date.now()}_${Math.random()}`,
       content,
       senderId: {
         _id: signedUserID,
@@ -168,8 +224,18 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
       },
       timestamp: new Date().toISOString(),
       seen: [],
-      attachments: attachments, // Use provided attachments instead of empty array
-      temp: true
+      attachments,
+      special,
+      temp: true,
+      replyTo: replyToId ? {
+        id: replyToId,
+        content: messages.find(m => m.id === replyToId)?.content || '',
+        senderId: messages.find(m => m.id === replyToId)?.senderId || {
+          _id: '',
+          name: { first: '', last: '' },
+          avatar: ''
+        }
+      } : undefined
     };
 
     setMessages(prev => {
@@ -180,11 +246,14 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
     });
 
     console.log("Added temporary message:", {
+      id: tempMessage.id,
       content: content.substring(0, 20) + (content.length > 20 ? "..." : ""),
       attachmentsCount: attachments.length,
+      special,
+      replyToId,
       timestamp: Date.now()
     });
-  }, [signedUserID, userAvatar]);
+  }, [signedUserID, userAvatar, messages]);
 
   const formatMessageTime = useCallback((timestamp: string) => {
     const date = new Date(timestamp);
@@ -197,11 +266,8 @@ export const useMessages = (signedUserID: string, userAvatar: string) => {
     return `${hours}:${minutes} ${ampm}`;
   }, []);
 
-  // Memoize the sorted messages to prevent unnecessary re-renders
-  const sortedMessages = useMemo(() => messages, [messages]);
-
   return {
-    messages: sortedMessages,
+    messages,
     chatInfo,
     handleNewMessage,
     handleMessagesReceived,

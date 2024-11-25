@@ -1,17 +1,29 @@
 import { memo } from 'react';
 import ChatCard from '@cards/ChatCard';
-import { usersData } from '@data/users';
 import { FlatList, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+import { useChatContext } from '@context/ChatContext';
 
 function AllChats() {
+    const { chats } = useChatContext();
+
     return (
-        <FlatList showsVerticalScrollIndicator={false}
-            data={[...usersData, ...usersData, ...usersData]}
-            renderItem={({ item, index }) => <ChatCard msgID={`ChatID-${index}`} user={item} />}
-            keyExtractor={(item, index) => item.id + index.toString()}
+        <FlatList 
+            showsVerticalScrollIndicator={false}
+            data={chats}
+            renderItem={({ item }) => (
+                <ChatCard 
+                    _id={item._id}
+                    name={item.name}
+                    logo={item.logo}
+                    type={item.type}
+                    receivers={item.receivers}
+                />
+            )}
+            keyExtractor={(item) => item._id}
         />
     )
 }
-export default memo(AllChats)
-const styles = StyleSheet.create({})
+
+export default memo(AllChats);
+
+const styles = StyleSheet.create({});

@@ -1,3 +1,4 @@
+import { useThemeColor } from '@hooks/useThemeColor';
 import { memo, ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 
@@ -21,10 +22,11 @@ function Container({
     style, children, align, justify,
     gap = 8, radius = 8, row = false
 }: ContainerProps) {
+    const colors = useThemeColor();
     return (
         <View style={[
             styles.container,
-            { gap, borderRadius: radius },
+            { gap, borderRadius: radius,backgroundColor: colors.card },
             row ?
                 { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }
                 : { flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' },
@@ -42,11 +44,8 @@ export default memo(Container);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        borderWidth: 1,
         shadowColor: "#000",
         shadowOpacity: 0.25,
-        borderColor: '#E1E1E1',
-        backgroundColor: '#FCFCFC',
         shadowOffset: { width: 0, height: 4, },
     },
 });

@@ -1,31 +1,32 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import ProfileStack from "@components/PoepleComponent";
 import { useThemeColor } from "@hooks/useThemeColor";
+import { router } from "expo-router";
 
-export type AssignedTo = {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
+type AssignedTo = {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
 };
 
 interface MeetingCardProps {
-  id: string;
-  title: string;
-  description: string;
-  assignedTo: AssignedTo[];
-  onPress?: () => void;
+    id: string;
+    title: string;
+    description: string;
+    assignedTo: AssignedTo[];
+    hasNotification?: boolean;  // Added optional notification prop
 }
 
-const MeetingCard: React.FC<MeetingCardProps> = ({
+const MeetingCard = ({
   id,
   title,
   description,
   assignedTo,
-  onPress
-}) => {
+  hasNotification = false  // Default to false
+}: MeetingCardProps) => {
   const color = useThemeColor();
 
   return (
@@ -33,7 +34,12 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
       <View style={styles(color).contentContainer}>
         <View style={styles(color).textContainer}>
           <View style={styles(color).headerContainer}>
-            <Text style={styles(color).title}>{title}</Text>
+            <Text style={styles(color).title}>
+              {title}
+              {hasNotification && (
+                <View style={styles(color).notificationDot} />
+              )}
+            </Text>
           </View>
           <Text style={styles(color).description}>{description}</Text>
         </View>
@@ -43,10 +49,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
             <ProfileStack profiles={assignedTo} maxDisplay={3} />
           </View>
 
-          <TouchableOpacity 
-            onPress={onPress} 
-            style={styles(color).joinButton}
-          >
+          <TouchableOpacity onPress={() => router.push(`/meetings/${id}`)} style={styles(color).joinButton}>
             <Feather
               name="video"
               size={16}
@@ -83,6 +86,15 @@ const styles = (color: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: color.text,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: color.primary,
+    marginLeft: 8,
   },
   description: {
     fontSize: 12,

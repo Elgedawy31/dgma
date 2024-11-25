@@ -1,24 +1,33 @@
 import AppBar from "@blocks/AppBar";
+import { useCallback } from "react";
 import Text from "@blocks/Text";
 import CustomSwitch from "@components/CustomSwitch";
 import CustomListItem from "@components/SettingsListItem";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons ,AntDesign } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { ThemeContext } from "@ThemeContext";
 import { router } from "expo-router";
+import useSecureStorage from "@hooks/useSecureStorage";
+import useStorage from "@hooks/useStorage";
 import { memo, useContext } from "react";
 import { View } from "react-native";
+import useAxios from "@hooks/useAxios";
 
+import { userContext } from '@UserContext';
 function Settings() {
   const color = useThemeColor();
   const { theme, setTheme } = useContext(ThemeContext);
-  
+  const { user, logout} = useContext(userContext);
+  const {postRequest} = useAxios();
   // Helper function to handle theme toggle
   const handleThemeToggle = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
-
-  console.log(theme)
+  const onLogoutPress = useCallback(async () => {
+    await postRequest({ endPoint: "/users/logout" })
+    logout();
+    router.replace("/(auth)/");
+  }, []);
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
       <AppBar
@@ -51,7 +60,7 @@ function Settings() {
           onPress={handleThemeToggle}
           type="switch"
         />
-        <CustomListItem
+        {user?.role ==='admin' && <CustomListItem
           isActive={false}
           setIsActive={() => {}}
           text="Users List"
@@ -64,7 +73,7 @@ function Settings() {
           }
           onPress={() => router.push("/profile/users")}
           type="navigate"
-        />
+        />}
       
          <CustomListItem
           isActive={false}
@@ -78,6 +87,16 @@ function Settings() {
             />
           }
           onPress={() => router.push("/profile/changePassword")}
+          type="navigate"
+        />
+         <CustomListItem
+          isActive={false}
+          setIsActive={() => {}}
+          text="Logout"
+          icon={
+            <AntDesign name="logout" size={24} color={color.primary} />
+          }
+          onPress={onLogoutPress}
           type="navigate"
         />
       </View>

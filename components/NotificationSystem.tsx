@@ -1,34 +1,41 @@
-// NotificationSystem.tsx
-import React, { memo, useCallback, useEffect, useRef, useState, useContext } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useContext,
+  createContext,
+} from "react";
 import {
   View,
   Animated,
   TouchableOpacity,
-  Text,
   StyleSheet,
   Platform,
   Vibration,
   Dimensions,
-  Image
-} from 'react-native';
-import { userContext } from '@UserContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
-import { useSocket } from '@hooks/useSocket';
+  Image,
+} from "react-native";
+import { userContext } from "@UserContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router, usePathname } from "expo-router";
+import { useSocket } from "@hooks/useSocket";
+import {
+  RawMessage,
+  UserBase,
+  NotificationType,
+  MessageNotification,
+} from "../models/types";
+import { useThemeColor } from "@hooks/useThemeColor";
+import Text from "@blocks/Text";
 
 // Types
 export interface Notification {
   id: string;
-  type: 'message' | 'unread_message' | 'mention' | 'reaction' | 'system';
+  type: NotificationType;
   content: string;
-  sender?: {
-    _id: string;
-    name: {
-      first: string;
-      last: string;
-    };
-    avatar?: string;
-  };
+  sender?: UserBase;
   conversationId?: string;
   conversationType?: string;
   timestamp: string;
@@ -43,19 +50,56 @@ interface ToastProps {
   visible: boolean;
 }
 
-// Custom Toast Component
+// Create context for notifications
+export interface NotificationContextType {
+  unreadMessages: { [conversationId: string]: number };
+  hasUnreadMessages: boolean;
+  markConversationAsRead: (conversationId: string) => void;
+  lastNotificationSenderId: string[]; // Changed to string array
+}
+
+export const NotificationContext = createContext<NotificationContextType>({
+  unreadMessages: {},
+  hasUnreadMessages: false,
+  markConversationAsRead: () => { },
+  lastNotificationSenderId: [], // Changed default to empty array
+});
+
+interface NotificationSystemProps {
+  children: React.ReactNode;
+}
+
+// Helper function to process avatar URL
+const processAvatarUrl = (avatarUrl: string | undefined | null): any => {
+  if (!avatarUrl) {
+    return require('../assets/images/user.png');
+  }
+  //http://teamapp2024.s3.amazonaws.com/http://teamapp2024.s3.amazonaws.com/1731294617646_images.jpeg
+
+
+  // Check for duplicate S3 URL pattern
+  if (avatarUrl.includes('https://teamapp2024.s3.amazonaws.com/http://')) {
+
+
+    const parts = avatarUrl.split('http');
+    console.log('parts' , parts)
+    return { uri:`http${parts[2]}` };
+  }
+
+  return { uri: avatarUrl };
+};
+
 const Toast = memo<ToastProps>(({ notification, onHide, onPress, visible }) => {
   const animation = useRef(new Animated.Value(0)).current;
-  const { width } = Dimensions.get('window');
+  const { width } = Dimensions.get("window");
+  const colors = useThemeColor();
 
   useEffect(() => {
     if (visible) {
-      // Simple vibration that works in Expo Go
-      if (Platform.OS === 'android') {
+      if (Platform.OS === "android") {
         Vibration.vibrate(200);
       }
 
-      // Animate toast
       Animated.sequence([
         Animated.timing(animation, {
           toValue: 1,
@@ -83,14 +127,14 @@ const Toast = memo<ToastProps>(({ notification, onHide, onPress, visible }) => {
 
   const getNotificationColor = () => {
     switch (notification.type) {
-      case 'message':
-        return '#2196F3';
-      case 'mention':
-        return '#4CAF50';
-      case 'reaction':
-        return '#FF9800';
+      case "message":
+        return colors.primary;
+      case "mention":
+        return colors.notifyMention;
+      case "reaction":
+        return colors.notifyReaction;
       default:
-        return '#333';
+        return "#333";
     }
   };
 
@@ -118,19 +162,13 @@ const Toast = memo<ToastProps>(({ notification, onHide, onPress, visible }) => {
         onPress={handlePress}
         activeOpacity={0.8}
       >
-        {notification.sender?.avatar && (
-          <Image
-            source={{ uri: notification.sender.avatar }}
-            style={styles.avatar}
-          />
-        )}
+        <Image
+          source={processAvatarUrl(notification?.sender?.avatar)}
+          style={styles.avatar}
+        />
         <View style={styles.textContainer}>
-          <Text style={styles.title}>
-            {notification.sender?.name.first || 'Notification'}
-          </Text>
-          <Text style={styles.message} numberOfLines={2}>
-            {notification.content}
-          </Text>
+          <Text bold type="subtitle" title={`${notification.sender?.name.first} ${notification.sender?.name.last}` || "Notification"} />
+          <Text size={14} title={notification?.content !== ' ' ? notification.content?.substring(0, 100) : 'file'} />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -138,44 +176,140 @@ const Toast = memo<ToastProps>(({ notification, onHide, onPress, visible }) => {
 });
 
 // Main Notification System Component
-const NotificationSystem = () => {
+const NotificationSystem = ({
+  children,
+}: NotificationSystemProps): JSX.Element => {
   const { user } = useContext(userContext);
-  const [activeNotification, setActiveNotification] = useState<Notification | null>(null);
+  const [activeNotification, setActiveNotification] =
+    useState<Notification | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState<{
+    [conversationId: string]: number;
+  }>({});
+  const [lastNotificationSenderId, setLastNotificationSenderId] = useState<
+    string[]
+  >([]); // Changed to string array
   const notificationQueueRef = useRef<Notification[]>([]);
   const isProcessingRef = useRef(false);
   const maxStoredNotifications = 100;
-  const storageKey = 'app_notifications';
+  const storageKey = "app_notifications";
+  const unreadMessagesKey = "unread_messages";
+  const pathName = usePathname();
+  const pathNameRef = useRef(pathName);
+
+  // Update pathNameRef whenever pathName changes
+  useEffect(() => {
+    pathNameRef.current = pathName;
+  }, [pathName]);
+
+  // Get user ID safely
+  const getUserId = useCallback((): string => {
+    if (!user || typeof user !== "object") return "";
+    const userId = "_id" in user ? user._id : null;
+    return typeof userId === "string" ? userId : "";
+  }, [user]);
+
+  // Load unread messages from storage
+  useEffect(() => {
+    const loadUnreadMessages = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(unreadMessagesKey);
+        if (stored) {
+          setUnreadMessages(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.error("Error loading unread messages:", error);
+      }
+    };
+    loadUnreadMessages();
+  }, []);
+
+  // Save unread messages to storage whenever they change
+  useEffect(() => {
+    const saveUnreadMessages = async () => {
+      try {
+        await AsyncStorage.setItem(
+          unreadMessagesKey,
+          JSON.stringify(unreadMessages)
+        );
+      } catch (error) {
+        console.error("Error saving unread messages:", error);
+      }
+    };
+    saveUnreadMessages();
+  }, [unreadMessages]);
+
+  const markConversationAsRead = useCallback((conversationId: string) => {
+    setUnreadMessages((prev) => {
+      const newState = { ...prev };
+      delete newState[conversationId];
+      return newState;
+    });
+    // Remove the conversationId from lastNotificationSenderId array
+    setLastNotificationSenderId((prev) =>
+      prev.filter((id) => id !== conversationId)
+    );
+  }, []);
 
   // Handle new notification
   const handleNotification = useCallback(async (notification: Notification) => {
     try {
-      // Save notification to storage
-      const storedNotifications = await AsyncStorage.getItem(storageKey);
-      const notifications = storedNotifications 
-        ? JSON.parse(storedNotifications) 
-        : [];
-      
-      await AsyncStorage.setItem(storageKey, JSON.stringify([
-        notification,
-        ...notifications.slice(0, maxStoredNotifications - 1)
-      ]));
+      const currentPathName = pathNameRef.current;
+      // Check if we should skip showing toast and adding to lastNotificationSenderId
+      const shouldSkipNotification = notification?.conversationId && 
+        currentPathName?.split('/')[2] === notification?.conversationId;
 
-      // Add to queue
-      notificationQueueRef.current.push(notification);
-      processNextNotification();
+      // Store notification in AsyncStorage regardless
+      const storedNotifications = await AsyncStorage.getItem(storageKey);
+      const notifications = storedNotifications
+        ? JSON.parse(storedNotifications)
+        : [];
+
+      await AsyncStorage.setItem(
+        storageKey,
+        JSON.stringify([
+          notification,
+          ...notifications.slice(0, maxStoredNotifications - 1),
+        ])
+      );
+
+      if (!shouldSkipNotification) {
+        // Only update lastNotificationSenderId if we're not skipping
+        if (notification?.conversationId) {
+          setLastNotificationSenderId((prev) => {
+            if (!prev?.includes(notification.conversationId!)) {
+              return [...prev, notification.conversationId!];
+            }
+            return prev;
+          });
+        }
+
+        // Update unread messages count if it's a message notification
+        if (notification.type === "message" && notification.conversationId) {
+          const convId = notification.conversationId;
+          setUnreadMessages((prev) => ({
+            ...prev,
+            [convId]: (prev[convId] || 0) + 1,
+          }));
+        }
+
+        // Only add to queue if we're not skipping
+        notificationQueueRef.current.push(notification);
+        processNextNotification();
+      }
     } catch (error) {
-      console.error('Error handling notification:', error);
+      console.error("Error handling notification:", error);
     }
   }, []);
 
   // Process notification queue
   const processNextNotification = useCallback(() => {
-    if (isProcessingRef.current || notificationQueueRef.current.length === 0) return;
+    if (isProcessingRef.current || notificationQueueRef.current.length === 0)
+      return;
 
     isProcessingRef.current = true;
     const nextNotification = notificationQueueRef.current.shift();
-    
+
     if (nextNotification) {
       setActiveNotification(nextNotification);
       setIsVisible(true);
@@ -187,85 +321,137 @@ const NotificationSystem = () => {
     setIsVisible(false);
     isProcessingRef.current = false;
     setActiveNotification(null);
-    // Process next notification after a short delay
     setTimeout(processNextNotification, 300);
   }, [processNextNotification]);
 
   // Handle notification press
   const handleNotificationPress = useCallback((notification: Notification) => {
-    switch (notification.type) {
-      case 'message':
-      case 'unread_message':
-        if (notification.conversationId) {
-          router.push(`/chat/${notification.conversationId}`);
-        }
-        break;
-      case 'mention':
-        if (notification.data?.screenName) {
-          router.push(notification.data.screenName);
-        }
-        break;
-      case 'reaction':
-        if (notification.data?.messageId) {
-        //   router.push(`/chat/${notification.conversationId}?messageId=${notification.data.messageId}`);
-        console.log('go to chat' , notification);
-        }
-        break;
-      default:
-        if (notification.data?.route) {
-          router.push(notification.data.route);
-        }
+    if (!notification.conversationId) return; 
+
+    // Remove the conversationId from lastNotificationSenderId
+    setLastNotificationSenderId(prev => 
+      prev.filter(id => id !== notification.conversationId)
+    );
+    
+    if(notification?.conversationType ==='dm'){
+      router.push({
+        pathname: "/chat/[id]",
+        params: {
+          id: notification.conversationId,
+          chat: JSON.stringify({
+            logo: notification.sender?.avatar || '',
+            name: `${notification.sender?.name?.first || ''} ${notification.sender?.name?.last || ''}`,
+            type: notification.conversationType || '',
+            id: notification.conversationId,
+          }),
+        },
+      });
     }
   }, []);
 
-  // Initialize socket connection for notifications
-  const { isSocketConnected } = useSocket(
-    'notifications',
-    'global',
-    user?.id || '',
-    () => {}, // onNewMessage
-    () => {}, // onMessagesReceived
-    () => {}, // onMessagesSeen
-    handleNotification // notification handler
+  // Handle message notification from socket
+  const onMessageNotification = useCallback(
+    ({
+      message,
+      conversationType,
+      conversationId,
+      sender,
+    }: MessageNotification) => {
+      const notification: Notification = {
+        id: String(message.id || message._id || `msg_${Date.now()}_${Math.random()}`),
+        type: "message",
+        content: message.content || "",
+        sender,
+        conversationId,
+        conversationType,
+        timestamp:
+          message.timestamp || message.createdAt || new Date().toISOString(),
+        read: false,
+      };
+      handleNotification(notification);
+    },
+    [handleNotification]
   );
 
-  // Load saved notifications on mount
+  // Initialize socket connection for notifications
+  const { isSocketConnected } = useSocket(
+    "notifications",
+    "global",
+    getUserId(),
+    () => { }, // onNewMessage
+    () => { }, // onMessagesReceived
+    () => { }, // onMessagesSeen
+    () => { }, // onJoinSuccess
+    onMessageNotification // Pass the notification handler
+  );
+
   useEffect(() => {
     const loadSavedNotifications = async () => {
       try {
         const storedNotifications = await AsyncStorage.getItem(storageKey);
         if (storedNotifications) {
           const notifications = JSON.parse(storedNotifications);
-          // You could process unread notifications here if needed
+          // Process unread notifications
+          notifications.forEach((notification: Notification) => {
+            if (
+              !notification.read &&
+              notification.type === "message" &&
+              notification.conversationId
+            ) {
+              const convId = notification.conversationId;
+              setUnreadMessages((prev) => ({
+                ...prev,
+                [convId]: (prev[convId] || 0) + 1, 
+              }));
+
+              setLastNotificationSenderId((prev) => {
+                if (!prev?.includes(convId)) {
+                  return [...prev, convId];
+                }
+                return prev;
+              });
+            }
+          });
         }
       } catch (error) {
-        console.error('Error loading notifications:', error);
+        console.error("Error loading notifications:", error);
       }
     };
 
-    if (user?.id) {
+    const userId = getUserId();
+    if (userId) {
       loadSavedNotifications();
     }
-  }, [user?.id]);
+  }, [getUserId]);
+
+  const contextValue = {
+    unreadMessages,
+    hasUnreadMessages: Object.keys(unreadMessages).length > 0,
+    markConversationAsRead,
+    lastNotificationSenderId,
+  };
 
   return (
-    <Toast
-      notification={activeNotification}
-      visible={isVisible}
-      onHide={hideToast}
-      onPress={handleNotificationPress}
-    />
+    <NotificationContext.Provider value={contextValue}>
+      {children}
+      <Toast
+        notification={activeNotification}
+        visible={isVisible}
+        onHide={hideToast}
+        onPress={handleNotificationPress}
+      />
+    </NotificationContext.Provider>
   );
 };
 
 // Styles
 const styles = StyleSheet.create({
   toastContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 25,
     left: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -273,8 +459,8 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   toastContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
   },
   avatar: {
@@ -282,21 +468,20 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   textContainer: {
     flex: 1,
   },
   title: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   message: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    opacity: 0.9,
   },
 });
 

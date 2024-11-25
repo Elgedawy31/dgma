@@ -1,4 +1,4 @@
-import useAxios from './useAxios';
+import useAxios from '@hooks/useAxios';
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -22,7 +22,7 @@ const FILE_TYPES = {
 };
 type PickerModel = { multiple?: boolean }
 export default function useFile() {
-    const { post } = useAxios();
+    const { postRequest } = useAxios();
     const [loading, setLoading] = useState(false);
     const FILE_TYPES = useMemo(() => ({
         // Images
@@ -57,7 +57,7 @@ export default function useFile() {
             }
             size /= 1024;
         }
-        return { size, measure };
+        return { size: +size.toFixed(2), measure };
     }, [])
 
     const decodeFile = useCallback((file: string, size?: string) => {
@@ -119,7 +119,7 @@ export default function useFile() {
 
             const file = result.assets[0];
             const { size, measure } = calcFileSize(file.fileSize || 0);
-            
+
             return [{
                 size: size,
                 uri: file.uri,
@@ -170,7 +170,7 @@ export default function useFile() {
             } as any);
         })
         console.log('formData', JSON.stringify(formData));
-        return post({ endPoint: 'files/upload-file', body: formData, isMedia: true })
+        return postRequest({ endPoint: 'files/upload-file', body: formData, isMedia: true })
             .then(res => { console.log(res); return res })
             .catch(err => console.log(err))
             .finally(() => setLoading(false));
@@ -178,8 +178,8 @@ export default function useFile() {
 
 
     const obj = useMemo(() =>
-    ({ loading, imagePicker ,cameraCapture, documentPicker, uploadFiles, decodeFile }
-    ), [loading, imagePicker ,cameraCapture, documentPicker, uploadFiles, decodeFile])
+    ({ loading, imagePicker, cameraCapture, documentPicker, uploadFiles, decodeFile }
+    ), [loading, imagePicker, cameraCapture, documentPicker, uploadFiles, decodeFile])
 
     return obj;
 };

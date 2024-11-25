@@ -18,7 +18,7 @@ import { useThemeColor } from "@hooks/useThemeColor";
 //#endregion
 
 function ForgetPassword() {
-  const { post } = useAxios();
+  const { postRequest } = useAxios();
   const [msg, setMsg] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ function ForgetPassword() {
   const onSubmit = handleSubmit((data: { email: string }) => {
     const func = async () => {
       setLoading(true);
-      await post({
+      await postRequest({
         endPoint: "users/forgetPassword",
         body: data,
         hasToken: false,

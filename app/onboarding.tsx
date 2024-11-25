@@ -5,12 +5,13 @@ import { router } from 'expo-router';
 import { memo, useRef, useState } from 'react';
 import StatusBar from '@blocks/StatusBar';
 import { useThemeColor } from '@hooks/useThemeColor';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import Onboarding from 'react-native-onboarding-swiper';
-import Button  from '@ui/Button';
+import Button from '@ui/Button';
 import { Routes } from '@routes';
 import useStorage from '@hooks/useStorage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AppBar from '@blocks/AppBar';
 //#endregion
 
 const content = [
@@ -47,34 +48,48 @@ function OnboardingScreen() {
     }
     //#region UI
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <View style={[styles.container, { backgroundColor: colors.primary }]}>
-                <StatusBar />
-                <View style={[styles.head, { backgroundColor: colors.background }]}>
-                    <Button type='text' align='flex-end' label="Skip" onPress={handleSkip} txtStyle={styles.skip} />
-                    <Onboarding
-                        showPagination
-                        showSkip={false}
-                        showNext={false}
-                        showDone={false}
-                        ref={onboardingRef}
-                        controlStatusBar={false}
-                        bottomBarHighlight={false}
-                        containerStyles={styles.onboarding}
-                        pageIndexCallback={(pageIndex) => setIndex(pageIndex)}
-                        DotComponent={({ selected }) => <Dot selected={selected} />}
-                        pages={[1, 2, 3].map((idx) => ({
-                            title: '', subtitle: '', backgroundColor: 'transparent',
-                            image: (<Image key={index} style={styles.img} source={onboardingImages[idx]} />),
-                        }))}
-                    />
-                </View>
-                <View style={styles.bottom}>
-                    <Text type='body' color='white' align='justify' title={content[index]} />
-                    <Button type='variant' label={index !== 2 ? "Next" : "Get Started"} onPress={handleOnboardingNavigation} />
+        <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
+            <View style={{ flex: 1 }}>
+                <View style={[styles.container, { backgroundColor: colors.onboardingBottom }]}>
+                    <StatusBar hidden />
+                    <View style={[styles.head, { backgroundColor: colors.background, paddingTop: 35 }]}>
+                        <View style={{ alignItems: 'flex-end' }}>
+                            <Button type='text' align='center' label="Skip" onPress={handleSkip} txtStyle={styles.skip} />
+                        </View>
+                        <Onboarding
+                            showPagination
+                            showSkip={false}
+                            showNext={false}
+                            showDone={false}
+                            ref={onboardingRef}
+                            controlStatusBar={false}
+                            bottomBarHighlight={false}
+                            containerStyles={styles.onboarding}
+                            pageIndexCallback={(pageIndex) => setIndex(pageIndex)}
+                            DotComponent={({ selected }) => <Dot selected={selected} />}
+                            pages={[1, 2, 3].map((idx) => ({
+                                title: '', subtitle: '', backgroundColor: 'transparent',
+                                image: (<Image key={index} style={styles.img} source={onboardingImages[idx]} />),
+                            }))}
+                        />
+                    </View>
+
+                    <View style={[styles.bottom, { backgroundColor: colors.onboardingBottom }]}>
+                        <Text type='body' color='white' align='justify' title={content[index]} />
+                        <Pressable style={({ pressed }) => [
+                            styles.btn,
+                            { backgroundColor: pressed ? colors.background : colors.white },
+                        ]}
+
+                            onPress={handleOnboardingNavigation} >
+                            <Text type='subtitle' size={20} title={index !== 2 ? "Next" : "Get Started"} color={colors.primary} />
+
+                        </Pressable>
+
+                    </View>
                 </View>
             </View>
-        </SafeAreaView>
+        </SafeAreaView >
     );
     //#endregion
 }
@@ -109,7 +124,14 @@ const styles = StyleSheet.create({
     skip: {
         fontSize: 20,
         marginHorizontal: 15,
-        alignSelf: 'flex-end',
-    }
+    },
+    btn: {
+        padding: 10,
+        width: '100%',
+        borderRadius: 40,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 });
 //#endregion

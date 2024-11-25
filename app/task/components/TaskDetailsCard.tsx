@@ -2,12 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
+import { useRouter } from "expo-router";
 
 interface TaskCardProps {
   title: string;
   description: string;
   startDate: string;
   endDate: string;
+  onDelete?: () => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -15,18 +17,37 @@ const TaskCard: React.FC<TaskCardProps> = ({
   description,
   startDate,
   endDate,
+  onDelete,
 }) => {
   const [showAll, setShowAll] = React.useState<boolean>(true);
   const colors = useThemeColor();
+  const router = useRouter();
+
   return (
     <View style={styles(colors).container}>
       <View style={styles(colors).content}>
-        <Text style={styles(colors).title}>{title}</Text>
+        <View style={styles(colors).headerContainer}>
+          <Text style={styles(colors).title}>{title}</Text>
+          <TouchableOpacity 
+            style={styles(colors).deleteButton}
+            onPress={() => {
+              if (onDelete) {
+                onDelete();
+              } else {
+                router.back();
+              }
+            }}
+          >
+            <Text style={styles(colors).deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles(colors).description}>
           {showAll ? description : `${description?.slice(0, 60)}...`}
-        {description?.length > 60 &&   <TouchableOpacity  onPress={() => setShowAll(!showAll)} >
-          <Text style={{color:colors.primary ,}}>  {showAll ? "less" : "more"}</Text>
-          </TouchableOpacity>}
+          {description?.length > 60 && (
+            <TouchableOpacity onPress={() => setShowAll(!showAll)}>
+              <Text style={{color: colors.primary}}>  {showAll ? "less" : "more"}</Text>
+            </TouchableOpacity>
+          )}
         </Text>
 
         <View style={styles(colors).dateContainer}>
@@ -57,7 +78,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   );
 };
 
-const styles =(colors:any) =>  StyleSheet.create({
+const styles = (colors: any) => StyleSheet.create({
   container: {
     backgroundColor: colors.card,
     borderRadius: 12,
@@ -68,11 +89,28 @@ const styles =(colors:any) =>  StyleSheet.create({
   content: {
     gap: 12,
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   title: {
     fontSize: 20,
     fontWeight: "600",
     color: colors.text,
-    marginBottom: 8,
+    flex: 1,
+  },
+  deleteButton: {
+    backgroundColor: colors.cancel,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
   },
   description: {
     fontSize: 16,

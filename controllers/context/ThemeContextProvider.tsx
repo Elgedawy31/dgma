@@ -12,7 +12,7 @@ interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType>({} as ThemeContextType);
 
 function ThemeContextProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<ThemeType>('light');
+  const [theme, setTheme] = useState<ThemeType>('dark');
   const { readStorage, writeStorage } = useStorage();
   
   // Load initial theme

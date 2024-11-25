@@ -11,67 +11,126 @@ import { userContext } from "@UserContext";
 import TextInputField from "@ui/TextInputField";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
-import { memo, useEffect, useState, useMemo, useContext, useCallback } from "react";
+import {
+  memo,
+  useEffect,
+  useState,
+  useMemo,
+  useContext,
+  useCallback,
+} from "react";
 import ImageAvatar from "@blocks/ImageAvatar";
+import ChannelModal from "@model/channel";
+import { UserBase } from "@model/types";
+import {
+  NotificationContext,
+  NotificationContextType,
+} from "@components/NotificationSystem";
 
+const ChannelItem = memo(({ _id, name, logo, type }: ChatModal) => {
+  const { lastNotificationSenderId, markConversationAsRead } =
+    useContext<NotificationContextType>(NotificationContext);
 
-const ChannelItem = memo(({ item }: { item: ChatModal }) => (
-  <TouchableOpacity style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}>
-    <ImageAvatar
-      type="channel"
-      url='1731026479790_zoeyshen_dashboard3_2x.png'
-    // style={{ width: 60, height: 60, borderRadius: 30 }}
-    // source={require("@assets/images/groups-no-img.png")}
-    />
-    <Text type="body" title={item.name} />
-  </TouchableOpacity>
-));
+  // Check for new message based on chat type
+  const hasNewMessage = Boolean(
+    lastNotificationSenderId && lastNotificationSenderId?.includes(_id)
+  );
 
-const tabs = [{ type: "dm", label: "Chats" }, { type: "group", label: "Groups" }];
+  const handleName = useMemo(() => {
+    const temp = name.split(" ");
+    if (temp.length === 1) return temp[0];
+    return temp[1].length > 10
+      ? temp[1].slice(0, 10) + `...`
+      : `${temp[0]} ${temp[1]}`;
+  }, [name]);
+
+  const handlePress = useCallback(() => {
+    router.push({
+      pathname: "/chat/[id]",
+      params: { id: _id, chat: JSON.stringify({ logo, name, type, id: _id }) },
+    });
+    // Always mark conversation as read when clicking on a channel
+    markConversationAsRead(_id);
+  }, [_id, name, logo, type, markConversationAsRead]);
+  
+  const colors = useThemeColor();
+  return (
+    <TouchableOpacity
+      style={{ gap: 2, alignItems: "center", paddingLeft: 12 }}
+      onPress={handlePress}
+    >
+      <ImageAvatar type="channel" url={logo || null} />
+      {hasNewMessage && (
+        <View
+          style={[
+            styles(colors).notificationDot,
+            type === "dm" ? styles(colors).dmDot : styles(colors).groupDot,
+          ]}
+        />
+      )}
+      
+      <Text type="body" title={handleName} />
+    </TouchableOpacity>
+  );
+});
+
+const tabs = [
+  { type: "dm", label: "Chats" },
+  { type: "group", label: "Groups" },
+];
 
 function Messaging() {
-  const { get } = useAxios();
-  const colors = useThemeColor();
-  const { user: { id: signedUserID } } = useContext(userContext)
-  // const [users, setUsers] = useState<UserModel[]>([]);
+  const { getRequest } = useAxios();
+  const colors = useThemeColor(); 
+  const { user } = useContext(userContext);
   const [activeTab, setActiveTab] = useState<number>(0);
-  // const [groupData, setGroupData] = useState<ChatModal[]>([]);
   const [chatData, setChatData] = useState<ChatModal[]>([]);
+  const [groupData, setGroupData] = useState<ChatModal[]>([]);
   const [channelsData, setChannelsData] = useState<ChatModal[]>([]);
-  const { control, handleSubmit, watch, reset } =
-    useForm<{ query: string }>({ defaultValues: { query: "" }, });
 
-  // Get filtered data based on active tab
-  // const filteredData = useMemo(() => {
-  //   const query = searchQuery.toLowerCase().trim();
+  const { control, handleSubmit, watch, reset } = useForm<{ query: string }>({
+    defaultValues: { query: "" },
+  });
 
-  //   groupData.filter((group) => group.name.toLowerCase().trim().includes(query));
+  const searchQuery = watch("query");
 
-  //   const dm = users
-  //     .filter(({ name: { first, last } }) => `${first} ${last}`.toLowerCase().trim().includes(query))
-  //     .map(({ id, name: { first, last }, avatar }) => (
-  //       {
-  //         id: `dm_${[signedUserID, id].sort().join("_")}`,
-  //         name: `${first} ${last}`, logo: avatar, type: "dm"
-  //       } as ChatModal)
-  //     )
-  //   return activeTab === tabs[0] ? dm : groupData;
+  // Filter data based on active tab and search query
+  const filteredData = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    const data = activeTab === 0 ? chatData : groupData;
 
-  // }, [activeTab, searchQuery, users, groupData]);
+    return data.filter(
+      (item) =>
+        item.name.toLowerCase()?.includes(query) &&
+        item.type === (activeTab === 0 ? "dm" : "group")
+    );
+  }, [activeTab, searchQuery, chatData, groupData]);
 
   useEffect(() => {
     const getUsersFunction = async () => {
       try {
-        const res = await get({ endPoint: "users" });
+        const res = await getRequest({ endPoint: "users" });
         if (res) {
-          setChatData(res
-            .filter((user: UserModel) => user.id !== signedUserID)
-            .map(({ id, name: { first, last }, avatar }: UserModel) => (
-              {
-                id: `dm_${[signedUserID, id].sort().join("_")}`,
-                name: `${first} ${last}`.toLowerCase().trim(), logo: avatar, type: "dm"
-              } as ChatModal)
-            ));
+          setChatData(
+            res
+              .filter((u: UserModel) => u.id !== user.id)
+              .map(
+                ({ id, name: { first, last }, avatar }: UserModel) =>
+                  ({
+                    _id: `dm_${[user.id, id].sort().join("_")}`,
+                    receivers: [
+                      {
+                        _id: id,
+                        avatar: avatar,
+                        name: { first, last },
+                      },
+                    ] as UserBase[],
+                    name: `${first} ${last}`.toLowerCase().trim(),
+                    logo: avatar,
+                    type: "dm",
+                  } as ChatModal)
+              )
+          );
         }
       } catch (err) {
         console.error(`Error: ${err}`);
@@ -80,9 +139,29 @@ function Messaging() {
 
     const getGroupsFunction = async () => {
       try {
-        const res = await get({ endPoint: "channels/all?type=group" });
+        const res = await getRequest({ endPoint: "channels/all?type=group" });
         if (res?.results) {
-          // setGroupData(res.results);
+          setGroupData(
+            res.results.map(
+              (group: ChannelModal) =>
+                ({
+                  _id: group._id,
+                  name: group.name,
+                  logo: group.photo,
+                  receivers: group.members
+                    .filter((member) => member._id !== user.id)
+                    .map((member) => ({
+                      _id: member._id,
+                      avatar: member.avatar,
+                      name: {
+                        first: member.name.first,
+                        last: member.name.last,
+                      },
+                    })) as UserBase[],
+                  type: "group",
+                } as ChatModal)
+            )
+          );
         }
       } catch (err) {
         console.error(`Error: ${err}`);
@@ -91,9 +170,29 @@ function Messaging() {
 
     const getChannelsFunction = async () => {
       try {
-        const res = await get({ endPoint: "channels/all?type=channel" });
+        const res = await getRequest({ endPoint: "channels/all?type=channel" });
         if (res?.results) {
-          setChannelsData(res.results);
+          setChannelsData(
+            res.results.map(
+              ({ _id, name, photo, members }: ChannelModal) =>
+                ({
+                  _id: _id,
+                  name: name,
+                  logo: photo,
+                  receivers: members
+                    .filter((member) => member._id !== user.id)
+                    .map((member) => ({
+                      _id: member._id,
+                      avatar: member.avatar,
+                      name: {
+                        first: member.name.first,
+                        last: member.name.last,
+                      },
+                    })) as UserBase[],
+                  type: "channel",
+                } as ChatModal)
+            )
+          );
         }
       } catch (err) {
         console.error(`Error: ${err}`);
@@ -103,73 +202,77 @@ function Messaging() {
     getUsersFunction();
     getGroupsFunction();
     getChannelsFunction();
-  }, []);
+  }, [getRequest, user.id]);
 
+  const toggleActiveTab = useCallback(
+    (idx: number) => {
+      setActiveTab(idx);
+      reset({ query: "" });
+    },
+    [reset]
+  );
 
-  const toggleActiveTab = useCallback((idx: number) => {
-    console.log("tab", idx);
-    setActiveTab(idx);
-    reset({ query: '' });
-  }, []);
-
-  const clearSearch = useCallback(() => reset({ query: '' }), []);
-
-  // const handleSearch = useCallback((text: string) => setSearchQuery(text), []);
+  const clearSearch = useCallback(() => reset({ query: "" }), [reset]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <AppBar
-        title={<Text type="subtitle" title="Chats" />}
-        action={<Icon icon="add" type="complex" onPress={() => router.push("/newGroup")} />}
+        title={
+          <Text type="subtitle" title={activeTab === 0 ? "Chats" : "Groups"} />
+        }
+        action={
+        <>{ activeTab === 1 &&   <Icon
+          icon="add"
+          type="complex"
+          onPress={() => router.push("/newGroup")}
+        /> }</>
+        }
       />
 
-      <View style={[styles(colors).searchContainer , {backgroundColor:colors.card}, watch('query') ? { paddingLeft: 0, paddingRight: 5 } : { paddingLeft: 5, paddingRight: 0 }]}>
-        {!watch('query') && <Icon iconColor={colors.text} icon="search" />}
+      <View
+        style={[
+          styles(colors).searchContainer,
+          { backgroundColor: colors.card },
+          searchQuery
+            ? { paddingLeft: 0, paddingRight: 5 }
+            : { paddingLeft: 5, paddingRight: 0 },
+        ]}
+      >
+        {!searchQuery && <Icon iconColor={colors.text} icon="search" />}
         <View style={{ flex: 1 }}>
           <TextInputField
-            noLabel noBorder
-            name='query' control={control}
+            noLabel
+            noBorder
+            name="query"
+            control={control}
             placeholder={`Search ${tabs[activeTab].label}...`}
           />
         </View>
-        {watch('query') && <Icon
-          size={18} icon='close' type="complex"
-          iconColor={colors.text} onPress={clearSearch} />
-        }
-      </View>
-
-      {/* <View style={styles(colors).searchContainer}>
-        <Icon icon="search" />
-        <TextInput
-          style={styles(colors).input}
-          placeholder={`Search ...`}
-          placeholderTextColor="#444"
-          value={searchQuery}
-          onChangeText={handleSearch}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={clearSearch}>
-            <Ionicons name="close-circle" size={20} color="#666" />
-          </TouchableOpacity>
+        {searchQuery && (
+          <Icon
+            size={18}
+            icon="close"
+            type="complex"
+            iconColor={colors.text}
+            onPress={clearSearch}
+          />
         )}
-      </View> */}
-
-
-
-
+      </View>
 
       <View style={styles(colors).tabsContainer}>
         {tabs.map((tab, index) => (
-          <TouchableOpacity key={tab.type}
+          <TouchableOpacity
+            key={tab.type}
             onPress={() => toggleActiveTab(index)}
-            style={[styles(colors).tabButton, index === activeTab && styles(colors).activeTabButton,]}
+            style={[
+              styles(colors).tabButton,
+              index === activeTab && styles(colors).activeTabButton,
+            ]}
           >
             <Text
-              // style={[
-              //   styles(colors).tabText,
-              //   activeTab === tab && styles(colors).activeTabText,
-              // ]}
+              type="body"
               title={tab.label}
+              color={index === activeTab ? "white" : undefined}
             />
           </TouchableOpacity>
         ))}
@@ -177,19 +280,17 @@ function Messaging() {
 
       <View style={styles(colors).contentContainer}>
         <FlatList
-          data={[...chatData]
-            .filter((chat) => activeTab === 0 ? chat.type === 'dm' : chat.type === 'group')
-            .filter((chat) => !watch('query') ? true : chat.name.toLowerCase().includes(watch('query').toLowerCase()))
-          }
-          keyExtractor={({ id }) => id}
+          data={filteredData}
+          keyExtractor={({ _id }) => _id}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => <ChatCard {...item} />}
           ListEmptyComponent={() => (
             <View style={styles(colors).emptyContainer}>
               <Text
                 type="body"
-                title={`No ${tabs[activeTab].label.toLowerCase()} found${watch('query') ? ' for your search' : ''
-                  }`}
+                title={`No ${tabs[activeTab].label.toLowerCase()} found${
+                  searchQuery ? " for your search" : ""
+                }`}
               />
             </View>
           )}
@@ -204,8 +305,8 @@ function Messaging() {
           <FlatList
             horizontal
             data={channelsData}
-            renderItem={({ item }) => <ChannelItem item={item} />}
-            keyExtractor={(item) => item?.id?.toString()}
+            renderItem={({ item }) => <ChannelItem {...item} />}
+            keyExtractor={({ _id }) => _id.toString()}
             showsHorizontalScrollIndicator={false}
           />
         ) : (
@@ -214,67 +315,81 @@ function Messaging() {
           </View>
         )}
       </View>
-    </View >
+    </View>
   );
 }
 
-const styles =(colors:any) =>  StyleSheet.create({
-  searchContainer: {
-    margin: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  icon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#444",
-    fontWeight: "600",
-    paddingVertical: 8,
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    padding: 8,
-    gap: 8,
-    justifyContent: "space-around",
-  },
-  tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-  },
-  activeTabButton: {
-    backgroundColor: colors.primary,
-  },
-  tabText: {
-    color: "#666666",
-    fontSize: 16,
-  },
-  activeTabText: {
-    color: "white",
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  emptyContainer: {
-    paddingVertical: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  channelsSection: {
-    marginVertical: 12,
-  },
-  channelsHeader: {
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-});
+const styles = (colors: any) =>
+  StyleSheet.create({
+    searchContainer: {
+      margin: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      borderRadius: 8,
+    },
+    icon: {
+      marginRight: 8,
+    },
+    input: {
+      flex: 1,
+      fontSize: 16,
+      color: "#444",
+      fontWeight: "600",
+      paddingVertical: 8,
+    },
+    tabsContainer: {
+      flexDirection: "row",
+      padding: 8,
+      gap: 8,
+      justifyContent: "space-around",
+    },
+    tabButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+    },
+    activeTabButton: {
+      backgroundColor: colors.primary,
+    },
+    contentContainer: {
+      flex: 1,
+    },
+    emptyContainer: {
+      paddingVertical: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    channelsSection: {
+      marginVertical: 12,
+    },
+    channelsHeader: {
+      paddingHorizontal: 16,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    notificationDot: {
+      position: "absolute",
+      right: 0,
+      top: 3,
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: "#fff",
+    },
+    dmDot: {
+      backgroundColor: "#2196F3", // Blue for direct messages
+    },
+    groupDot: {
+      backgroundColor: "#4CAF50", // Green for group messages
+    },
+    newMessageText: {
+      fontSize: 12,
+      color: "#4CAF50", // Green text for group message indicator
+    },
+  });
 
 export default memo(Messaging);

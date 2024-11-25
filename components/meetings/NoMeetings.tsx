@@ -1,93 +1,106 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useThemeColor } from "@hooks/useThemeColor";
-import MeetingsHead from "./MeetingsHead";
+import { Feather } from "@expo/vector-icons";
 
 interface NoMeetingsProps {
-  onCreateMeeting: () => void;
+  setOpen: (open: boolean) => void;
+  hasNotifications?: boolean;  // Added to show notification status
 }
 
-const NoMeetings = ({ onCreateMeeting }: NoMeetingsProps) => {
+const NoMeetings = ({ setOpen, hasNotifications = false }: NoMeetingsProps) => {
   const color = useThemeColor();
-  
-  const styles = StyleSheet.create({
-    headTxt: {
-      fontSize: 20,
-      fontWeight: "500",
-      color: color.text,
-    },
-    para: {
-      fontSize: 14,
-      color: color.text,
-      textAlign: "center",
-    },
-    button: {
-      backgroundColor: color.primary,
-      paddingVertical: 12,
-      paddingHorizontal: 48,
-      borderRadius: 16,
-      alignItems: "center",
-      justifyContent: "center",
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    buttonText: {
-      color: "#FFFFFF",
-      fontSize: 18,
-      fontWeight: "500",
-      textAlign: "center",
-    },
-    container: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 32,
-    },
-    imageContainer: {
-      width: 200,
-      height: 200,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    image: {
-      width: '100%',
-      height: '100%',
-      resizeMode: 'contain',
-    },
-    textContainer: {
-      alignItems: 'center',
-    }
-  });
 
   return (
-    <View style={styles.container}> 
-      <View style={styles.imageContainer}>
-        <Image 
+    <View style={styles(color).container}>
+      <View style={styles(color).imageContainer}>
+        <Image
           source={require("../../assets/images/no-meetings.png")}
-          style={styles.image}
+          style={styles(color).image}
+          resizeMode="contain"
         />
       </View>
-      <View style={styles.textContainer}>
-        <Text style={[styles.headTxt, { textAlign: "center" }]}>
-          No meetings to join
+      <View style={styles(color).textContainer}>
+        <View style={styles(color).titleContainer}>
+          <Text style={styles(color).title}>No Meetings</Text>
+          {hasNotifications && (
+            <View style={styles(color).notificationDot} />
+          )}
+        </View>
+        <Text style={styles(color).description}>
+          You don't have any meetings scheduled. Create a new meeting to get started.
         </Text>
-        <Text style={styles.para}>Create a new one to meet them</Text>
       </View>
       <TouchableOpacity
-        style={styles.button}
-        onPress={onCreateMeeting}
-        activeOpacity={0.8}
+        onPress={() => setOpen(true)}
+        style={styles(color).button}
       >
-        <Text style={styles.buttonText}>Create a meeting</Text>
+        <Feather name="plus" size={20} color="#FFF" />
+        <Text style={styles(color).buttonText}>Create Meeting</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
+const styles = (color: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  imageContainer: {
+    width: "100%",
+    aspectRatio: 1,
+    marginBottom: 24,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  textContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: color.text,
+    marginBottom: 8,
+  },
+  notificationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: color.primary,
+  },
+  description: {
+    fontSize: 14,
+    color: color.body,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: color.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#FFF",
+  },
+});
 
 export default NoMeetings;

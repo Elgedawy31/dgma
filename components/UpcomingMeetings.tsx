@@ -5,28 +5,26 @@ import { Ionicons } from '@expo/vector-icons'
 import { StyleSheet, View } from 'react-native'
 import { useThemeColor } from '@hooks/useThemeColor'
 
-const meetings = [
-    { title: 'UI/UX&Graphic Team meeting', subTitle: 'Market research - User research ', time: '1PM - 2PM' },
-    { title: 'UI/UX&Graphic Team meeting', subTitle: 'Market research - User research ', time: '1PM - 2PM' },
-    { title: 'UI/UX&Graphic Team meeting', subTitle: 'Market research - User research ', time: '1PM - 2PM' },
-]
+const meetings: any = []
 
 function UpcomingMeetings() {
     const colors = useThemeColor();
     return (
         <View>
             <View style={styles.container}>
-                <Text type='title' title='Current Projects' />
+                <Text type='title' title='Ongoing Meetings' />
                 <Ionicons name="add" size={32} color={colors.text} style={{ padding: 2, backgroundColor: colors.secondary, borderRadius: 50 }} />
             </View>
-            {meetings.map((meeting, index) => (
+            {meetings?.length > 0 ? meetings.map((meeting: any, index: number) => (
                 <MeetingCard
-                    key={meeting.title + "meeting" + index}
                     time={meeting.time}
                     title={meeting.title}
                     subTitle={meeting.subTitle}
+                    key={meeting.title + "meeting" + index}
                 />))
-            }
+                : <View style={{ marginVertical: 32, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text type='title' title='No Meetings Yet ' color={colors.body} />
+                </View>}
         </View>
     )
 }

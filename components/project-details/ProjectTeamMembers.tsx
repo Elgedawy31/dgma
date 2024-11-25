@@ -29,7 +29,7 @@ type FlatListComponentProps = {
 };
 
 const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
-    const { get } = useAxios();
+    const { getRequest } = useAxios();
     const colors = useThemeColor();
     const [users, setUsers] = useState<UserModel[]>([]);
     const { control, watch, } = useForm<{ teamValue: string }>({});
@@ -42,7 +42,7 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
 
     useEffect(() => {
         const getUsers = async () => {
-            await get({ endPoint: "users" }).then(res => {console.log(res); res && setUsers(res)})
+            await getRequest({ endPoint: "users" }).then(res => res && setUsers(res))
         }
         getUsers();
 

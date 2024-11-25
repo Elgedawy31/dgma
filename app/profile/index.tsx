@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React, { memo, useCallback, useContext } from "react";
+import React, { memo, useCallback, useContext, useState } from "react";
 import AppBar from "@blocks/AppBar";
 import Text from "@blocks/Text";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,37 +9,87 @@ import { userContext } from "@UserContext";
 import { useForm } from "react-hook-form";
 import TextInputField from "@ui/TextInputField";
 import useAxios from "@hooks/useAxios";
-import useSecureStorage from "@hooks/useSecureStorage";
-import useStorage from "@hooks/useStorage";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { Colors } from "@colors";
+import { Toast } from "@ui/Toast";
+import useFilePicker from "@hooks/useFile";
+import useSecureStorage from "@hooks/useSecureStorage";
+
+type FormData = {
+  firstName: string;
+  lastName: string;
+  role: "user" | "admin" | null;
+  email: string;
+};
 
 function profile() {
-  const { post } = useAxios();
-  const { removeStorage: removeToken } = useSecureStorage();
-  const { removeStorage } = useStorage();
   const color = useThemeColor();
-  const { user, resetUser } = useContext(userContext);
+  const { user, setUserData } = useContext(userContext);
+  const { readStorage: readToken } = useSecureStorage();
+  const [profileLogo, setProfileLogo] = useState<any>(null);
+  const [profileUploadedImg, setProfileUploadedImg] = useState<any>(null);
+  const { imagePicker, uploadFiles } = useFilePicker();
+  const [showModal, setShowModal] = useState(false);
+  const [toastType , setToastType] = useState("success");
+
+  const [loading, setLoading] = useState(false);
+  const { patchRequest } = useAxios();
   const {
     control,
+    handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<FormData>({
     defaultValues: {
-      name: `${user.name.first} ${user.name.last}`,
-      role: user.role,
+      firstName: user.name.first,
+      lastName: user.name.last,
+      role: user?.role,
       email: user.email,
-      birth: "4 - Novmber 1999",
     },
   });
-  const onLogoutPress = useCallback(async () => {
-    await removeToken("token");
-    await removeStorage("user");
-    await post({ endPoint: "/users/logout" }).then(async (res) => {
 
-      resetUser();
-      router.replace("/(auth)/");
-    });
+  const onSubmit = async (data: FormData) => {
+    let token = await readToken("token") || "";
+    setLoading(true);
+    await patchRequest({
+      endPoint: `users/${user?.id}`,
+      body: { name: { first: data?.firstName, last: data?.lastName } , avatar: profileUploadedImg ? profileUploadedImg : user?.avatar },
+      hasToken: true,
+    })
+
+      .then((res) => {
+        if (res?.id) {
+          setUserData(token, res);
+          setShowModal(true);
+          setProfileLogo(false)
+          setProfileUploadedImg(false)
+        }else{
+          setShowModal(true );
+          setToastType("error")
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+      setShowModal(true );
+        setLoading(false);
+        setToastType("error")
+      });
+    setLoading(false);
+  };
+
+  const pickLogoImage = useCallback(async () => {
+    const res = await imagePicker({ multiple: false });
+    if (res) {
+      const file = await uploadFiles(res);
+      if (file?.length > 0) {
+        setProfileUploadedImg(file[0]?.name);
+        setProfileLogo(res[0]);
+      }
+    }
+  }, []);
+
+  const clearProfileImage = useCallback(() => {
+    setProfileLogo(null);
+    setProfileUploadedImg(null);
   }, []);
 
   const styles = StyleSheet.create({
@@ -49,7 +99,7 @@ function profile() {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      position: 'relative',
+      position: "relative",
       padding: 16,
       borderRadius: 16,
       marginBottom: 16,
@@ -68,9 +118,50 @@ function profile() {
       position: "absolute",
       right: 8,
     },
+    container: {
+      flex: 1,
+      backgroundColor: color.background,
+    },
+    contentContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: "100%",
+      padding: 16,
+      marginTop: 24,
+    },
+    avatarContainer: {
+      width: "100%",
+      alignItems: "center",
+    },
+    avatar: {
+      marginBottom: 24,
+      position: 'relative',
+    },
+    clearButton: {
+      position: 'absolute',
+      right: -10,
+      top: -10,
+      backgroundColor: color.background,
+      borderRadius: 12,
+      padding: 4,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    formContainer: {
+      width: "100%",
+      gap: 24,
+    },
   });
+
   return (
-    <View style={{ flex: 1, backgroundColor: color.background }}>
+    <View style={styles.container}>
       <AppBar
         center
         title={<Text type="subtitle" title="Profile" />}
@@ -95,76 +186,68 @@ function profile() {
           />
         }
       />
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          padding: 16,
-          marginTop: 24,
-        }}
-      >
-        <View style={{ width: "100%", alignItems: "center" }}>
-          <View style={{ marginBottom: 24 }}>
-            <ImageAvatar size={100} type="avatar" url={user.avatar} />
+      <View style={styles.contentContainer}>
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            <TouchableOpacity onPress={pickLogoImage}>
+              <ImageAvatar size={100} type="avatar" url={profileLogo?.uri ? profileLogo?.uri : user.avatar} />
+            </TouchableOpacity>
+            {(profileLogo || profileUploadedImg) && (
+              <TouchableOpacity style={styles.clearButton} onPress={clearProfileImage}>
+                <Ionicons name="close-circle" size={24} color={color.text} />
+              </TouchableOpacity>
+            )}
           </View>
-          <View style={{ width: "100%", gap: 24 }}>
+          <View style={styles.formContainer}>
             <TextInputField
-            editable={false}
-              capitalize
-              name="name"
-              label="Full Name"
+              name="firstName"
+              label="First Name"
               control={control}
-              errorMessage={errors.name?.message}
-              rules={{ required: "Name is required" }}
+              errorMessage={errors.firstName?.message}
+              rules={{ required: "First name is required" }}
             />
             <TextInputField
-            editable={false}
-
+              name="lastName"
+              label="Last Name"
+              control={control}
+              errorMessage={errors.lastName?.message}
+              rules={{ required: "Last name is required" }}
+            />
+            <TextInputField
+              editable={user?.role === "admin"}
               name="role"
               label="Role"
               control={control}
-              errorMessage={errors.role?.message}
-              rules={{ required: "role is required" }}
+              errorMessage={errors?.role?.message}
+              rules={{ required: "Role is required" }}
             />
             <TextInputField
-            editable={false}
-
+              editable={user?.role === "admin"}
               name="email"
               label="Email"
               control={control}
               errorMessage={errors.email?.message}
-              rules={{ required: "role is required" }}
-            />
-            <TextInputField
-            editable={false}
-
-              name="birth"
-              label="Date of Birth"
-              control={control}
-              errorMessage={errors.birth?.message}
-              rules={{ required: "Date of Birth is required" }}
+              rules={{ required: "Email is required" }}
             />
           </View>
         </View>
       </View>
       <TouchableOpacity
         style={styles.button}
-        onPress={onLogoutPress}
+        onPress={handleSubmit(onSubmit)}
         activeOpacity={0.8}
       >
-        <Text color="white" title="Logout" bold />
-        <Ionicons
-          name="exit"
-          size={28}
-          color="#fff"
-          style={styles.icon}
-        />
+        <Text color="white" title={loading ? "loading..." : "Submit"} bold />
       </TouchableOpacity>
+
+      <Toast
+        message={toastType === "success" ? 'User Updated Successfully' : 'Error Updating User'}
+        isVisible={showModal}
+        onHide={() => setShowModal(false)}
+        isError={toastType === 'error'}
+      />
     </View>
   );
 }
-export default memo(profile);
 
-const styles = StyleSheet.create({});
+export default memo(profile);

@@ -1,157 +1,144 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
 import AppBar from "@blocks/AppBar";
 import Text from "@blocks/Text";
 import MeetingCard from "@components/meetings/MeetingCard";
 import MeetingsHead from "@components/meetings/MeetingsHead";
 import NoMeetings from "@components/meetings/NoMeetings";
+import { NotificationContext, NotificationContextType } from "@components/NotificationSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@hooks/useThemeColor";
 import { router } from "expo-router";
-import { userContext } from '../../controllers/context/UserContextProvider';
-import useAxios from '@hooks/useAxios';
+import { memo, useState, useContext, useEffect, useMemo } from "react";
+import { View, ScrollView } from "react-native";
+import { UserBase } from "@model/types";
 
+// Type from MeetingCard
+type AssignedTo = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+};
+
+// Meeting interface with proper types
 interface Meeting {
-  ExternalMeetingId: string;
-  MediaPlacement: {
-    AudioFallbackUrl: string;
-    AudioHostUrl: string;
-    EventIngestionUrl: string;
-    ScreenDataUrl: string;
-    ScreenSharingUrl: string;
-    ScreenViewingUrl: string;
-    SignalingUrl: string;
-    TurnControlUrl: string;
-  };
-  MediaRegion: string;
-  MeetingArn: string;
-  MeetingId: string;
-  TenantIds: any[];
-  createdBy: {
-    _id: string;
-    avatar: string;
-    email: string;
-    name: {
-      first: string;
-      last: string;
-    };
-  };
-  isPrivate: boolean;
+  id: string;
+  title: string;
+  description: string;
+  assignedTo: AssignedTo[];
 }
 
-interface UserContextType {
-  user: {
-    id: string;
-    email: string;
-    role: string | null;
-    name: { first: string; last: string };
-  };
-}
+// Helper to convert UserBase to AssignedTo format
+const convertToAssignedTo = (user: UserBase): AssignedTo => ({
+  id: user._id,
+  name: `${user.name.first} ${user.name.last}`,
+  email: `${user.name.first.toLowerCase()}.${user.name.last.toLowerCase()}@gmail.com`,
+  avatar: user.avatar || "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain" // Default avatar
+});
+
+// Mock data for meetings
+const MOCK_MEETINGS: Meeting[] = [
+  {
+    id: "1",
+    title: "UI/UX&Graphic Team meeting",
+    description: "Market research - User research",
+    assignedTo: [
+      {
+        id: "1",
+        name: "John Doe",
+        email: "john.doe@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "2",
+        name: "Sarah Smith",
+        email: "sarah.smith@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "3",
+        name: "Mike Johnson",
+        email: "mike.johnson@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "4",
+        name: "Emma Wilson",
+        email: "emma.wilson@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+    ],
+  },
+  {
+    id: "2",
+    title: "Product Development Sync",
+    description: "Weekly sprint planning and feature discussion",
+    assignedTo: [
+      {
+        id: "5",
+        name: "David Brown",
+        email: "david.brown@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "6",
+        name: "Lisa Anderson",
+        email: "lisa.anderson@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+    ],
+  },
+  {
+    id: "3",
+    title: "Marketing Strategy Review",
+    description: "Q4 campaign planning and budget review",
+    assignedTo: [
+      {
+        id: "7",
+        name: "Alex Turner",
+        email: "alex.turner@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "8",
+        name: "Rachel Green",
+        email: "rachel.green@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "9",
+        name: "Chris Martin",
+        email: "chris.martin@gmail.com",
+        avatar: "https://th.bing.com/th/id/OIP.pegfGc8sWHh2_RuwiuAknwHaHZ?rs=1&pid=ImgDetMain",
+      },
+    ],
+  },
+];
 
 function Meetings() {
   const color = useThemeColor();
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useContext(userContext) as UserContextType;
-  const { get, post } = useAxios();
+  const [open, setOpen] = useState(false);
+  const { lastNotificationSenderId } = useContext<NotificationContextType>(NotificationContext);
 
-  const fetchMeetings = async () => {
-    try {
-      const response = await get({ endPoint: 'meet' });
-      
-      if (Array.isArray(response)) {
-        console.log('Active meetings:', response);
-        setMeetings(response);
-      } else {
-        console.log('Invalid meetings response:', response);
-        setMeetings([]);
-      }
-      setError(null);
-    } catch (err: any) {
-      console.error('Error fetching meetings:', err);
-      setError(err.message || 'Failed to load meetings');
-      setMeetings([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMeetings();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchMeetings();
-  };
-
-  const createNewMeeting = async () => {
-    try {
-      // Create a new meeting
-      const createResponse = await post({ 
-        endPoint: 'meet',
-        body: {
-          isPrivate: false,
-          createdBy: user.id
-        }
-      });
-      
-      console.log('Create meeting response:', createResponse);
-
-      if (!createResponse?.meetingResponse?.Meeting?.MeetingId) {
-        throw new Error('Failed to get meeting ID');
-      }
-
-      // Add current user to the meeting
-      const joinResponse = await post({
-        endPoint: 'meet/add-user',
-        body: {
-          userId: user.id,
-          meetingId: createResponse.meetingResponse.Meeting.MeetingId
-        }
-      });
-
-      console.log('Join meeting response:', joinResponse);
-
-      if (!joinResponse?.Attendee) {
-        throw new Error('Failed to join meeting');
-      }
-
-      // Navigate to the meeting room
-      router.push(`/meetings/${createResponse.meetingResponse.Meeting.MeetingId}`);
-      
-      // Refresh the meetings list
-      fetchMeetings();
-    } catch (err: any) {
-      console.error('Error creating meeting:', err);
-      setError(err.message || 'Failed to create meeting');
-    }
-  };
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: color.background }}>
-        <AppBar
-          center
-          title={<Text type="subtitle" title="Meeting Room" />}
-          leading={
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={color.text}
-              onPress={() => router.back()}
-            />
-          }
-        />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text type="body" title="Loading meetings..." />
-        </View>
-      </View>
+  // Check if any meeting has the notification sender
+  const meetingWithNotification = useMemo(() => {
+    if (!lastNotificationSenderId) return null;
+    return MOCK_MEETINGS.find(meeting => 
+      meeting.assignedTo.some(user => user.id === lastNotificationSenderId)
     );
-  }
+  }, [lastNotificationSenderId]);
+
+  // Log notification details
+  useEffect(() => {
+    if (lastNotificationSenderId && meetingWithNotification) {
+      console.log('Last notification sender ID on meetings page:', lastNotificationSenderId);
+      console.log('Found in meeting:', meetingWithNotification.title);
+    }
+  }, [lastNotificationSenderId, meetingWithNotification]);
+
+  const hasNotifications = Boolean(meetingWithNotification);
+
+
+  console.log(lastNotificationSenderId)
 
   return (
     <View style={{ flex: 1, backgroundColor: color.background }}>
@@ -172,48 +159,31 @@ function Meetings() {
       <ScrollView 
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[color.primary]}
-            tintColor={color.primary}
-          />
-        }
       >
         <MeetingsHead 
-          showBtn={true}
-          onCreateMeeting={createNewMeeting}
+          showBtn={MOCK_MEETINGS?.length > 0} 
+          hasNotifications={hasNotifications}
         />
-        
-        {error && (
-          <View style={{ padding: 20, alignItems: 'center' }}>
-            <Text type="error" title={error} />
-          </View>
-        )}
-
-        {meetings.length === 0 ? (
-          <NoMeetings onCreateMeeting={createNewMeeting} />
-        ) : (
-          meetings.map((meeting) => (
+        {MOCK_MEETINGS.length > 0 ? (
+          MOCK_MEETINGS.map((meeting) => (
             <MeetingCard
-              key={meeting.MeetingId}
-              id={meeting.MeetingId}
-              title={`Meeting by ${meeting.createdBy.name.first} ${meeting.createdBy.name.last}`}
-              description={`Created by: ${meeting.createdBy.email}`}
-              assignedTo={[{
-                id: meeting.createdBy._id,
-                name: `${meeting.createdBy.name.first} ${meeting.createdBy.name.last}`,
-                email: meeting.createdBy.email,
-                avatar: meeting.createdBy.avatar
-              }]}
-              onPress={() => router.push(`/meetings/${meeting.MeetingId}`)}
+              id={meeting.id}
+              key={meeting.id}
+              title={meeting.title}
+              description={meeting.description}
+              assignedTo={meeting.assignedTo}
+              hasNotification={meeting.id === meetingWithNotification?.id}
             />
           ))
+        ) : (
+          <NoMeetings 
+            setOpen={setOpen} 
+            hasNotifications={hasNotifications}
+          />
         )}
       </ScrollView>
     </View>
   );
 }
 
-export default React.memo(Meetings);
+export default memo(Meetings);

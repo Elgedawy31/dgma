@@ -1,5 +1,5 @@
-import { useThemeColor } from '@hooks/useThemeColor';
-import React from 'react';
+import { useThemeColor } from "@hooks/useThemeColor";
+import React from "react";
 import {
   Modal,
   View,
@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-} from 'react-native';
+  ActivityIndicator,
+} from "react-native";
 
 interface TerminateModalProps {
   visible: boolean;
@@ -15,15 +16,17 @@ interface TerminateModalProps {
   onConfirm: () => void;
   title?: string;
   message?: string;
+  loading?: boolean;
 }
 
 const TerminateModal: React.FC<TerminateModalProps> = ({
   visible,
   onClose,
   onConfirm,
-  title = 'Confirm Delete',
+  title = "Confirm Delete",
+  loading = false,
 }) => {
-  const colors = useThemeColor()
+  const colors = useThemeColor();
   return (
     <Modal
       visible={visible}
@@ -41,15 +44,23 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
             <TouchableOpacity
               style={[styles(colors).button, styles(colors).cancelButton]}
               onPress={onClose}
+              disabled={loading}
             >
               <Text style={styles(colors).cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles(colors).button, styles(colors).deleteButton]}
               onPress={onConfirm}
+              disabled={loading}
             >
-              <Text style={styles(colors).deleteButtonText}>Delete</Text>
+              <Text style={styles(colors).deleteButtonText}>
+                {loading ? (
+                  <ActivityIndicator color={colors.white} size="small" />
+                ) : (
+                  "Delete"
+                )}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -58,66 +69,65 @@ const TerminateModal: React.FC<TerminateModalProps> = ({
   );
 };
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
-const styles =(colors:any) =>  StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: width * 0.85,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 24,
-    
-  },
-  modalHeader: {
-    marginBottom: 32,
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.text,
-    textAlign:'center'
-
-  },
-  modalBody: {
-    marginBottom: 20,
-  },
-  modalMessage: {
-    fontSize: 16,
-    color: colors.body,
-    lineHeight: 22,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap:24
-  },
-  button: {
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  cancelButton: {
-    backgroundColor: '#E0E0E0',
-  },
-  deleteButton: {
-    backgroundColor: '#F22A2A',
-  },
-  cancelButtonText: {
-    color: '#333',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+const styles = (colors: any) =>
+  StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContainer: {
+      width: width * 0.85,
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 24,
+    },
+    modalHeader: {
+      marginBottom: 32,
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: colors.text,
+      textAlign: "center",
+    },
+    modalBody: {
+      marginBottom: 20,
+    },
+    modalMessage: {
+      fontSize: 16,
+      color: colors.body,
+      lineHeight: 22,
+    },
+    modalFooter: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 24,
+    },
+    button: {
+      paddingVertical: 8,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+    },
+    cancelButton: {
+      backgroundColor: "#E0E0E0",
+    },
+    deleteButton: {
+      backgroundColor: "#F22A2A",
+    },
+    cancelButtonText: {
+      color: "#333",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    deleteButtonText: {
+      color: "white",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+  });
 
 export default TerminateModal;
