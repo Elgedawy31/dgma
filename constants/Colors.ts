@@ -58,20 +58,22 @@ export const Colors = (theme: string) => ({
   //Button Colors
   btnPrimary: theme === 'light' ? '#002D75' : '#0097FF',
 });
+
 export const TaskColors = Object.freeze({
   review: '#2684FF',
   overdue: '#E54C4C',
   progress: '#FFC400',
   completed: '#57D9A3',
-  pending: '#D9D9D9',
+  pending:'#D9D9D9',
   cancelled: '#03243C',
 });
+
 export const TaskColors2 = Object.freeze({
-  'In Review': '#2684FF',
-  Overdue: '#E54C4C',
   'In Progress': '#FFC400',
-  Completed: '#57D9A3',
-  Pending: '#D9D9D9',
+  'Pending':'#D9D9D9', 
+  'In Review': '#2684FF',
+  'Completed': '#57D9A3',
+  'Overdue': '#E54C4C',
   'To Do': '#D9D9D9',
-  Cancelled: '#03243C',
+  'Cancelled': '#03243C'
 });

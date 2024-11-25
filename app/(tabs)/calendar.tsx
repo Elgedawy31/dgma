@@ -14,6 +14,7 @@ import useAxios from "@hooks/useAxios";
 import NoTasks from "@components/calendar/NoTasks";
 import { usePathname } from "expo-router";
 import LoadingSpinner from "@blocks/LoadingSpinner";
+
 const explore = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [view, setView] = useState<"list" | "month">("list");
@@ -31,8 +32,8 @@ const explore = () => {
     setView(view);
   };
 
-  const handleDateSelect = async (data: string) => {
-    setSelectedDate(data);
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(dayjs(date).format("YYYY-MM-DD"));
   };
 
   const handleDateSelect2 = (date: any) => {
@@ -41,10 +42,14 @@ const explore = () => {
 
   useEffect(() => {
     const handleSubmit = async () => {
-      await getRequest({ endPoint: "tasks/" })
+      await getRequest({ endPoint: "projects/personal/kanban" })
         .then((res) => {
           if (res) {
-            setTasks(res);
+            // Extract all tasks from columns into a flat array
+            const allTasks = res.columns.reduce((acc: any[], column: any) => {
+              return [...acc, ...column.tasks];
+            }, []);
+            setTasks(allTasks);
           }
         })
         .catch((err) => {
@@ -62,7 +67,6 @@ const explore = () => {
       });
       setFilteredTasks(filtered);
     } else {
-      console.log("object");
       setFilteredTasks(tasks);
     }
   }, [selectedDate, tasks]);
@@ -77,9 +81,9 @@ const explore = () => {
         setDatePickerVisible={setDatePickerVisible}
       />
       <ToggleView onViewChange={handleViewChange} />
-      {loading ? ( 
+      {loading ? (
         <LoadingSpinner />
-      ) : ( 
+      ) : (
         <>
           {view === "list" ? (
             <>
@@ -90,7 +94,7 @@ const explore = () => {
                     selectedDate ? selectedDate : dayjs().format("YYYY-MM-DD")
                   }
                 />
-              </View> 
+              </View>
               <CalendarHead
                 date={
                   selectedDate ? selectedDate : dayjs().format("YYYY-MM-DD")
@@ -102,12 +106,12 @@ const explore = () => {
               >
                 {filteredTasks.length > 0 ? (
                   <FlatList
-                    keyExtractor={(item, index) => item.title + index}
+                    keyExtractor={(item) => item._id}
                     showsVerticalScrollIndicator={false}
                     data={filteredTasks}
                     renderItem={({ item }) => (
                       <CalendarCard
-                        link={`/task/${item.id}`}
+                        link={`/task/${item._id}`}
                         title={item.title}
                         state={item.status}
                         subTitle={item.description}
@@ -125,12 +129,12 @@ const explore = () => {
             </>
           ) : (
             <MonthCalendar
-              tasks={tasks.map((ele: any) => ({
-                id: ele.id,
-                title: ele?.title,
-                startDate: ele?.startDate,
-                endDate: ele?.deadline,
-                status: ele.status as const,
+              tasks={tasks.map((task: any) => ({
+                id: task._id,
+                title: task.title,
+                startDate: task.startDate,
+                endDate: task.deadline,
+                status: task.status
               }))}
             />
           )}

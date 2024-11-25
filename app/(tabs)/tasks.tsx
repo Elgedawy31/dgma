@@ -28,16 +28,14 @@ interface AssignedProps {
 }
 
 interface Task {
-  id: string;
+  _id: string;
   title: string;
-  subTitle: string;
-  time: string;
+  description: string;
   type: 'project' | 'team' | 'personal';
   status: 'Overdue' | 'In Progress' | 'In Review' | 'Completed' | 'Pending' | 'Cancelled' | 'To Do';
-  description: string;
   assignedTo: AssignedProps[];
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  deadline: string | null;
 }
 
 interface State {
@@ -70,10 +68,10 @@ function Tasks(): JSX.Element {
   const [headerIndex, setHeaderIndex] = useState<number>(0);
   const [taskAdded, setTaskAdded] = useState<boolean>(false);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [modalVisible , setModalVisible] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const { getRequest , loading } = useAxios();
-  const pathName = usePathname()
+  const { getRequest, loading } = useAxios();
+  const pathName = usePathname();
 
   const onStateChange = (index: number): void => setStateIndex(index);
 
@@ -83,16 +81,20 @@ function Tasks(): JSX.Element {
   useEffect(() => {
     const handleSubmit = async (): Promise<void> => {
       try {
-        const response = await getRequest({ endPoint: "tasks/" });
+        const response = await getRequest({ endPoint: "projects/personal/kanban" });
         if (response) {
-          setTasks(response);
+          // Extract all tasks from columns into a flat array
+          const allTasks = response.columns.reduce((acc: Task[], column: any) => {
+            return [...acc, ...column.tasks];
+          }, []);
+          setTasks(allTasks);
         }
       } catch (err) {
         console.error(`Error: ${err}`);
       }
     };
     handleSubmit();
-  }, [taskAdded , pathName]);
+  }, [taskAdded, pathName]);
 
   // Filter tasks based on header selection and status
   useEffect(() => {
@@ -152,7 +154,6 @@ function Tasks(): JSX.Element {
   };
 
   const renderState = (state: State, index: number): JSX.Element => (
-    console.log('state', state.id),
     <Pressable
       key={index}
       onPress={() => onStateChange(index)}
@@ -178,29 +179,27 @@ function Tasks(): JSX.Element {
 
   const renderTask = ({ item }: { item: Task }): JSX.Element => (
     <CalendarCard
-    title={item.title} 
-    state={item.status} 
-    link={`/task/${item.id}`}
-    subTitle={item.description}
-    assignedTo={item?.assignedTo}
-    time={`${dayjs(item.startDate).format('DD MMM')} - ${dayjs(item.endDate).format('DD MMM')}`} 
+      title={item.title} 
+      state={item.status} 
+      link={`/task/${item._id}`}
+      subTitle={item.description}
+      assignedTo={item?.assignedTo}
+      time={`${item.startDate ? dayjs(item.startDate).format('DD MMM') : 'No start'} - ${item.deadline ? dayjs(item.deadline).format('DD MMM') : 'No end'}`} 
     />
   );
 
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-       <CalendarHeader
+      <CalendarHeader
         fromCalenderTab
         title="Tasks"
         view={'month'}
         setModalVisible={setModalVisible}
-        setDatePickerVisible={() => {}}
+        setDatePickerVisible={setModalVisible} // Changed to use the same state setter
       />
       <View style={styles.headerContainer}>
-        <View
-        >
-          <View style={[styles.headerRow , {justifyContent:'center'} ]}>
+        <View>
+          <View style={[styles.headerRow, {justifyContent:'center'}]}>
             {headers.map((header, index) => renderHeader(header, index))}
           </View>
         </View>
@@ -216,20 +215,24 @@ function Tasks(): JSX.Element {
         </ScrollView>
       </View>
 
-      {loading ? <LoadingSpinner/> :<View style={styles.listContainer}>
-      {filteredTasks.length > 0 ?    <FlatList
-          keyExtractor={(item, index) => item.title + index.toString()}
-          showsVerticalScrollIndicator={false}
-          data={filteredTasks}
-          renderItem={renderTask}
-        /> : <NoTasks />}
-      </View>}
+      {loading ? <LoadingSpinner/> :
+        <View style={styles.listContainer}>
+          {filteredTasks.length > 0 ? 
+            <FlatList
+              keyExtractor={(item) => item._id}
+              showsVerticalScrollIndicator={false}
+              data={filteredTasks}
+              renderItem={renderTask}
+            /> : 
+            <NoTasks />
+          }
+        </View>
+      }
 
       <TaskFormModal
         isVisible={modalVisible} 
         onClose={() => setModalVisible(false)}
         setTaskAdded={setTaskAdded}
-       
       />
     </View>
   );
