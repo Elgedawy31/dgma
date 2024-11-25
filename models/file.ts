@@ -3,7 +3,8 @@ type FileModel = {
     name: string,
     size?: number,
     mimeType: string,
-    measure: string
+    measure: string,
+    isNeedToUpload: boolean,
 }
 
 export default FileModel;

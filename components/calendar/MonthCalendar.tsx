@@ -10,14 +10,18 @@ import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { useThemeColor } from "@hooks/useThemeColor";
 
-type TaskStatus = "Pending" | "In Progress" | "In Review" | "Completed" | "Overdue" | "To Do" | "Cancelled";
-
 interface Task {
   id: string;
   title: string;
-  startDate: Date | string | null;
-  endDate: Date | string | null;
-  status: string;
+  startDate: Date;
+  endDate: Date;
+  status:
+    | "In Review"
+    | "Overdue"
+    | "In Progress"
+    | "completed"
+    | "Pending"
+    | "cancelled";
 }
 
 interface CalendarProps {
@@ -29,19 +33,6 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [calendarDays, setCalendarDays] = useState<(number | null)[]>([]);
   const colors = useThemeColor();
-
-  const getStatusStyle = (status: string) => {
-    const statusMap: Record<TaskStatus, any> = {
-      "Pending": styles(colors).Pending,
-      "In Progress": styles(colors)["In Progress"],
-      "In Review": styles(colors)["In Review"],
-      "Completed": styles(colors).Completed,
-      "Overdue": styles(colors).Overdue,
-      "To Do": styles(colors)["To Do"],
-      "Cancelled": styles(colors).Cancelled
-    };
-    return statusMap[status as TaskStatus] || styles(colors).Pending;
-  };
 
   const getDaysInMonth = (): number => {
     return currentDate.daysInMonth();
@@ -71,18 +62,16 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
     setCalendarDays(days);
   };
 
-  const isSameDay = (date1: Date | string | null, date2: dayjs.Dayjs): boolean => {
-    if (!date1) return false;
+  const isSameDay = (date1: Date, date2: dayjs.Dayjs): boolean => {
     const d1 = dayjs(date1);
     return d1.format("YYYY-MM-DD") === date2.format("YYYY-MM-DD");
   };
 
   const isWithinRange = (
     date: dayjs.Dayjs,
-    start: Date | string | null,
-    end: Date | string | null
+    start: Date,
+    end: Date
   ): boolean => {
-    if (!start || !end) return false;
     const dateStr = date.format("YYYY-MM-DD");
     const startStr = dayjs(start).format("YYYY-MM-DD");
     const endStr = dayjs(end).format("YYYY-MM-DD");
@@ -103,8 +92,8 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
         status: task?.status,
         isStart: isSameDay(task.startDate, dayDate),
         isEnd: isSameDay(task.endDate, dayDate),
-        daysFromStart: task.startDate ? dayjs(dayDate).diff(dayjs(task.startDate), "day") : 0,
-        totalDays: task.startDate && task.endDate ? dayjs(task.endDate).diff(dayjs(task.startDate), "day") + 1 : 1,
+        daysFromStart: dayjs(dayDate).diff(dayjs(task.startDate), "day"),
+        totalDays: dayjs(task.endDate).diff(dayjs(task.startDate), "day") + 1,
       }));
   };
 
@@ -116,7 +105,7 @@ const CustomCalendar: React.FC<CalendarProps> = ({ tasks, onTaskPress }) => {
     return dayTasks.map((task, index) => {
       const barStyle = [
         styles(colors).taskBar,
-        getStatusStyle(task.status),
+        styles(colors)[task.status],
         {
           top: index * 28,
           marginLeft: task.isStart ? 4 : -8,
@@ -328,27 +317,27 @@ const styles = (colors: any) =>
       paddingLeft: 8,
       paddingRight: 8,
     },
-    "In Progress": {
-      backgroundColor: "#FFC400",
-    },
-    "Pending": {
-      backgroundColor: "#040A0F",
-    },
     "In Review": {
-      backgroundColor: "#2684FF",
+      backgroundColor: "rgba(38, 132, 255, 0.9)",
     },
-    "Completed": {
-      backgroundColor: "#57D9A3",
+    Overdue: {
+      backgroundColor: "rgba(229, 76, 76, 0.9)",
     },
-    "Overdue": {
-      backgroundColor: "#E54C4C",
+    "In Progress": {
+      backgroundColor: "rgba(255, 196, 0, 0.9)",
+    },
+    Completed: {
+      backgroundColor: "rgba(87, 217, 163, 0.9)",
+    },
+    Pending: {
+      backgroundColor: "rgba(217, 217, 217, 0.9)",
     },
     "To Do": {
-      backgroundColor: "#D9D9D9",
+      backgroundColor: "rgba(217, 217, 217, 0.9)",
     },
-    "Cancelled": {
-      backgroundColor: "#03243C",
-    }
+    Cancelled: {
+      backgroundColor: "rgba(3, 36, 60, 0.9)",
+    },
   });
 
 export default CustomCalendar;

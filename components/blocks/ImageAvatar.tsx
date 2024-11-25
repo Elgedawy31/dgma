@@ -4,7 +4,7 @@ import { router } from 'expo-router'
 
 type ImageAvatarProps = {
     onPress?: () => void
-    url: string | null
+    url: string | null | undefined
     type: 'avatar' | 'member' | 'project' | 'profile' | 'channel'
     size?: 50 | 60 | 70 | 80 | 90 | 100
 }

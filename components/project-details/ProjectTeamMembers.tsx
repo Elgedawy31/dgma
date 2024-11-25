@@ -23,12 +23,8 @@ type MembersModel = {
     avatar: string
 }
 
-type FlatListComponentProps = {
-    onScrollBegin: () => void;
-    onScrollEnd: () => void;
-};
 
-const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
+const ProjectTeamMembers: FC = () => {
     const { getRequest } = useAxios();
     const colors = useThemeColor();
     const [users, setUsers] = useState<UserModel[]>([]);
@@ -77,7 +73,7 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                 </View>
                 : <View style={{ gap: 8, marginVertical: 8 }}>
                     <View style={{ height: 220 }}>
-                        <FlatList
+                        {/* <FlatList
                             data={[...users]
                                 .filter((user) => !members.some((mem) => mem.id === user.id))
                                 .filter(({ name: { first, last } }) =>
@@ -86,9 +82,6 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                                     || last.toLowerCase().includes(watch('teamValue').toLowerCase())
                                 )
                                 )}
-                            onScrollBeginDrag={onScrollBegin}
-                            onScrollEndDrag={onScrollEnd}
-                            onMomentumScrollEnd={onScrollEnd}
                             keyExtractor={item => item.id}
                             renderItem={({ item: { avatar, name: { first, last }, id }, index }) => (
                                 <Pressable style={{ marginVertical: 2 }}
@@ -99,11 +92,11 @@ const ProjectTeamMembers: FC<FlatListComponentProps> = ({ onScrollBegin, onScrol
                                     </View>
                                 </Pressable>
                             )}
-                        />
+                        /> */}
                     </View>
                 </View>
             }
-        </View >
+        </View>
     )
 }
 

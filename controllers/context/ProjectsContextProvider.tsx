@@ -32,10 +32,10 @@ function ProjectsContextProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const addNewProject = useCallback((data: ProjectModel)
-        : void => { setProjects([...projects, { ...data }]); }, []);
+        : void => { setProjects(prev => [...prev, data]); }, []);
 
     const addBulkProject = useCallback((data: ProjectModel[])
-        : void => { setProjects([...projects, ...data]); }, []);
+        : void => { setProjects(prev => [...prev, ...data]); }, []);
 
 
     const removeProject = useCallback((id: string) => setProjects(projects.filter((project) => project._id !== id)), [projects]);

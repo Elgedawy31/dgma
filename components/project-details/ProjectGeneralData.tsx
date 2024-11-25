@@ -8,6 +8,7 @@ import { useThemeColor } from '@hooks/useThemeColor'
 import { projectDetailsContext } from '@ProjectDetailsContext'
 import { memo, useCallback, useContext, useEffect, useState } from 'react'
 import ImageViewerFunc from '@components/ImageViewer'
+import useDate from '@hooks/useDate'
 
 type ProjectDetailsInputsProps = {
     name: string;
@@ -17,27 +18,35 @@ type ProjectDetailsInputsProps = {
 }
 const ProjectGeneralData = () => {
     const colors = useThemeColor();
+    const { nextMonth } = useDate();
     const { imagePicker, uploadFiles } = useFile();
     const [isNew, setIsNew] = useState<boolean>(true);
-    const { control, reset, watch, setValue, formState: { errors } } = useForm<ProjectDetailsInputsProps>({});
+    const { control, reset, watch, setValue, formState: { errors } } = useForm<ProjectDetailsInputsProps>({
+        defaultValues: {
+            name: '',
+            description: '',
+            deadline: nextMonth(new Date()),
+            startDate: new Date().toISOString(),
+        },
+    });
     const { project, logoFile, setProjectLogo, setProjectGeneralData } = useContext(projectDetailsContext);
-    const { _id, logo, name, description, deadline, startDate } = project
+    const { _id, logo, name, description } = project
     const [openImageViewer, setOpenImageViewer] = useState(false);
-    useEffect(() => {
-        if (_id) {
-            setIsNew(false);
-            reset({ name, description, deadline, startDate });
-        }
-    }, [_id])
+    // useEffect(() => {
+    //     if (_id) {
+    //         setIsNew(false);
+    //         reset({ name, description, deadline, startDate });
+    //     }
+    // }, [_id])
 
     const pickLogoImage = useCallback(async () => {
         if (isNew) {
             const res = await imagePicker({ multiple: false });
-            if (res) {
-                const uploaded = await uploadFiles(res);
-                console.log("Uploaded", uploaded);
-                // setProjectLogo(res[0]);
-            }
+            // if (res) {
+            //     const uploaded = await uploadFiles(res);
+            //     console.log("Uploaded", uploaded);
+            //     // setProjectLogo(res[0]);
+            // }
             res && setProjectLogo(res[0]);
         }
         else { setOpenImageViewer(true); }
@@ -54,7 +63,7 @@ const ProjectGeneralData = () => {
         name && description && startDate && deadline && setProjectGeneralData(allFields);
     }, [watch('name'), watch('description'), watch('startDate'), watch('deadline')]);
 
-    console.log('watch startdat and deadline' , watch('deadline') , watch('startDate'))
+    console.log('watch startdat and deadline', watch('deadline'), watch('startDate'))
     return (
         <View style={{ gap: 16, }}>
             <View style={[styles.logo, { backgroundColor: colors.card }, !logoFile?.uri && { paddingHorizontal: 60, paddingVertical: 20, }]}>
@@ -77,7 +86,7 @@ const ProjectGeneralData = () => {
                 rules={{ required: 'Project Name is required', minLength: { value: 5, message: 'Project Name is too short' } }}
             />}
             <TextInputField
-            numberOfLines={6}
+                numberOfLines={6}
                 multiline
                 align='justify'
                 control={control}
@@ -91,8 +100,8 @@ const ProjectGeneralData = () => {
             />
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 24 }}>
-                <DatePicker value={startDate} label='Start Date' onChange={(d) => onDateSelect('startDate', d)} />
-                <DatePicker value={deadline} label='End Date' onChange={(d) => onDateSelect('deadline', d)} />
+                <DatePicker value={watch('startDate')} label='Start Date' onChange={(d) => onDateSelect('startDate', d)} />
+                <DatePicker value={watch('deadline')} label='End Date' onChange={(d) => onDateSelect('deadline', d)} />
             </View>
         </View>
     )

@@ -4,17 +4,20 @@ import UserContextProvider from '@UserContext'
 import ThemeContextProvider from '@ThemeContext'
 import ProjectsContextProvider from '@ProjectsContext'
 import { ToastProvider } from './ToastContext'
+import ActiveProjectContextProvider from './ActiveProjectContextProvider'
 
 function Providers({ children }: any) {
     return (
         <ToastProvider>
             <UserContextProvider>
                 <ProjectsContextProvider>
-                    <ThemeContextProvider>
-                        <View style={{ flex: 1 }}>
-                            {children}
-                        </View>
-                    </ThemeContextProvider>
+                    <ActiveProjectContextProvider>
+                        <ThemeContextProvider>
+                            <View style={{ flex: 1 }}>
+                                {children}
+                            </View>
+                        </ThemeContextProvider>
+                    </ActiveProjectContextProvider>
                 </ProjectsContextProvider>
             </UserContextProvider>
         </ToastProvider>

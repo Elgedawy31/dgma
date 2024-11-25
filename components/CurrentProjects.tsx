@@ -6,22 +6,30 @@ import ProjectCard from '@cards/ProjectCard'
 import { Ionicons } from '@expo/vector-icons'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Pressable } from 'react-native';
-import { memo, useContext } from 'react';
+import { memo, useCallback, useContext } from 'react';
 import { userContext } from '@UserContext';
 import { projectsContext } from '@ProjectsContext';
 import Button from '@ui/Button';
 import { useThemeColor } from '@hooks/useThemeColor';
+import ProjectModel from '@model/project';
+import { activeProjectContext } from '@context/ActiveProjectContextProvider';
 //#endregion
 
 function CurrentProjects() {
     const { user } = useContext(userContext)
     const { projects } = useContext(projectsContext);
+    const { setProject: setActiveProject } = useContext(activeProjectContext);
     const colors = useThemeColor();
+    const handleClick = useCallback((proj: ProjectModel) => {
+        setActiveProject(proj);
+        router.push('/project/preview');
+    }, [])
+    console.log(projects.forEach((proj) => console.log("kljk",proj.team)))
     return (
         <View>
             <View style={[styles.container, { paddingHorizontal: 16, }]}>
                 <Text type='title' title='Current Projects' />
-                {user?.role  === 'admin' ? <Ionicons name="add" size={32} color={colors.text} onPress={() => router.push(Routes.projectDetails)} />
+                {user?.role === 'admin' ? <Ionicons name="add" size={32} color={colors.text} onPress={() => router.push({ pathname: Routes.projectDetails, params: { type: 'new' } })} />
                     : projects?.length ? <Button type='text' label='Show all' onPress={() => router.push(Routes.allProjects)} /> : null}
             </View>
             <View>
@@ -30,14 +38,14 @@ function CurrentProjects() {
                         showsHorizontalScrollIndicator={false}>
                         <View style={styles.cards}>
                             {projects.slice(0, projects.length > 3 ? 3 : projects?.length).map((proj) => (
-                                <Link key={proj._id} href={{ pathname: '/project/[id]', params: { id: proj._id!, project: JSON.stringify(proj) } }}>
+                                <Pressable key={proj._id} onPress={() => handleClick(proj)}>
                                     <View style={{ paddingLeft: 16 }}>
                                         <ProjectCard project={proj} />
                                     </View>
-                                </Link>
+                                </Pressable>
                             ))}
                         </View>
-                        {projects?.length > 3 && user?.role  === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={[styles.linkContainer, { backgroundColor: colors.body }]}>
+                        {projects?.length > 1 && user?.role === 'admin' && <Pressable onPress={() => router.push(Routes.allProjects)} style={[styles.linkContainer, { backgroundColor: colors.body }]}>
                             <Text type='label' title='Show all' color='white' />
                         </Pressable>}
                     </ScrollView> :

@@ -1,9 +1,8 @@
+// import { SERVER_URL } from '@env';
 import axios, { AxiosError } from 'axios';
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useToast } from '@context/ToastContext';
 import useSecureStorage from './useSecureStorage';
-import { useRouter } from 'expo-router';
-import { userContext } from '@UserContext';
 
 type AxiosParams = {
     body?: object;
@@ -13,30 +12,15 @@ type AxiosParams = {
 }
 
 export default function useAxios() {
-    const SERVER_URL = 'http://192.168.1.71:5001'
+   const SERVER_URL = 'http://192.168.1.71:5001'
     const { readStorage } = useSecureStorage();
     const [error, setError] = useState<string>('');
     const [isError, setIsError] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const { showToast } = useToast();
-    const router = useRouter();
-    const {  logout} = useContext(userContext);
-
-    const handleLogout = useCallback(async () => {
-        await postRequest({ endPoint: "/users/logout" });
-        logout();
-        router.replace("/(auth)/");
-    }, [logout, router]);
 
     const handleError = (error: any) => {
         let errorMessage = '';
-        if (error?.response?.data?.message === "Invalid token" && 
-            error?.response?.data?.name === "AuthorizationError" && 
-            error?.response?.data?.status === 401) {
-            handleLogout();
-            return;
-        }
-        
         if (error?.response?.data?.error) {
             errorMessage = error.response.data.error;
         } else if (error?.response?.data?.message) {

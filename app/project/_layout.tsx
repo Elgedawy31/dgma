@@ -11,7 +11,7 @@ function ProjectLayout() {
         <SafeAreaView style={{ flex: 1 }}>
             <ProjectDetailsContextProvider>
                 <Stack>
-                    <Stack.Screen name='[id]' options={{ headerShown: false, }} />
+                    <Stack.Screen name='preview' options={{ headerShown: false, }} />
                     <Stack.Screen name='all-projects' options={{ headerShown: false, }} />
                     <Stack.Screen name='details' options={{ headerShown: false, }} />
                 </Stack>

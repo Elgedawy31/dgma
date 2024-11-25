@@ -7,15 +7,14 @@ import { useThemeColor } from '@hooks/useThemeColor';
 import Icon from '@blocks/Icon';
 
 type DatePickerProps = {
-    value?: string;
+    value: string;
     label: string;
     display?: | 'spinner' | 'calendar' | 'clock';
     mode?: 'countdown' | 'date' | 'datetime' | 'time';
     onChange: (d?: Date) => void;
 }
 const DatePicker = ({
-    label, onChange,
-    value,
+    label, onChange, value,
     mode = 'date', display = 'spinner',
 }: DatePickerProps) => {
     const colors = useThemeColor()
@@ -34,7 +33,7 @@ const DatePicker = ({
             <Text color={colors.primary} type='label' title={label} />
             <Pressable onPress={() => { console.log("Press"); if (!showPicker) setShowPicker(true) }}>
                 <TextInput
-                placeholderTextColor={colors.body}
+                    placeholderTextColor={colors.body}
                     value={date.toDateString()}
                     editable={false}
                     style={[

@@ -10,11 +10,8 @@ import { projectDetailsContext } from '@ProjectDetailsContext';
 import { FC, memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import Button from '@ui/Button';
 
-type FlatListComponentProps = {
-    onScrollBegin: () => void;
-    onScrollEnd: () => void;
-};
-const ProjectAttachments: FC<FlatListComponentProps> = ({ onScrollBegin, onScrollEnd }) => {
+
+const ProjectAttachments: FC = () => {
     const colors = useThemeColor();
     const [files, setFiles] = useState<FileModel[]>([])
     const [expand, setExpand] = useState<boolean>(false);

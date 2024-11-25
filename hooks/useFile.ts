@@ -67,11 +67,12 @@ export default function useFile() {
 
         const [value, measure] = size?.split(' ') || ["1", "KB"];
         return {
-            name: name,
             uri: file,
+            name: name,
             size: +value,
+            measure: measure,
             mimeType: mimeType,
-            measure: measure
+            isNeedToUpload: false
         } as FileModel;
     }, [])
 
@@ -91,8 +92,9 @@ export default function useFile() {
                         size: size,
                         uri: file.uri,
                         measure: measure,
+                        isNeedToUpload: true,
                         name: validateFileName(file.fileName!),
-                        mimeType: file.mimeType || 'image/jpeg'
+                        mimeType: file.mimeType || 'image/jpeg',
                     } as FileModel
                 })
         }
@@ -124,8 +126,9 @@ export default function useFile() {
                 size: size,
                 uri: file.uri,
                 measure: measure,
+                isNeedToUpload: true,
+                mimeType: file.mimeType || 'image/jpeg',
                 name: validateFileName(`camera_${Date.now()}.jpg`),
-                mimeType: file.mimeType || 'image/jpeg'
             }] as FileModel[];
         } catch (error) {
             console.error('Error capturing image:', error);
@@ -147,6 +150,7 @@ export default function useFile() {
                         size: size,
                         uri: file.uri,
                         measure: measure,
+                        isNeedToUpload: true,
                         name: validateFileName(file.name!),
                         mimeType: file.mimeType || 'image/jpeg'
                     } as FileModel

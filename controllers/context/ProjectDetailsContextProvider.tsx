@@ -124,8 +124,9 @@ function ProjectDetailsContextProvider({ children }: { children: React.ReactNode
     }, [project, members, logoFile, attachmentsFiles, originalState]);
 
     useEffect(() => {
-        const { name, description, startDate, deadline } = project;
-        setIsDataDone(!!name && !!description && !!startDate && !!deadline && !!logoFile && members.length > 0);
+        const { name, startDate } = project;
+        console.log({ name, startDate, members });
+        setIsDataDone(!!name && !!startDate &&  members.length > 0);
     }, [project, logoFile, members]);
 
     const getChangedFiles = useCallback(() => {
