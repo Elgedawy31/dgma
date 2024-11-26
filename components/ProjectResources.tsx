@@ -5,13 +5,15 @@ import Button from '@ui/Button'
 import { memo, useState } from 'react'
 import { useThemeColor } from '@hooks/useThemeColor'
 import useFile from '@hooks/useFile'
+import * as Linking from "expo-linking";
+
 
 function ProjectResources({ resources, projectName }: { projectName: string, resources: string[] }) {
 
     const { decodeFile } = useFile();
     const colors = useThemeColor();
     const [showMore, setShowMore] = useState(false);
-
+console.log(resources)
     return (
         <View style={{ paddingVertical: 8, gap: 8 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -23,7 +25,7 @@ function ProjectResources({ resources, projectName }: { projectName: string, res
                     <Text italic type='label' align='center' color={'red'} title='No Resources Added Yet' />
                     :
                     resources.slice(0, showMore ? resources.length : 3).map((item, index) =>
-                        (<File type='view' key={item} src={decodeFile(item)} onPress={() => { }} />))
+                        (<File type='view' key={item} src={decodeFile(item)} onPress={() => Linking.openURL(item)} />))
                 }
             </View>
         </View>)

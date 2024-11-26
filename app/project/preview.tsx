@@ -17,7 +17,6 @@ function ProjectDetails() {
     const { user: { role } } = useContext(userContext)
     const { project } = useContext(activeProjectContext);
     const { name, description, attachments, team } = project
-    console.log(team)
     return (
         <View style={{ flex: 1, backgroundColor: colors.background, gap: 16 }}>
             <AppBar dark title={name} leading='back'

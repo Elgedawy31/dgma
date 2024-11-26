@@ -60,12 +60,28 @@ export default function useFile() {
         return { size: +size.toFixed(2), measure };
     }, [])
 
-    const decodeFile = useCallback((file: string, size?: string) => {
-        const name = file.split('/').pop()?.split(/\d+_/).pop() || '';
-        const extension = file.split('.').pop()?.toLowerCase() || '';
-        const mimeType = FILE_TYPES[extension as keyof typeof FILE_TYPES].mimeType;
+    const decodeFile = useCallback((file: string | null, size?: string | null) => {
+        // Default values if file is null
+        if (!file) {
+            return {
+                uri: '',
+                name: 'unknown',
+                size: 0,
+                measure: 'KB',
+                mimeType: 'application/octet-stream',
+                isNeedToUpload: false
+            } as FileModel;
+        }
 
-        const [value, measure] = size?.split(' ') || ["1", "KB"];
+        const name = file.split('/').pop()?.split(/\d+_/).pop() || 'unknown';
+        const extension = file.split('.').pop()?.toLowerCase() || '';
+        const fileType = FILE_TYPES[extension as keyof typeof FILE_TYPES];
+        const mimeType = fileType?.mimeType || 'application/octet-stream';
+
+        // Default size values if size is null or undefined
+        const defaultSize = { value: "0", measure: "KB" };
+        const [value, measure] = size?.split(' ') || [defaultSize.value, defaultSize.measure];
+
         return {
             uri: file,
             name: name,

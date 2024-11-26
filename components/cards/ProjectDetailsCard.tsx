@@ -19,7 +19,7 @@ function ProjectDetailsCard({ logo, startDate, deadline, progress }: ProjectDeta
     const { shortDate } = useDate();
     return (
         <Container radius={10} >
-            <Image source={{ uri: logo }} resizeMode='stretch' style={{ width: '100%', height: 210, borderTopLeftRadius: 10, borderTopRightRadius: 10 }} />
+            <Image source={logo ? { uri: logo } : require('@images/select.png')} resizeMode='contain' style={{ width: '100%', height: 210, borderTopLeftRadius: 10, borderTopRightRadius: 10 }} />
             <View style={{ width: '100%', padding: 8, gap: 10 }}>
                 <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 8, paddingVertical: 5, justifyContent: 'space-between', alignItems: 'center' }}>
                     <ProgressBar progress={progress / 100} />

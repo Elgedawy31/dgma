@@ -24,7 +24,7 @@ function CurrentProjects() {
         setActiveProject(proj);
         router.push('/project/preview');
     }, [])
-    console.log(projects.forEach((proj) => console.log("kljk",proj.team)))
+    console.log('projects' , projects)
     return (
         <View>
             <View style={[styles.container, { paddingHorizontal: 16, }]}>

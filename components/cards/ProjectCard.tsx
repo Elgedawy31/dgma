@@ -6,6 +6,7 @@ import useDate from '@hooks/useDate';
 import ProjectModel from '@model/project';
 import { Image, StyleSheet, View } from 'react-native'
 import { useThemeColor } from '@hooks/useThemeColor';
+import ImageAvatar from '@blocks/ImageAvatar';
 //#endregion
 
 type ProjectCardProps = {
@@ -18,11 +19,11 @@ function ProjectCard({
     DateIcon = true, }: ProjectCardProps) {
     const colors = useThemeColor();
     const { shortDate } = useDate();
+    console.log('logo', logo )
     //#region UI
     return (
         <View style={[styles.container, { backgroundColor: colors.card }]}>
-            <Image source={{ uri: logo }}
-                style={styles.image} resizeMode='stretch' />
+            <ImageAvatar type='homeProject'  url={logo}  />
             <View style={styles.conDetails}>
                 <Text type='label' title={name?.length > 20 ? `${name.slice(0, 20)}...` : name} />
                 <View style={styles.conBottom}>
